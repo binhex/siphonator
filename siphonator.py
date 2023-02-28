@@ -30,6 +30,7 @@ try:
     import lib.siphonator.tools_logging as siphonator_tools_logging
     import lib.siphonator.tools_various as siphonator_tools_various
     import lib.siphonator.search_all as siphonator_search_all
+    import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
 except ImportError:
 
@@ -47,6 +48,7 @@ except ImportError:
         import lib.siphonator.tools_logging as siphonator_tools_logging
         import lib.siphonator.tools_various as siphonator_tools_various
         import lib.siphonator.search_all as siphonator_search_all
+        import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
     except ImportError:
 
@@ -92,10 +94,15 @@ class Siphonator(object):
 
         user_agent = u"Siphonator/%s; https://sourceforge.net/projects/moviegrabber" % current_version
 
+        # create database
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance)
+        db_sqlite_instance.create_database(db_path, db_version)
+
         torrent_client_qbittorrent_host = '192.168.1.10'
         torrent_client_qbittorrent_port = 2100
         torrent_client_qbittorrent_username = 'admin'
         torrent_client_qbittorrent_password = 'adminadmin'
+        torrent_client_qbittorrent_add_paused = True
 
         notification_email_enabled = True
         notification_email_host = 'smtp.gmail.com'
@@ -182,6 +189,7 @@ class Siphonator(object):
                                  'torrent_client_qbittorrent_port': torrent_client_qbittorrent_port,
                                  'torrent_client_qbittorrent_username': torrent_client_qbittorrent_username,
                                  'torrent_client_qbittorrent_password': torrent_client_qbittorrent_password,
+                                 'torrent_client_qbittorrent_add_paused': torrent_client_qbittorrent_add_paused,
                                  'notification_email_enabled': notification_email_enabled,
                                  'notification_email_host': notification_email_host,
                                  'notification_email_port': notification_email_port,
@@ -226,19 +234,19 @@ if __name__ == '__main__':
 
     # set siphonator and db schema version numbers
     current_version = "1.0.0"
-    latest_db_version = "1"
+    db_version = int(1)
 
-    app_root_dir = os.path.dirname(os.path.realpath(__file__))
+    app_root_path = os.path.dirname(os.path.realpath(__file__))
 
     # set folder path for config files
-    config_dir = os.path.join(app_root_dir, u"configs")
-    config_dir = os.path.normpath(config_dir)
+    config_path = os.path.join(app_root_path, u"configs")
+    config_path = os.path.normpath(config_path)
 
     # set path for configspec.ini file
-    configspec_ini = os.path.join(config_dir, u"configspec.ini")
+    configspec_ini = os.path.join(config_path, u"configspec.ini")
 
     # set path for config.ini file
-    config_ini = os.path.join(config_dir, u"config.ini")
+    config_ini = os.path.join(config_path, u"config.ini")
 
     # create configobj instance, set config.ini file, set encoding and set configspec.ini file
     config_obj = configobj.ConfigObj(config_ini, list_values=False, write_empty_values=True, encoding='UTF-8', default_encoding='UTF-8', configspec=configspec_ini, unrepr=True)
@@ -250,11 +258,15 @@ if __name__ == '__main__':
     config_obj.write()
 
     # set folder path for log files
-    logs_dir = os.path.join(app_root_dir, u"logs")
-    logs_dir = os.path.normpath(logs_dir)
+    logs_path = os.path.join(app_root_path, u"logs")
+    logs_path = os.path.normpath(logs_path)
+
+    # set folder path for db files
+    db_path = os.path.join(app_root_path, u"db")
+    db_path = os.path.normpath(db_path)
 
     # set path for log file
-    log_file = os.path.join(logs_dir, u"siphonator.log")
+    log_file = os.path.join(logs_path, u"siphonator.log")
 
     logger = siphonator_tools_logging.app_logging(config_obj, log_file)
     logger_instance = logger.get('logger')

@@ -9,13 +9,13 @@ class TorrentClients(object):
 
         self.index_dict = kwargs
         self.logger_instance = logger_instance
-
-    #def qbittorrent_auth(self):
+        self.add_paused_bool = self.index_dict['torrent_client_qbittorrent_add_paused'].lower()
 
         host = self.index_dict['torrent_client_qbittorrent_host']
         port = self.index_dict['torrent_client_qbittorrent_port']
         username = self.index_dict['torrent_client_qbittorrent_username']
         password = self.index_dict['torrent_client_qbittorrent_password']
+
 
         # instantiate a Client using the appropriate WebUI configuration
         self.qbt_client = qbittorrentapi.Client(
@@ -34,7 +34,7 @@ class TorrentClients(object):
 
         except qbittorrentapi.LoginFailed as e:
 
-            self.logger_instance.warning(u"Qbittorrent login failed for username '%s' with error '%s'" % (username, e))
+            self.logger_instance.warning(u"qBittorrent login failed for username '%s' with error '%s'" % (username, e))
 
     def qbittorrent_search(self):
 
@@ -68,6 +68,6 @@ class TorrentClients(object):
 
         self.logger_instance.debug(u"Magnet/Torrent link is '%s'" % download_url)
 
-        # add torrent/magnet to queue
-        self.qbt_client.torrents_add(urls=download_url, category='movies-siphonator', is_paused=True)
+        # add torrent/magnet to quue
+        self.qbt_client.torrents_add(urls=download_url, category='movies-siphonator', is_paused=self.add_paused_bool)
         self.qbt_client.torrents_reannounce(torrent_hashes='all')
