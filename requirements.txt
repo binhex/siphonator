@@ -1,0 +1,14 @@
+backoff					# function decorator for backoff and retry for requests
+imdbpie					# python IMDB client using the IMDB JSON web service made available for their iOS application
+xmltodict				# xmltodict is a simple library that aims at making XML feel like working with JSON
+mako					# Mako is a web template library written in Python
+uvicorn					# Alternative to tornado, is async so much faster!
+tornado					# Tornado is a Python web framework - non blocking i/o
+tornroutes				# web server routes decorator
+requests				# http library for humans
+urllib3					# referenced by requests
+sqlalchemy				# SQLAlchemy is the Python SQL toolkit and Object Relational Mapper that gives developers the full power and flexibility of SQL.
+validators				# used to validate data from user e.g. email, url etc
+configobj				# config reading, writing and validation
+ConfigArgParse			# drop-in replacement for argparse that allows options to be set via cli, config files and/or environment variables
+qbittorrent-api			# API support to add torrents/magnets to qbittorrent
