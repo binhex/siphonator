@@ -10,7 +10,6 @@ tornado					# Tornado is a Python web framework - non blocking i/o
 tornroutes				# web server routes decorator
 requests				# http library for humans
 urllib3					# referenced by requests
-shortier				# URL shortner, used to get arond issues with magnet links not working in email notifications
 sqlalchemy				# SQLAlchemy is the Python SQL toolkit and Object Relational Mapper that gives developers the full power and flexibility of SQL.
 validators				# used to validate data from user e.g. email, url etc
 configobj				# config reading, writing and validation
