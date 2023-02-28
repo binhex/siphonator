@@ -3,8 +3,10 @@ import lib.siphonator.tools_various as siphonator_tools_various
 import lib.siphonator.search_all as siphonator_search_all
 import lib.siphonator.imdb_imdbpie as siphonator_imdb_imdbpie
 import lib.siphonator.filter_movies as siphonator_filter_movies
+import lib.siphonator.torrent_clients as siphonator_torrent_clients
+import lib.siphonator.notification_email as siphonator_notification_email
 import xmltodict
-import re
+import urllib.parse
 #
 # example with keyword filter (1080p)
 # http://192.168.1.10:1900/api/v2.0/indexers/all/results/torznab/api?apikey=o4xte43ftp56m64aknxch4pe7cp3lhaj&t=search&cat=&q=1080p&
@@ -44,44 +46,42 @@ import re
 # MG processes list of dicts for each group against the filters
 
 
-class IndexTorznab(object):
+class IndexProxy(object):
 
     def __init__(self, logger_instance, **kwargs):
 
         self.index_dict = kwargs
-        self.index_title_regex = kwargs.get('index_title_regex', None)
-        self.index_year_regex = kwargs.get('index_year_regex', None)
         self.search_site = 'TMDb'
         self.logger_instance = logger_instance
 
     # in logger_instance,kwargs for construct url (host, port, api_key, category, search, limit, user_agent)
     # out return_code, status_code, content
-    def torznab_download(self):
+    def jackett(self):
 
         if self.index_dict is not None:
 
             self.index_dict.update({'search_site': self.search_site})
 
-            if "host" in self.index_dict:
-                host = self.index_dict['host']
+            if "index_proxy_jackett_host" in self.index_dict:
+                host = self.index_dict['index_proxy_jackett_host']
             else:
                 self.logger_instance.warning(u'No hostname sent to function, exiting function...')
                 return 1, None
 
-            if "port" in self.index_dict:
-                port = self.index_dict['port']
+            if "index_proxy_jackett_port" in self.index_dict:
+                port = self.index_dict['index_proxy_jackett_port']
             else:
                 self.logger_instance.warning(u'No port sent to function, exiting function...')
                 return 1, None
 
-            if "api_key" in self.index_dict:
-                api_key = self.index_dict['api_key']
+            if "index_proxy_jackett_api_key" in self.index_dict:
+                api_key = self.index_dict['index_proxy_jackett_api_key']
             else:
                 self.logger_instance.warning(u'No api_key sent to function, exiting function...')
                 return 1, None
 
-            if "category" in self.index_dict:
-                category = self.index_dict['category']
+            if "index_site_category" in self.index_dict:
+                category = self.index_dict['index_site_category']
             else:
                 self.logger_instance.warning(u'No category sent to function, exiting function...')
                 return 1, None
@@ -92,15 +92,17 @@ class IndexTorznab(object):
                 self.logger_instance.warning(u'No index site sent to function, defaulting to \'all\'')
                 index_site = "all"
 
-            if "search" in self.index_dict:
-                search = self.index_dict['search']
+            if "index_site_search" in self.index_dict:
+                search = self.index_dict['index_site_search']
                 search = search.replace(",", " ")
+                # url encode search string
+                search = urllib.parse.quote_plus(search)
             else:
                 self.logger_instance.warning(u'No search sent to function, exiting function...')
                 return 1, None
 
-            if "limit" in self.index_dict:
-                limit = self.index_dict['limit']
+            if "index_proxy_jackett_limit" in self.index_dict:
+                limit = self.index_dict['index_proxy_jackett_limit']
             else:
                 self.logger_instance.warning(u'No limit sent to function, exiting function...')
                 return 1, None
@@ -111,8 +113,8 @@ class IndexTorznab(object):
                 self.logger_instance.warning(u'No user_agent sent to function, exiting function...')
                 return 1, None
 
-            if "read_timeout" in self.index_dict:
-                read_timeout = self.index_dict['read_timeout']
+            if "index_proxy_jackett_read_timeout" in self.index_dict:
+                read_timeout = self.index_dict['index_proxy_jackett_read_timeout']
             else:
                 read_timeout = 30.0
                 self.logger_instance.info(u'No read timeout sent to function, defaulting to %s seconds' % read_timeout)
@@ -135,7 +137,8 @@ class IndexTorznab(object):
             site_feed_parse = site_feed_parse["rss"]["channel"]["item"]
 
         except (ValueError, TypeError, KeyError):
-            self.logger_instance.warning(u'Unable to process feed from index site')
+
+            self.logger_instance.warning(u"Unable to process feed from index site '%s'" % index_site)
             return 1
 
         # this breaks down the rss feed page into tag sections
@@ -143,12 +146,19 @@ class IndexTorznab(object):
 
             seeders = None
             peers = None
-            magneturl = None
-            torrenturl = None
+            magnet_url = None
+            torrent_url = None
 
             results_dict = self.index_dict
 
-            list_named_attributes = node['http://torznab.com/schemas/2015/feed:attr']
+            try:
+
+                list_named_attributes = node['http://torznab.com/schemas/2015/feed:attr']
+
+            except TypeError:
+
+                self.logger_instance.warning(u"Unable to process attributes from index site '%s'" % index_site)
+                return 1
 
             for i in list_named_attributes:
 
@@ -162,15 +172,13 @@ class IndexTorznab(object):
 
                     peers = i['@value']
 
-                if attribute_name == "magneturl":
+                if attribute_name == "magnet_url":
 
-                    magneturl = i['@value']
+                    magnet_url = i['@value']
 
             try:
 
                 title = node["title"]
-                # replace dots with spaces to allow for bad keyword matching in filter_movies
-                title = re.sub(r'\.', " ", title).lower()
 
             except (KeyError, TypeError, IndexError, AttributeError):
 
@@ -184,17 +192,19 @@ class IndexTorznab(object):
 
                 link = None
 
-            if link != magneturl:
+            if link != magnet_url:
 
-                torrenturl = link
+                torrent_url = link
 
             try:
 
                 size = node["size"]
+                size_mb = int(size) // 1000000
 
             except (KeyError, TypeError, IndexError, AttributeError):
 
                 size = None
+                size_mb = None
 
             try:
 
@@ -220,9 +230,19 @@ class IndexTorznab(object):
 
                 pubdate = None
 
-            self.logger_instance.info(u"Getting title and year from index title using regex...")
-            results_dict.update({'index_title': title, 'torrenturl': torrenturl, 'index_size': size, 'download_link': details, 'index_comments': comments, 'index_pubdate': pubdate, 'index_seeders': seeders, 'index_peers': peers, 'magneturl': magneturl})
+            self.logger_instance.info(u"Starting processing index title '%s'..." % title)
+            results_dict.update({'index_title': title, 'torrent_url': torrent_url, 'index_size': size, 'index_size_mb': size_mb, 'download_link': details, 'index_comments': comments, 'index_pubdate': pubdate, 'index_seeders': seeders, 'index_peers': peers, 'magnet_url': magnet_url})
             results_dict = siphonator_tools_various.get_title_and_year_from_index_title(self.logger_instance, **results_dict)
+
+            if results_dict is not None:
+
+                self.logger_instance.info(u"Filtering movie based on index details...")
+                filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, **results_dict)
+                results_dict = filter_movies_instance.filter_index_movies()
+
+            else:
+
+                continue
 
             if results_dict is not None:
 
@@ -234,7 +254,7 @@ class IndexTorznab(object):
 
                 continue
 
-            self.logger_instance.debug(u"Results dict is '%s'" % results_dict)
+            #self.logger_instance.debug(u"Results dict is '%s'" % results_dict)
 
             if results_dict is not None:
 
@@ -247,19 +267,23 @@ class IndexTorznab(object):
 
             if results_dict is not None:
 
-                get_title_type = results_dict.get('title_type')
-
-                if get_title_type != 'movie':
-
-                    self.logger_instance.warning(u"Index title type '%s' is != 'movie'" % get_title_type)
-                    continue
-
-            if results_dict is not None:
-
-                self.logger_instance.info(u"Filtering movie based on criteria..")
+                self.logger_instance.info(u"Filtering movie based on IMDb details...")
                 filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, **results_dict)
-                results_dict = filter_movies_instance.filter_movies()
+                results_dict = filter_movies_instance.filter_imdb_movies()
 
             else:
 
                 continue
+
+            if results_dict is not None:
+
+                self.logger_instance.debug(u"woot")
+
+                if self.index_dict.get('notification_email_enabled'):
+
+                    self.logger_instance.info(u"E-mail notification enabled, sending E-mail...")
+                    notification_email_instance = siphonator_notification_email.NotificationEmail(self.logger_instance, **results_dict)
+                    notification_email_instance.email_send()
+
+                torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, **results_dict)
+                torrent_client_instance.qbittorrent_add()

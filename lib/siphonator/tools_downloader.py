@@ -82,7 +82,7 @@ def http_client(logger_instance, **kwargs):
     connect_timeout = 30.0
 
     # set read timeout value (max time to wait between each byte)
-    read_timeout = 10.0
+    read_timeout = 30.0
 
     # use a session instance to customize how "requests" handles making http requests
     session = requests.Session()

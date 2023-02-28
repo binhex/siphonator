@@ -1,34 +1,73 @@
 import qbittorrentapi
 
-# instantiate a Client using the appropriate WebUI configuration
-qbt_client = qbittorrentapi.Client(
-    host='192.168.1.10',
-    port=2100,
-    username='admin',
-    password='adminadmin',
-)
+# TODO search and identify if existing movie already paused/downloading/downloaded
+# TODO read in user defined option to add torrent/magnet in paused or started state, currently hard set to paused
 
-# the Client will automatically acquire/maintain a logged-in state
-# in line with any request. therefore, this is not strictly necessary;
-# however, you may want to test the provided login credentials.
-try:
-    qbt_client.auth_log_in()
-except qbittorrentapi.LoginFailed as e:
-    print(e)
+class TorrentClients(object):
 
-# display qBittorrent info
-print(f'qBittorrent: {qbt_client.app.version}')
-print(f'qBittorrent Web API: {qbt_client.app.web_api_version}')
-for k,v in qbt_client.app.build_info.items(): print(f'{k}: {v}')
+    def __init__(self, logger_instance, **kwargs):
 
-# retrieve and show all torrents
-for torrent in qbt_client.torrents_info():
-    print(f'{torrent.hash[-6:]}: {torrent.name} ({torrent.state})')
+        self.index_dict = kwargs
+        self.logger_instance = logger_instance
 
-# pause all torrents
-qbt_client.torrents.pause.all()
+    #def qbittorrent_auth(self):
 
-# add torrent magnet link
-qbt_client.torrents_add(urls='magnet:?xt=urn:btih:df64fbe3d389fc5b520317e6525933abaa086591&dn=Swan.Song.2021.1080p.BluRay.AVC.DTS-HD.MA.5.1-INCUBO&tr=http%3A%2F%2Ftracker.trackerfix.com%3A80%2Fannounce&tr=udp%3A%2F%2F9.rarbg.me%3A2830&tr=udp%3A%2F%2F9.rarbg.to%3A2840&tr=udp%3A%2F%2Ftracker.thinelephant.org%3A12710&tr=udp%3A%2F%2Ftracker.slowcheetah.org%3A14720')
-qbt_client.torrents_reannounce(torrent_hashes='all')
+        host = self.index_dict['torrent_client_qbittorrent_host']
+        port = self.index_dict['torrent_client_qbittorrent_port']
+        username = self.index_dict['torrent_client_qbittorrent_username']
+        password = self.index_dict['torrent_client_qbittorrent_password']
 
+        # instantiate a Client using the appropriate WebUI configuration
+        self.qbt_client = qbittorrentapi.Client(
+            host = host,
+            port = port,
+            username = username,
+            password = password,
+        )
+
+        # the Client will automatically acquire/maintain a logged-in state
+        # in line with any request. therefore, this is not strictly necessary;
+        # however, you may want to test the provided login credentials.
+        try:
+
+            self.qbt_client.auth_log_in()
+
+        except qbittorrentapi.LoginFailed as e:
+
+            self.logger_instance.warning(u"Qbittorrent login failed for username '%s' with error '%s'" % (username, e))
+
+    def qbittorrent_search(self):
+
+        # display qBittorrent info
+        print(f'qBittorrent: {self.qbt_client.app.version}')
+        print(f'qBittorrent Web API: {self.qbt_client.app.web_api_version}')
+        for k,v in self.qbt_client.app.build_info.items(): print(f'{k}: {v}')
+
+        # retrieve and show torrents tagged as added by siphonator
+        for torrent in self.qbt_client.torrents_info(tag='siphonator'):
+            print(f'{torrent.hash[-6:]}: {torrent.name} ({torrent.state})')
+
+    def qbittorrent_queue(self):
+
+        # pause all torrents
+        self.qbt_client.torrents.pause.all()
+
+    def qbittorrent_add(self):
+
+        # TODO seems to be a bug in getting torrent_url, seems to be magnet or empty?
+        download_url = self.index_dict['magnet_url']
+        if download_url is None:
+
+            self.logger_instance.info(u"No magnet link present for index title '%s', trying torrent file..." % self.index_dict['index_title'])
+
+            download_url = self.index_dict['torrent_url']
+            if download_url is None:
+
+                self.logger_instance.info(u"No torrent file present, cannot download index title '%s'" % self.index_dict['index_title'])
+                return None
+
+        self.logger_instance.debug(u"Magnet/Torrent link is '%s'" % download_url)
+
+        # add torrent/magnet to queue
+        self.qbt_client.torrents_add(urls=download_url, category='movies-siphonator', is_paused=True)
+        self.qbt_client.torrents_reannounce(torrent_hashes='all')

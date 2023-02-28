@@ -1,0 +1,46 @@
+import nmdmail
+
+class NotificationEmail(object):
+
+    def __init__(self, logger_instance, **kwargs):
+
+        self.index_dict = kwargs
+        self.logger_instance = logger_instance
+        self.smtp = {
+            'host': self.index_dict.get('notification_email_host'),
+            'port': self.index_dict.get('notification_email_port'),
+            'tls': self.index_dict.get('notification_email_enable_tls'),
+            'ssl': self.index_dict.get('notification_email_enable_ssl'),
+            'user': self.index_dict.get('notification_email_username'),
+            'password': self.index_dict.get('notification_email_password')
+        }
+
+    def email_send(self):
+
+        imdb_title = self.index_dict.get('imdb_title')
+        imdb_year = self.index_dict.get('imdb_year')
+        imdb_id = self.index_dict.get('imdb_id')
+        imdb_rating = self.index_dict.get('imdb_rating')
+        imdb_votes = self.index_dict.get('imdb_votes')
+        imdb_plot = self.index_dict.get('imdb_plot_summary') #none?
+        imdb_credits_cast_list = self.index_dict.get('imdb_credits_cast_list')
+        imdb_actors = ", ".join(imdb_credits_cast_list)
+        imdb_genres_list = self.index_dict.get('imdb_genres_list')
+        imdb_genres = ", ".join(imdb_genres_list)
+        index_title = self.index_dict.get('index_title')
+        index_size_mb = self.index_dict.get('index_size_mb')
+        content = """
+**Title:** [%s (%s)](https://imdb.com/title/%s) %s from %s users<br/><br/>
+**Plot:** %s<br/><br/>
+**Actors:** %s<br/><br/>
+**Genres:** %s<br/><br/>
+**Release:** %s<br/><br/>
+**Size:** %s MB
+        """ % (imdb_title, imdb_year, imdb_id, imdb_rating, imdb_votes, imdb_plot, imdb_actors, imdb_genres, index_title, index_size_mb)
+
+        # TODO work out action from qbittorrent client, eg. paused or download
+        nmdmail.send(content,
+            subject='Siphonator: %s (%s) - IMDb rating %s - Action Queued' % (imdb_title, imdb_year, imdb_rating),
+            from_email=self.index_dict.get('notification_email_from_address'),
+            to_email=self.index_dict.get('notification_email_to_address'),
+            smtp=self.smtp)

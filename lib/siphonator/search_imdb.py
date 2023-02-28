@@ -1,103 +1,94 @@
 import re
 import imdbpie
 
-# fixme need to regex for Blade Runner 2049 (2017) as it is assuming year is 2049
-
 
 class SearchIMDB(object):
 
     def __init__(self, logger_instance, **kwargs):
 
         self.index_dict = kwargs
-        self.index_title = kwargs.get('index_title', None)
-        self.search_site = 'IMDb'
+        self.index_title_search = kwargs.get('index_title_search', None)
+        self.index_title_compare = kwargs.get('index_title_compare', None)
+        self.index_year_compare = kwargs.get('index_year_compare', None)
         self.logger_instance = logger_instance
-        self.index_title_regex = kwargs.get('index_title_regex', None)
-        self.index_year_regex = kwargs.get('index_year_regex', None)
 
-    def roman_to_dec(self, title):
+    def find_imdb_id_imdb(self):
 
-        title = re.sub('\sI\s?$', '1', title)
-        title = re.sub('\sII\s?$', '2', title)
-        title = re.sub('\sIII\s?$', '3', title)
-        title = re.sub('\sIV\s?$', '4', title)
-        title = re.sub('\sV\s?$', '5', title)
-        title = re.sub('\sVI\s?$', '6', title)
-        title = re.sub('\sVII\s?$', '7', title)
-        title = re.sub('\sVIII\s?$', '8', title)
-        title = re.sub('\sIX\s?$', '9', title)
-        title = re.sub('\sX\s?$', '10', title)
-
-        return title
-
-    def get_imdb_id(self):
-
-        self.logger_instance.info(u"Searching '%s' for '%s'..." % (self.search_site, self.index_title_regex))
-
+        imdb_title_compare_regex = r'[^a-zA-Z0-9]+'
+        
         imdb_instance = imdbpie.Imdb()
+        imdb_find_id_dict = imdb_instance.search_for_title(self.index_title_compare)
 
-        try:
-            imdb_title_search_list_dict = imdb_instance.search_for_title(self.index_title_regex)
-        except AttributeError:
-            self.logger_instance.warning(u"No match found for index title '%s' using search site '%s'" % (self.index_title_regex, self.search_site))
+        # if resulting imdb json page is blank then continue
+        if imdb_find_id_dict == {}:
+
+            self.logger_instance.info(u"No match for movie title '%s' on IMDb json" % self.index_title_search)
             return None
 
-        if not imdb_title_search_list_dict:
+        for imdb_find_id in imdb_find_id_dict:
 
-            self.logger_instance.warning(u'%s did not return any results' % self.search_site)
-            return None
+            # find imdb title
+            try:
 
-        else:
+                imdb_title = imdb_find_id["title"]
+                self.logger_instance.info(u"IMDb title is '%s'" % imdb_title)
 
-            self.logger_instance.info(u'Results returned')
+            except (IndexError, KeyError, TypeError):
 
-        strip_title_compare_regex = re.compile('[-()/:;*?"<>|.,`~!%_\'\s]+')
-        title_clean_regex = re.compile('[/:*?"<>|]+')
+                self.logger_instance.info(u"Cannot find IMDb Title for movie")
+                continue
 
-        index_title_roman = self.roman_to_dec(self.index_title_regex)
-        index_title_regex_compare = re.sub(strip_title_compare_regex, '', index_title_roman)
-        index_title_regex_compare = re.sub('and|And', '&', index_title_regex_compare)
+            if imdb_title is None:
 
-        # loop over list of dicts with possible match
-        for i in imdb_title_search_list_dict:
+                self.logger_instance.debug(u"IMDb title is None, cannot compare")
+                continue
 
-            imdb_title = i.get("title")
-            imdb_year = i.get("year")
+            imdb_title_compare = re.sub(imdb_title_compare_regex, '', imdb_title).lower()
+            
+            if imdb_title_compare not in self.index_title_compare:
 
-            self.logger_instance.debug(u'%s title possible match is %s %s' % (self.search_site, imdb_title, imdb_year))
+                self.logger_instance.debug(u"IMDb title compare '%s' not in index title compare '%s'" % (imdb_title_compare, self.index_title_compare))
+                continue
 
-            if imdb_year == self.index_year_regex:
+            self.logger_instance.debug(u"IMDb title compare '%s' matches index title compare '%s'" % (imdb_title_compare, self.index_title_compare))
 
-                if imdb_title:
+            # find imdb year
+            try:
 
-                    imdb_title_compare = self.roman_to_dec(imdb_title)
-                    imdb_title_compare = re.sub(strip_title_compare_regex, '', imdb_title_compare)
-                    imdb_title_compare = re.sub('and|And', '&', imdb_title_compare)
-                    imdb_title_clean = re.sub(title_clean_regex, '', imdb_title)
+                imdb_year = imdb_find_id["year"]
+                self.logger_instance.info(u"IMDb year is '%s'" % imdb_year)
 
-                    if imdb_title_compare.lower() == index_title_regex_compare.lower():
+            except (IndexError, KeyError, TypeError):
 
-                        imdb_year = i.get("year")
-                        imdb_id = i.get("imdb_id")
+                self.logger_instance.info(u"Cannot find IMDb year for movie")
+                continue
 
-                        self.index_dict.update({'imdb_title': imdb_title_clean, 'imdb_id': imdb_id, 'imdb_year': imdb_year})
-                        self.logger_instance.info(u"%s year '%s' and download year regex '%s' match for %s title '%s'" % (self.search_site, imdb_year, self.index_year_regex, self.search_site, imdb_title))
-                        self.logger_instance.info(u"IMDb ID for movie '%s' is '%s'" % (imdb_title, imdb_id))
+            if imdb_year is None:
 
-                        return self.index_dict
+                self.logger_instance.debug(u"IMDb year is None, cannot compare")
+                continue
 
-                    else:
+            if int(imdb_year) != int(self.index_year_compare):
 
-                        self.logger_instance.info(u'%s title %s and download title regex %s do not match' % (self.search_site, imdb_title_compare, index_title_regex_compare))
-                else:
+                self.logger_instance.debug(u"IMDb year compare '%s' does not equal index year compare '%s'" % (imdb_year, self.index_year_compare))
+                continue
 
-                    # unable to get title - bad data from IMDb site?
-                    self.logger_instance.warning(u'No title returned from %s' % self.search_site)
-                    return None
+            self.logger_instance.debug(u"IMDb year compare '%s' equals index year compare '%s'" % (imdb_year, self.index_year_compare))
 
-            else:
+            # find imdb id
+            try:
 
-                self.logger_instance.debug(u'%s year %s and download year regex %s do not match' % (self.search_site, imdb_year, self.index_year_regex))
+                imdb_id = imdb_find_id["imdb_id"]
+                self.logger_instance.info(u"IMDb id is '%s'" % imdb_id)
 
-        self.logger_instance.warning(u'No match found using %s search' % self.search_site)
+            except (IndexError, KeyError, TypeError):
+
+                self.logger_instance.info(u"Cannot find IMDb id for movie")
+                continue
+
+            self.logger_instance.info(u"IMDb ID URL is 'https://www.imdb.com/title/%s/'" % imdb_id)
+            self.index_dict.update({'imdb_id': imdb_id})
+
+            return self.index_dict
+
         return None

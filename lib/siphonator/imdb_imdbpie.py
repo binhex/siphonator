@@ -13,10 +13,16 @@ def imdb_json_api(logger_instance, **kwargs):
     imdb_id = imdb_dict.get('imdb_id', None)
     logger_instance.info(u"Getting title attributes for movie with IMDb ID '%s'..." % imdb_id)
 
-    imdb_instance = imdbpie.Imdb()
+    try:
+        imdb_instance = imdbpie.Imdb()
+    except OSError:
+        logger_instance.warning(u"Cannot connect to IMDb")
+        return None
+
     imdb_get_title_dict = imdb_instance.get_title(str(imdb_id))
     imdb_get_title_genres_dict = imdb_instance.get_title_genres(str(imdb_id))
     imdb_get_title_credits_dict = imdb_instance.get_title_credits(str(imdb_id))
+    imdb_get_title_auxiliary_dict = imdb_instance.get_title_auxiliary(str(imdb_id))
 
     try:
         credits_director_json = (imdb_get_title_credits_dict['credits']['director'])
@@ -49,10 +55,29 @@ def imdb_json_api(logger_instance, **kwargs):
         credits_character_list = None
 
     try:
+        spoken_languages_list = imdb_get_title_auxiliary_dict['spokenLanguages']
+
+    except:
+        logger_instance.warning(u"Unable to identify IMDb Spoken Languages")
+        spoken_languages_list = None
+
+    try:
         genres_list = (imdb_get_title_genres_dict['genres'])
     except:
         logger_instance.warning(u"Unable to identify IMDb Genres")
         genres_list = None
+
+    try:
+        imdb_title = (imdb_get_title_dict['base']['title'])
+    except:
+        logger_instance.warning(u"Unable to identify IMDb Title")
+        imdb_title = None
+
+    try:
+        imdb_year = (imdb_get_title_dict['base']['year'])
+    except:
+        logger_instance.warning(u"Unable to identify IMDb Year")
+        imdb_year = None
 
     try:
         poster_url = (imdb_get_title_dict['base']['image']['url'])
@@ -90,9 +115,10 @@ def imdb_json_api(logger_instance, **kwargs):
         logger_instance.warning(u"Unable to identify IMDb rating count")
         votes = None
 
-    imdb_dict.update({'poster_url': poster_url, 'plot_summary': plot_summary, 'rating': rating, 'votes': votes,
-                      'title_type': title_type, 'running_time_in_minutes': running_time_in_minutes,
-                      'genres_list': genres_list, 'credits_director_list': credits_director_list,
-                      'credits_cast_list': credits_cast_list, 'credits_character_list': credits_character_list})
+    imdb_dict.update({'imdb_title': imdb_title, 'imdb_year': imdb_year, 'imdb_poster_url': poster_url, 'imdb_plot_summary': plot_summary, 'imdb_rating': rating, 'imdb_votes': votes,
+                      'imdb_title_type': title_type, 'imdb_running_time_in_minutes': running_time_in_minutes,
+                      'imdb_genres_list': genres_list, 'imdb_credits_director_list': credits_director_list,
+                      'imdb_credits_cast_list': credits_cast_list, 'imdb_spoken_languages_list': spoken_languages_list,
+                      'imdb_credits_character_list': credits_character_list})
 
     return imdb_dict
