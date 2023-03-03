@@ -15,24 +15,26 @@ class SearchAll(object):
     def search(self):
 
         search_imdb_instance = siphonator_search_imdb.SearchIMDB(self.logger_instance, **self.index_dict)
-        results_dict = search_imdb_instance.find_imdb_id_imdb()
+        self.index_dict = search_imdb_instance.find_imdb_id_imdb()
 
-        if results_dict is None:
+        if self.index_dict.get('result') == 'failed':
 
             self.logger_instance.warning(u"Failed to identify ID from IMDb, switching to TMDb...")
 
             search_tmdb_instance = siphonator_search_tmdb.SearchTMDB(self.logger_instance, **self.index_dict)
-            results_dict = search_tmdb_instance.find_imdb_id_tmdb()
+            self.index_dict = search_tmdb_instance.find_imdb_id_tmdb()
 
-            if results_dict is None:
+            if self.index_dict.get('result') == 'failed':
 
                 self.logger_instance.warning(u"Failed to identify ID from TMDb, switching to OMDb...")
 
                 search_omdb_instance = siphonator_search_omdb.SearchOMDb(self.logger_instance, **self.index_dict)
-                results_dict = search_omdb_instance.find_imdb_id_omdb()
+                self.index_dict = search_omdb_instance.find_imdb_id_omdb()
 
-                if results_dict is None:
+                if self.index_dict.get('result') == 'failed':
 
                     self.logger_instance.warning(u"Failed to identify ID from OMDb, no other methods currently defined")
+                    return self.index_dict
 
-        return results_dict
+        self.index_dict.update({'result': 'success', 'result_details': u"Identified IMDb ID using search"})
+        return self.index_dict

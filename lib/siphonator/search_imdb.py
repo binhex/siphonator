@@ -23,7 +23,8 @@ class SearchIMDB(object):
         if imdb_find_id_dict == {}:
 
             self.logger_instance.info(u"No match for movie title '%s' on IMDb json" % self.index_title_search)
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"No match for movie title '%s' on IMDb json" % self.index_title_search})
+            return self.index_dict
 
         for imdb_find_id in imdb_find_id_dict:
 
@@ -89,6 +90,8 @@ class SearchIMDB(object):
             self.logger_instance.info(u"IMDb ID URL is 'https://www.imdb.com/title/%s/'" % imdb_id)
             self.index_dict.update({'imdb_id': imdb_id})
 
+            self.index_dict.update({'result': 'success', 'result_details': u"Found IMDb ID for movie '%s' using IMDb search" % self.index_title_search})
             return self.index_dict
 
-        return None
+        self.index_dict.update({'result': 'failed', 'result_details': u"Failed to identify movie '%s' using IMDb search" % self.index_title_search})
+        return self.index_dict

@@ -32,7 +32,8 @@ class SearchTMDB(object):
         if return_code != 0:
 
             self.logger_instance.warning(u"Site feed download failed for TMDb")
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+            return self.index_dict
 
         try:
 
@@ -41,13 +42,15 @@ class SearchTMDB(object):
         except (ValueError, TypeError, KeyError):
 
             self.logger_instance.warning(u"Site feed parse failed for TMDb")
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"Site feed parse failed for TMDb"})
+            return self.index_dict
 
         # if resulting tmdb json page is blank then continue
         if tmdb_find_id_json == {}:
 
-            self.logger_instance.info(u"No match for movie title %s on TMDb json" % self.index_title_search)
-            return None
+            self.logger_instance.info(u"No match for movie title '%s' on TMDb json" % self.index_title_search)
+            self.index_dict.update({'result': 'failed', 'result_details': u"No match for movie title '%s' on TMDb json" % self.index_title_search})
+            return self.index_dict
 
         for tmdb_find_id in tmdb_find_id_json["results"]:
 
@@ -87,7 +90,8 @@ class SearchTMDB(object):
             except (IndexError, KeyError, TypeError):
 
                 self.logger_instance.info(u"Cannot find TMDb ID for movie")
-                return None
+                self.index_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                return self.index_dict
 
             # generate url to find imdb tt number using tmdb id number from previous search
             tmdb_find_tt_json_url = "https://api.themoviedb.org/3/movie/%s?api_key=%s" % (tmdb_movie_id, search_tmdb_api_key)
@@ -101,7 +105,8 @@ class SearchTMDB(object):
             if return_code != 0:
 
                 self.logger_instance.warning(u"Site feed download failed for TMDb")
-                return None
+                self.index_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                return self.index_dict
 
             try:
 
@@ -110,11 +115,13 @@ class SearchTMDB(object):
             except (ValueError, TypeError, KeyError):
 
                 self.logger_instance.warning(u"Site feed parse failed for TMDb")
-                return None
+                self.index_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                return self.index_dict
 
             if tmdb_find_tt_json is None or tmdb_find_tt_json == {}:
                 self.logger_instance.info(u"No IMDb ID for movie title %s on TMDb json" % self.index_title_search)
-                return None
+                self.index_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                return self.index_dict
 
             try:
 
@@ -124,16 +131,21 @@ class SearchTMDB(object):
             except (IndexError, KeyError, TypeError):
 
                 self.logger_instance.info(u"Cannot find IMDb ID for movie")
-                return None
+                self.index_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                return self.index_dict
 
             if imdb_id is None or imdb_id == "":
 
                 self.logger_instance.warning(u"IMDb ID is None, unable to identify valid value")
-                return None
+                self.index_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                return self.index_dict
 
             self.logger_instance.info(u"IMDb ID URL is 'https://www.imdb.com/title/%s/'" % imdb_id)
             self.index_dict.update({'imdb_id': imdb_id})
 
+            self.index_dict.update({'result': 'success', 'result_details': u"Found IMDb ID for movie '%s' using TMDb search" % self.index_title_search})
             return self.index_dict
 
-        return None
+        self.index_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+        return self.index_dict
+

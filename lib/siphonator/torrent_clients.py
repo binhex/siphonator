@@ -1,7 +1,6 @@
 import qbittorrentapi
 
 # TODO search and identify if existing movie already paused/downloading/downloaded
-# TODO read in user defined option to add torrent/magnet in paused or started state, currently hard set to paused
 
 class TorrentClients(object):
 
@@ -9,7 +8,7 @@ class TorrentClients(object):
 
         self.index_dict = kwargs
         self.logger_instance = logger_instance
-        self.add_paused_bool = self.index_dict['torrent_client_qbittorrent_add_paused'].lower()
+        self.add_paused_bool = self.index_dict['torrent_client_qbittorrent_add_paused']
 
         host = self.index_dict['torrent_client_qbittorrent_host']
         port = self.index_dict['torrent_client_qbittorrent_port']

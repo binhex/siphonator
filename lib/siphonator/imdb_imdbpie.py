@@ -5,19 +5,20 @@ import imdbpie
 
 def imdb_json_api(logger_instance, **kwargs):
 
-    imdb_dict = kwargs
+    index_dict = kwargs
     credits_cast_list = []
     credits_director_list = []
     credits_character_list = []
 
-    imdb_id = imdb_dict.get('imdb_id', None)
+    imdb_id = index_dict.get('imdb_id', None)
     logger_instance.info(u"Getting title attributes for movie with IMDb ID '%s'..." % imdb_id)
 
     try:
         imdb_instance = imdbpie.Imdb()
     except OSError:
         logger_instance.warning(u"Cannot connect to IMDb")
-        return None
+        index_dict.update({'result': 'failed', 'result_details': u"Cannot connect to IMDb"})
+        return index_dict
 
     imdb_get_title_dict = imdb_instance.get_title(str(imdb_id))
     imdb_get_title_genres_dict = imdb_instance.get_title_genres(str(imdb_id))
@@ -115,10 +116,11 @@ def imdb_json_api(logger_instance, **kwargs):
         logger_instance.warning(u"Unable to identify IMDb rating count")
         votes = None
 
-    imdb_dict.update({'imdb_title': imdb_title, 'imdb_year': imdb_year, 'imdb_poster_url': poster_url, 'imdb_plot_summary': plot_summary, 'imdb_rating': rating, 'imdb_votes': votes,
+    index_dict.update({'imdb_title': imdb_title, 'imdb_year': imdb_year, 'imdb_poster_url': poster_url, 'imdb_plot_summary': plot_summary, 'imdb_rating': rating, 'imdb_votes': votes,
                       'imdb_title_type': title_type, 'imdb_running_time_in_minutes': running_time_in_minutes,
                       'imdb_genres_list': genres_list, 'imdb_credits_director_list': credits_director_list,
                       'imdb_credits_cast_list': credits_cast_list, 'imdb_spoken_languages_list': spoken_languages_list,
                       'imdb_credits_character_list': credits_character_list})
 
-    return imdb_dict
+    index_dict.update({'result': 'success', 'result_details': u"Identified IMDb metadata using IMDbPie"})
+    return index_dict

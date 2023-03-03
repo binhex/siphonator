@@ -1,27 +1,30 @@
 import re
 import os
 
-def get_title_and_year_from_index_title(logger_instance, **search_dict):
+def get_title_and_year_from_index_title(logger_instance, **index_dict):
 
-    if search_dict is None:
+    if index_dict is None:
 
         logger_instance.warning(u'No kwargs sent to function')
         return None
 
+
     else:
 
-        index_title = search_dict.get('index_title', None)
-        search_site = search_dict.get('search_site', None)
+        index_title = index_dict.get('index_title', None)
+        search_site = index_dict.get('search_site', None)
 
         if index_title is None:
 
-            logger_instance.warning(u"Index title not found in dictionary '%s'" % search_dict)
-            return None
+            logger_instance.warning(u"Index title not found in dictionary '%s'" % index_dict)
+            index_dict.update({'result': 'failed', 'result_details': 'Index title not found'})
+            return index_dict
 
         if search_site is None:
 
-            logger_instance.warning(u"Search site not found in dictionary '%s'" % search_dict)
-            return None
+            logger_instance.warning(u"Search site not found in dictionary '%s'" % index_dict)
+            index_dict.update({'result': 'failed', 'result_details': 'Search site not found'})
+            return index_dict
 
     logger_instance.info(u"Index title is '%s'" % index_title)
 
@@ -40,14 +43,16 @@ def get_title_and_year_from_index_title(logger_instance, **search_dict):
     if index_title_compare is None:
 
         logger_instance.info(u"Cannot identify compare title from index title '%s' using regex '%s'" % (index_title, index_title_regex_strip))
-        return None
+        index_dict.update({'result': 'failed', 'result_details': 'Cannot identify compare title from index title '})
+        return index_dict
 
     logger_instance.info(u"Index title compare is '%s'" % index_title_compare)
 
     if index_title_search is None:
 
         logger_instance.info(u"Cannot identify search title from index title '%s' using regex '%s'" % (index_title, index_title_regex_search))
-        return None
+        index_dict.update({'result': 'failed', 'result_details': 'Cannot identify search title from index title'})
+        return index_dict
 
     logger_instance.info(u"Index title search is '%s'" % index_title_search)
 
@@ -59,7 +64,8 @@ def get_title_and_year_from_index_title(logger_instance, **search_dict):
     else:
 
         logger_instance.info(u"Cannot identify year to end from index title '%s' using regex '%s'" % (index_title, index_title_remove_year_to_end_regex))
-        return None
+        index_dict.update({'result': 'failed', 'result_details': 'Cannot identify year to end from index title'})
+        return index_dict
 
     index_year_compare = re.search(index_title_year_regex, index_title_year_to_end)
     if index_year_compare:
@@ -69,13 +75,15 @@ def get_title_and_year_from_index_title(logger_instance, **search_dict):
     else:
 
         logger_instance.info(u"Cannot identify search year from index title '%s' using regex '%s'" % (index_title, index_title_year_regex))
-        return None
+        index_dict.update({'result': 'failed', 'result_details': 'Cannot identify search year from index title'})
+        return index_dict
 
     index_year_compare = re.sub(r'[._\s()]+', '', index_year_compare)
 
     logger_instance.info (u"Index year compare is '%s'" % index_year_compare)
-    search_dict.update({'index_title_compare': index_title_compare, 'index_year_compare': index_year_compare, 'index_title_search': index_title_search})
-    return search_dict
+    index_dict.update({'index_title_compare': index_title_compare, 'index_year_compare': index_year_compare, 'index_title_search': index_title_search})
+    index_dict.update({'result': 'success', 'result_details': u'Identified title and year from index title'})
+    return index_dict
 
 def library_path_walk(logger_instance, library_path):
 

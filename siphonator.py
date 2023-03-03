@@ -34,6 +34,7 @@ try:
 
 except ImportError:
 
+    # TODO better solution than this
     # check if app root directory is already on path, if not then append.
     # this is req to allow import of local modules (pex bug):-
     # https://github.com/pantsbuild/pex/issues/340#issuecomment-358775440
@@ -94,15 +95,15 @@ class Siphonator(object):
 
         user_agent = u"Siphonator/%s; https://sourceforge.net/projects/moviegrabber" % current_version
 
-        # create database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance)
-        db_sqlite_instance.create_database(db_path, db_version)
+        # create sqlite database
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, db_filepath)
+        db_sqlite_instance.create_database(db_version)
 
         torrent_client_qbittorrent_host = '192.168.1.10'
         torrent_client_qbittorrent_port = 2100
         torrent_client_qbittorrent_username = 'admin'
         torrent_client_qbittorrent_password = 'adminadmin'
-        torrent_client_qbittorrent_add_paused = True
+        torrent_client_qbittorrent_add_paused = bool(True)
 
         notification_email_enabled = True
         notification_email_host = 'smtp.gmail.com'
@@ -153,7 +154,7 @@ class Siphonator(object):
                                        'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german', 'foreign',
                                        'danish', 'french', 'spanish', 'dutch', 'portuguese', 'portugues', 'ger', 'fre',
                                        'ita', 'spa', 'lpcm', 'hindi', 'nlsubs', 'xvid', 'divx', 'japanese',
-                                       'ads included', 'multi']
+                                       'ads included', 'multi', 'pl']
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
 
@@ -175,6 +176,7 @@ class Siphonator(object):
                     index_site_search.update({'index_site_category': '5000'})
 
                 results_dict = ({'filter_library_path_walk': filter_library_path_walk,
+                                 'db_filepath': db_filepath,
                                  'library_path': library_path,
                                  'index_proxy_jackett_host': index_proxy_jackett_host,
                                  'index_proxy_jackett_port': index_proxy_jackett_port,
@@ -223,6 +225,14 @@ class Siphonator(object):
                 except ImdbAPIError:
                     logger_instance.error(u"IMDbPie having issues contacting IMDb")
 
+        # compress (vacuum) database
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, db_filepath)
+        db_sqlite_instance.vacuum_database()
+
+        # close database
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, db_filepath)
+        db_sqlite_instance.close_database()
+
         logger_instance.info(u"Processing finished at '%s'" % run_current_date_and_time_converted)
 
         if config_schedule_mode == 'foreground':
@@ -264,6 +274,7 @@ if __name__ == '__main__':
     # set folder path for db files
     db_path = os.path.join(app_root_path, u"db")
     db_path = os.path.normpath(db_path)
+    db_filepath = os.path.join(db_path, u"siphonator.db")
 
     # set path for log file
     log_file = os.path.join(logs_path, u"siphonator.log")

@@ -31,7 +31,8 @@ class SearchOMDb(object):
         if return_code != 0:
 
             self.logger_instance.warning(u"Site feed download failed for %s" % self.search_site)
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for %s" % self.search_site})
+            return self.index_dict
 
         try:
 
@@ -40,13 +41,15 @@ class SearchOMDb(object):
         except (ValueError, TypeError, KeyError):
 
             self.logger_instance.warning(u"Site feed parse failed for %s" % self.search_site)
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"Site feed parse failed for %s" % self.search_site})
+            return self.index_dict
 
         # if resulting tmdb json page is blank then continue
         if omdb_find_id_json is None or omdb_find_id_json == {}:
 
             self.logger_instance.info(u"Empty json returned from OMDb for index title search '%s'" % self.index_title_search)
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"Empty json returned from OMDb for index title search '%s'" % self.index_title_search})
+            return self.index_dict
 
         try:
 
@@ -55,7 +58,8 @@ class SearchOMDb(object):
         except (IndexError, KeyError, TypeError):
 
             self.logger_instance.info(u"No title key in json for OMDb for index title search '%s'" % self.index_title_search)
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"No title key in json for OMDb for index title search '%s'" % self.index_title_search})
+            return self.index_dict
 
         try:
 
@@ -64,14 +68,16 @@ class SearchOMDb(object):
         except (IndexError, KeyError, TypeError):
 
             self.logger_instance.info(u"No year key in json for OMDb for index title search '%s'" % self.index_title_search)
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"No year key in json for OMDb for index title search '%s'" % self.index_title_search})
+            return self.index_dict
 
         omdb_title_compare = re.sub(omdb_title_regex_strip, '', omdb_title).lower()
 
         if omdb_title_compare not in self.index_title_compare:
 
             self.logger_instance.debug(u"OMDb title compare '%s' not in index title compare '%s', trying original title..." % (omdb_title_compare, self.index_title_compare))
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"OMDb title compare '%s' not in index title compare '%s', trying original title..." % (omdb_title_compare, self.index_title_compare)})
+            return self.index_dict
 
         self.logger_instance.debug(u"OMDb title compare '%s' matches index title compare '%s'" % (omdb_title_compare, self.index_title_compare))
 
@@ -81,7 +87,8 @@ class SearchOMDb(object):
         if int(omdb_release_year) != int(self.index_year_compare):
 
             self.logger_instance.debug(u"OMDb year compare '%s' does not equal index year compare '%s'" % (omdb_release_year, self.index_year_compare))
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"OMDb year compare '%s' does not equal index year compare '%s'" % (omdb_release_year, self.index_year_compare)})
+            return self.index_dict
 
         self.logger_instance.debug(u"OMDb year compare '%s' equals index year compare '%s'" % (omdb_release_year, self.index_year_compare))
 
@@ -93,14 +100,17 @@ class SearchOMDb(object):
         except (IndexError, KeyError, TypeError):
 
             self.logger_instance.info(u"Cannot find '%s' ID for movie" % self.search_site)
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"Cannot find '%s' ID for movie" % self.search_site})
+            return self.index_dict
 
         if imdb_id is None or imdb_id == "":
 
             self.logger_instance.warning(u"%s index - IMDb ID is None, unable to identify valid value" % self.search_site)
-            return None
+            self.index_dict.update({'result': 'failed', 'result_details': u"%s index - IMDb ID is None, unable to identify valid value" % self.search_site})
+            return self.index_dict
 
         self.logger_instance.info(u"IMDb ID URL is 'https://www.imdb.com/title/%s/'" % imdb_id)
         self.index_dict.update({'imdb_id': imdb_id})
 
+        self.index_dict.update({'result': 'success', 'result_details': u"Found IMDb ID for movie '%s' using OMDb search" % self.index_title_search})
         return self.index_dict
