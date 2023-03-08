@@ -1,6 +1,5 @@
-import re
 import imdbpie
-
+import lib.siphonator.tools_various as siphonator_tools_various
 
 class SearchIMDB(object):
 
@@ -14,10 +13,15 @@ class SearchIMDB(object):
 
     def find_imdb_id_imdb(self):
 
-        imdb_title_compare_regex = r'[^a-zA-Z0-9]+'
-        
         imdb_instance = imdbpie.Imdb()
-        imdb_find_id_dict = imdb_instance.search_for_title(self.index_title_compare)
+        try:
+
+            imdb_find_id_dict = imdb_instance.search_for_title(self.index_title_compare)
+
+        except AttributeError:
+
+            self.index_dict.update({'result': 'failed', 'result_details': u"Failed to search IMDb for index title compare '%s'" % self.index_title_compare})
+            return self.index_dict
 
         # if resulting imdb json page is blank then continue
         if imdb_find_id_dict == {}:
@@ -44,8 +48,11 @@ class SearchIMDB(object):
                 self.logger_instance.debug(u"IMDb title is None, cannot compare")
                 continue
 
-            imdb_title_compare = re.sub(imdb_title_compare_regex, '', imdb_title).lower()
-            
+            # get comparison dictionary for imdb_title
+            tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
+            custom_dict = tools_various_instance.custom_title_full_compare(imdb_title)
+            imdb_title_compare = custom_dict.get('custom_title_compare')
+
             if imdb_title_compare not in self.index_title_compare:
 
                 self.logger_instance.debug(u"IMDb title compare '%s' not in index title compare '%s'" % (imdb_title_compare, self.index_title_compare))

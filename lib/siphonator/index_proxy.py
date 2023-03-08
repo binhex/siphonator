@@ -21,8 +21,6 @@ class IndexProxy(object):
     # out return_code, status_code, content
     def jackett(self):
 
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.index_dict.get('db_filepath'))
-
         if self.index_dict is not None:
 
             self.index_dict.update({'search_site': self.search_site})
@@ -113,6 +111,7 @@ class IndexProxy(object):
             peers = None
             magnet_url = None
             torrent_url = None
+            imdbid = None
 
             try:
 
@@ -139,6 +138,10 @@ class IndexProxy(object):
 
                     magnet_url = i['@value']
 
+                if attribute_name == "imdbid":
+
+                    imdbid = i['@value']
+
             try:
 
                 title = node["title"]
@@ -147,16 +150,26 @@ class IndexProxy(object):
 
                 title = None
 
-            # check to see if index title already in the database (processed)
-            self.logger_instance.debug(u"Checking if index title '%s' is already in the database..." % title)
-            index_title_in_database_bool = db_sqlite_instance.read_database('history', 'index_title', title)
+            self.logger_instance.debug(u"Checking if index title '%s' is already in the sqlite database..." % title)
+            db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+            read_database_simple_bool = db_sqlite_instance.read_database_simple('history', 'index_title', title)
 
-            if index_title_in_database_bool:
+            if read_database_simple_bool:
 
-                self.logger_instance.info(u"Index title '%s' already in database, skipping" % title)
+                self.logger_instance.info(u"Index title '%s' found in sqlite database using simple match, skipping movie" % title)
                 continue
 
-            self.logger_instance.debug(u"Index title '%s' not in database, continuing..." % title)
+            else:
+
+                self.logger_instance.info(u"Index title '%s' not found in sqlite database using simple match, performing adv sqlite match..." % title)
+                read_database_adv_bool = db_sqlite_instance.read_database_adv('history', 'index_title', title)
+
+                if read_database_adv_bool:
+
+                    self.logger_instance.info(u"Index title '%s' found in sqlite database using adv match, skipping movie" % title)
+                    continue
+
+            self.logger_instance.debug(u"Index title '%s' not in sqlite database, continuing..." % title)
 
             try:
 
@@ -205,9 +218,21 @@ class IndexProxy(object):
                 pubdate = None
 
             self.logger_instance.info(u"Starting processing index title '%s'..." % title)
-            self.index_dict.update({'index_title': title, 'torrent_url': torrent_url, 'index_size': size, 'index_size_mb': size_mb, 'download_link': details, 'index_comments': comments, 'index_pubdate': pubdate, 'index_seeders': seeders, 'index_peers': peers, 'magnet_url': magnet_url})
+            self.index_dict.update({'index_title': title,
+                                    'torrent_url': torrent_url,
+                                    'index_size': size,
+                                    'index_size_mb': size_mb,
+                                    'download_link': details,
+                                    'index_details': comments,
+                                    'index_pubdate': pubdate,
+                                    'index_seeders': seeders,
+                                    'index_peers': peers,
+                                    'imdb_id': imdbid,
+                                    'magnet_url': magnet_url,
+                                    'category': category})
 
-            self.index_dict = siphonator_tools_various.get_title_and_year_from_index_title(self.logger_instance, **self.index_dict)
+            tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
+            self.index_dict = tools_various_instance.index_title_compare_search(**self.index_dict)
 
             if self.index_dict.get('result') != 'failed':
 
@@ -217,20 +242,25 @@ class IndexProxy(object):
 
             else:
 
-                # write to database
-                db_sqlite_instance.write_database(**self.index_dict)
+                # write to database, need repeated instance due to changing self.index_dict
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance.write_database()
                 continue
 
             if self.index_dict.get('result') != 'failed':
 
-                self.logger_instance.info(u"Searching for IMDb ID..")
-                get_imdb_tt_number_instance = siphonator_search_all.SearchAll(self.logger_instance, **self.index_dict)
-                self.index_dict = get_imdb_tt_number_instance.search()
+                # if imdbid is not found from index site (rarbg supplies tt number) then lookup
+                if imdbid is None:
+
+                    self.logger_instance.info(u"Searching for IMDb ID..")
+                    get_imdb_tt_number_instance = siphonator_search_all.SearchAll(self.logger_instance, **self.index_dict)
+                    self.index_dict = get_imdb_tt_number_instance.search()
 
             else:
 
                 # write to database
-                db_sqlite_instance.write_database(**self.index_dict)
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance.write_database()
                 continue
 
             if self.index_dict.get('result') != 'failed':
@@ -241,7 +271,8 @@ class IndexProxy(object):
             else:
 
                 # write to database
-                db_sqlite_instance.write_database(**self.index_dict)
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance.write_database()
                 continue
 
             if self.index_dict.get('result') != 'failed':
@@ -253,7 +284,8 @@ class IndexProxy(object):
             else:
 
                 # write to database
-                db_sqlite_instance.write_database(**self.index_dict)
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance.write_database()
                 continue
 
             if self.index_dict.get('result') != 'failed':
@@ -261,9 +293,8 @@ class IndexProxy(object):
                 self.index_dict.update({'result': 'success', 'result_details': u"Movie passed all checks"})
 
                 # write to database
-                db_sqlite_instance.write_database(**self.index_dict)
-
-                self.logger_instance.debug(u"woot")
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance.write_database()
 
                 if self.index_dict.get('notification_email_enabled'):
 
@@ -277,5 +308,6 @@ class IndexProxy(object):
             else:
 
                 # write to database
-                db_sqlite_instance.write_database(**self.index_dict)
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance.write_database()
                 continue

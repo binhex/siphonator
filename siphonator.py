@@ -76,28 +76,35 @@ class Siphonator(object):
         # add in minutes till next schedule
         next_schedule_run = schedule_current_date_and_time + datetime.timedelta(minutes=int(schedule_time_value))
 
-        # convert to human readable format dd/mm/YY H:M:S
+        # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
         logger_instance.info(u"Schedule running in '%s' mode every '%s %s', next run at '%s'" % (schedule_mode, schedule_time_value, schedule_time_key, schedule_run_converted))
+
+    def current_time(self):
+
+        # datetime object containing current date and time
+        run_current_date_and_time = datetime.datetime.now()
+
+        # convert to human-readable format dd/mm/YY H:M:S
+        run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
+        return run_current_date_and_time_converted
 
     def run(self):
 
         config_schedule_mode = self.config_dict['config_schedule_mode']
 
-        # datetime object containing current date and time
-        run_current_date_and_time = datetime.datetime.now()
-
-        # convert to human readable format dd/mm/YY H:M:S
-        run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
-
-        logger_instance.info(u"Processing started at '%s'" % run_current_date_and_time_converted)
+        current_time = self.current_time()
+        logger_instance.info(u"Processing started at '%s'" % current_time)
 
         user_agent = u"Siphonator/%s; https://sourceforge.net/projects/moviegrabber" % current_version
 
+        # begin definition of dictionary to pass around
+        index_dict = ({'db_filepath': db_filepath, 'db_version': db_version})
+
         # create sqlite database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, db_filepath)
-        db_sqlite_instance.create_database(db_version)
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, **index_dict)
+        db_sqlite_instance.create_database()
 
         torrent_client_qbittorrent_host = '192.168.1.10'
         torrent_client_qbittorrent_port = 2100
@@ -152,17 +159,19 @@ class Siphonator(object):
         filter_minimum_seeders = int(1)
         filter_bad_index_title_list = ['3d', 'cam', 'hdcam', 'camrip', 'iptv', 'hqcam', 'hdts', 'hdtc', 'hc', 'ts',
                                        'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german', 'foreign',
-                                       'danish', 'french', 'spanish', 'dutch', 'portuguese', 'portugues', 'ger', 'fre',
-                                       'ita', 'spa', 'lpcm', 'hindi', 'nlsubs', 'xvid', 'divx', 'japanese',
-                                       'ads included', 'multi', 'pl']
+                                       'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese', 'portugues',
+                                       'ger', 'fre', 'ita', 'spa', 'lpcm', 'hindi', 'nlsubs', 'xvid', 'divx', 'japanese',
+                                       'ads included', 'multi', 'pl', 'sub', 'dub']
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
+        filter_override_character_list = ['bridget jones']
 
         search_tmdb_api_key = "1d93addd6def495cec493845cd3b2788"
         search_omdb_api_key = "bc61f97e"
 
         # walk library path and store in results dict, note we save it as a list so we can re-use it (costly)
-        filter_library_path_walk = list(siphonator_tools_various.library_path_walk(logger_instance, library_path))
+        tools_various_instance = siphonator_tools_various.ToolsVarious(logger_instance)
+        filter_library_path_walk = list(tools_various_instance.library_path_walk(library_path))
 
         for index_site in index_site_list:
 
@@ -175,8 +184,7 @@ class Siphonator(object):
 
                     index_site_search.update({'index_site_category': '5000'})
 
-                results_dict = ({'filter_library_path_walk': filter_library_path_walk,
-                                 'db_filepath': db_filepath,
+                index_dict.update({'filter_library_path_walk': filter_library_path_walk,
                                  'library_path': library_path,
                                  'index_proxy_jackett_host': index_proxy_jackett_host,
                                  'index_proxy_jackett_port': index_proxy_jackett_port,
@@ -214,11 +222,12 @@ class Siphonator(object):
                                  'filter_minimum_seeders': filter_minimum_seeders,
                                  'filter_bad_index_title_list': filter_bad_index_title_list,
                                  'filter_good_language_list': filter_good_language_list,
+                                 'filter_override_character_list': filter_override_character_list,
                                  'filter_bad_movie_title_list': filter_bad_movie_title_list})
 
                 logger_instance.info(u"Processing index site '%s' for search criteria '%s' in category '%s'..." % (index_site, index_site_search.get('index_site_search'), index_site_search.get('index_site_category')))
                 logger_instance.debug(u"Search criteria dictionary is '%s'" % index_site_search)
-                index_site_instance = siphonator_index_proxy.IndexProxy(logger_instance, **results_dict)
+                index_site_instance = siphonator_index_proxy.IndexProxy(logger_instance, **index_dict)
 
                 try:
                     index_site_instance.jackett()
@@ -226,14 +235,15 @@ class Siphonator(object):
                     logger_instance.error(u"IMDbPie having issues contacting IMDb")
 
         # compress (vacuum) database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, db_filepath)
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, **index_dict)
         db_sqlite_instance.vacuum_database()
 
         # close database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, db_filepath)
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, **index_dict)
         db_sqlite_instance.close_database()
-
-        logger_instance.info(u"Processing finished at '%s'" % run_current_date_and_time_converted)
+        # TODO put in elapsed time
+        current_time = self.current_time()
+        logger_instance.info(u"Processing finished at '%s'" % current_time)
 
         if config_schedule_mode == 'foreground':
 

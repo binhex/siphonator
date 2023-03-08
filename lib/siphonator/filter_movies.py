@@ -1,11 +1,10 @@
 from decimal import Decimal
 import re
 
-# TODO add in cast, director, writer, char filters, bad genre
-# TODO if repack or proper then check for on disk, if there then possible override
+# TODO add in cast, director, writer, bad genre
+# TODO filter_override_downloaded - if repack or proper then check for on disk, if there then possible override
 # TODO if remastered or extended or directors cut then check for on disk, if there then possible override
 # TODO if in completed then do not download, or in qbittorrent queue, or in qbittorrent history (possible?)
-# TODO genre specific rating, e.g. preferred-genre-scifi-rating = 6.5, preferred-genre-animation-rating  = 5.0
 # TODO if size of movie is larger on disk compared to index title then ignore, UNLESS its remastered, proper etc.
 
 class FilterMovies(object):
@@ -17,10 +16,6 @@ class FilterMovies(object):
         self.regex_compare = r'\s|,|\.|_|-|\'|\!|[\(\)]|[\[\]]'
 
     def filter_index_movies(self):
-
-        # mark by default as not good movie
-        # TODO not required?, now using 'result'
-        self.index_dict.update({'good_movie': 'no'})
 
         # Local/Index filters
         filter_size_result = self.filter_size('minimum')
@@ -41,10 +36,10 @@ class FilterMovies(object):
             self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_bad_index_title'" % self.index_dict.get('index_title')})
             return self.index_dict
 
-        filter_index_title_tv_series = self.filter_index_title_tv_series()
-        if not filter_index_title_tv_series:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_index_title_tv_series'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_index_title_tv_series'" % self.index_dict.get('index_title')})
+        filter_bad_index_type = self.filter_bad_index_type()
+        if not filter_bad_index_type:
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_index_type'" % self.index_dict.get('index_title'))
+            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_bad_index_type'" % self.index_dict.get('index_title')})
             return self.index_dict
 
         filter_bad_movie_title = self.filter_bad_movie_title()
@@ -65,18 +60,12 @@ class FilterMovies(object):
             self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_downloaded'" % self.index_dict.get('index_title')})
             return self.index_dict
 
-        # all filters passed mark as good movie
-        self.index_dict.update({'good_movie': 'yes'})
-
         self.logger_instance.debug(u"Index title '%s' passed index filters" % self.index_dict.get('index_title'))
 
         self.index_dict.update({'result': 'passed','result_details': u"Index title '%s' passed index filters" % self.index_dict.get('index_title')})
         return self.index_dict
 
     def filter_imdb_movies(self):
-
-        # mark by default as not good movie
-        self.index_dict.update({'good_movie': 'no'})
 
         # IMDb filters
         filter_bitrate_result = self.filter_bitrate()
@@ -85,17 +74,21 @@ class FilterMovies(object):
             self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_bitrate'" % self.index_dict.get('index_title')})
             return self.index_dict
 
-        filter_rating_result = self.filter_rating()
-        if not filter_rating_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title')})
-            return self.index_dict
+        # if override character bool is True then skip check for rating and votes
+        filter_override_character = self.filter_override_character()
+        if not filter_override_character:
 
-        filter_votes_result = self.filter_votes()
-        if not filter_votes_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title')})
-            return self.index_dict
+            filter_rating_result = self.filter_rating()
+            if not filter_rating_result:
+                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title'))
+                self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title')})
+                return self.index_dict
+
+            filter_votes_result = self.filter_votes()
+            if not filter_votes_result:
+                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title'))
+                self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title')})
+                return self.index_dict
 
         filter_year_result = self.filter_year()
         if not filter_year_result:
@@ -354,24 +347,23 @@ class FilterMovies(object):
 
             for library_filename in files:
 
-                library_title_compare = re.sub(self.regex_compare, "", library_filename).lower()
-                #self.logger_instance.debug(u"Index title compare is '%s',  library filename compare is '%s'" % (index_title_compare, library_title_compare))
+                library_title_compare_lower = re.sub(self.regex_compare, "", library_filename).lower()
 
-                if index_title_compare in library_title_compare:
+                if index_title_compare in library_title_compare_lower:
 
-                    if index_year_compare in library_title_compare:
+                    if index_year_compare in library_title_compare_lower:
 
                         self.logger_instance.warning(u"Index title '%s' already exists in library file '%s', skipping movie" % (index_title, library_filename))
                         return False
 
             for library_dirs in dirs:
 
-                library_title_compare = re.sub(self.regex_compare, "", library_dirs).lower()
+                library_title_compare_lower = re.sub(self.regex_compare, "", library_dirs).lower()
                 #self.logger_instance.debug(u"Index title compare is '%s',  library directory compare is '%s'" % (index_title_compare, library_title_compare))
 
-                if index_title_compare in library_title_compare:
+                if index_title_compare in library_title_compare_lower:
 
-                    if index_year_compare in library_title_compare:
+                    if index_year_compare in library_title_compare_lower:
 
                         self.logger_instance.warning(u"Index title '%s' already exists in library directory '%s', skipping movie" % (index_title, library_dirs))
                         return False
@@ -383,8 +375,8 @@ class FilterMovies(object):
 
         index_title_regex = r'\.|_|\[|\]|\(|\)'
         index_title = self.index_dict.get('index_title')
-        index_title_strip = re.sub(index_title_regex, ' ', index_title).lower()
-        self.logger_instance.debug(u"Index title for bad keyword comparison is '%s'" % index_title_strip)
+        index_title_strip_lower = re.sub(index_title_regex, ' ', index_title).lower()
+        self.logger_instance.debug(u"Index title for bad keyword comparison is '%s'" % index_title_strip_lower)
 
         filter_bad_title_list = self.index_dict.get('filter_bad_index_title_list')
 
@@ -394,22 +386,22 @@ class FilterMovies(object):
 
         for filter_bad_title in filter_bad_title_list:
 
-            filter_bad_title = re.sub(self.regex_compare, "", filter_bad_title).lower()
+            filter_bad_title_lower = re.sub(self.regex_compare, "", filter_bad_title).lower()
 
             # use spaces to ensure exact match
-            filter_bad_title_word_match = " %s " % filter_bad_title
+            filter_bad_title_word_match_lower = " %s " % filter_bad_title_lower
 
-            if filter_bad_title_word_match in index_title_strip:
+            if filter_bad_title_word_match_lower in index_title_strip_lower:
 
-                self.logger_instance.warning(u"Index title '%s' contains bad title keyword '%s', skipping movie" % (index_title_strip, filter_bad_title))
+                self.logger_instance.warning(u"Index title '%s' contains bad title keyword '%s', skipping movie" % (index_title_strip_lower, filter_bad_title))
                 return False
 
-        self.logger_instance.info(u"Index title '%s' does NOT contain bad title keyword(s) '%s'" % (index_title_strip, filter_bad_title_list))
+        self.logger_instance.info(u"Index title '%s' does NOT contain bad title keyword(s) '%s'" % (index_title_strip_lower, filter_bad_title_list))
         return True
 
     def filter_bad_movie_title(self):
-
-        index_title_compare = self.index_dict.get('index_title_compare')
+        # TODO needs verify this works
+        index_title_compare_lower = self.index_dict.get('index_title_compare')
         index_year_compare = self.index_dict.get('index_year_compare')
         filter_bad_movie_title_list = self.index_dict.get('filter_bad_movie_title_list')
 
@@ -419,26 +411,26 @@ class FilterMovies(object):
 
         for filter_bad_movie_title in filter_bad_movie_title_list:
 
-            filter_bad_movie_title = re.sub(self.regex_compare, "", filter_bad_movie_title).lower()
+            filter_bad_movie_title_lower = re.sub(self.regex_compare, "", filter_bad_movie_title).lower()
 
-            if index_title_compare in filter_bad_movie_title:
+            if index_title_compare_lower in filter_bad_movie_title_lower:
 
-                if index_year_compare in filter_bad_movie_title:
+                if index_year_compare in filter_bad_movie_title_lower:
 
-                    self.logger_instance.warning(u"Index title '%s' found in bad movie title list, skipping movie" % index_title_compare)
+                    self.logger_instance.warning(u"Index title '%s' found in bad movie title list, skipping movie" % index_title_compare_lower)
                     return False
 
-        self.logger_instance.info(u"Index title '%s (%s)' NOT found in bad movie list" % (index_title_compare, index_year_compare))
+        self.logger_instance.info(u"Index title '%s (%s)' NOT found in bad movie list" % (index_title_compare_lower, index_year_compare))
         return True
 
-    def filter_index_title_tv_series(self):
+    def filter_bad_index_type(self):
 
-        index_title = self.index_dict.get('index_title').lower()
-        identify_tv_season_or_episode_regex = r'(season\s?([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})'
+        index_title_year_to_end_compare = self.index_dict.get('index_title_year_to_end_compare')
+        identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
 
-        if re.search(identify_tv_season_or_episode_regex, index_title):
+        if re.search(identify_tv_season_or_episode_regex, index_title_year_to_end_compare):
 
-            self.logger_instance.warning(u"Index title '%s' contains tv series string match for regex '%s', skipping movie" % (index_title, identify_tv_season_or_episode_regex))
+            self.logger_instance.warning(u"Index title year to end '%s' contains tv series string match for regex '%s', skipping movie" % (index_title_year_to_end_compare, identify_tv_season_or_episode_regex))
             return False
 
         return True
@@ -466,4 +458,32 @@ class FilterMovies(object):
                 return True
 
         self.logger_instance.debug(u"IMDb language '%s' is not in good language list '%s'" % (imdb_spoken_languages_list, filter_good_language_list))
+        return False
+
+    def filter_override_character(self):
+
+        imdb_credits_character_list = self.index_dict.get('imdb_credits_character_list')
+        filter_override_character_list = self.index_dict.get('filter_override_character_list')
+
+        if filter_override_character_list is None:
+
+            self.logger_instance.debug(u"Override character not defined, skipping character checks")
+            return False
+
+        if imdb_credits_character_list is None:
+
+            self.logger_instance.warning(u"IMDb credits character not found, skipping character checks")
+            return False
+
+        imdb_credits_character_lower_list = [x.lower() for x in imdb_credits_character_list]
+        filter_override_character_lower_list = [x.lower() for x in filter_override_character_list]
+
+        for filter_override_character_lower in filter_override_character_lower_list:
+
+            if filter_override_character_lower in imdb_credits_character_lower_list:
+
+                self.logger_instance.info(u"Override character '%s' is in IMDb credits character list '%s', skipping votes and rating checks" % (filter_override_character_lower, imdb_credits_character_lower_list))
+                return True
+
+        self.logger_instance.debug(u"Override characters in list '%s' are NOT in IMDb credits character list '%s'" % (filter_override_character_lower_list, imdb_credits_character_lower_list))
         return False
