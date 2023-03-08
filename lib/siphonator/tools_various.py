@@ -31,6 +31,22 @@ class ToolsVarious(object):
         self.logger_instance.debug(u"Custom title sqlite dict is '%s'" % custom_title_sqlite_dict)
         return custom_title_sqlite_dict
 
+    def custom_title_compare(self, custom_title):
+
+        if custom_title is None:
+
+            self.logger_instance.warning(u'No custom_title sent to function')
+            return None
+
+        self.logger_instance.debug(u"Custom title is '%s'" % custom_title)
+
+        custom_title_compare = re.sub(self.index_title_regex_strip, '', custom_title).lower()
+
+        custom_title_compare_dict = ({'custom_title_compare': custom_title_compare})
+
+        self.logger_instance.debug(u"Custom title compare dict is '%s'" % custom_title_compare_dict)
+        return custom_title_compare_dict
+
     def custom_title_full_compare(self, custom_title):
 
         if custom_title is None:
@@ -75,8 +91,8 @@ class ToolsVarious(object):
 
         if index_title_compare is None:
 
-            self.logger_instance.info(u"Cannot identify compare title from index title '%s' using regex '%s'" % (index_title, self.index_title_regex_strip))
-            index_dict.update({'result': 'failed', 'result_details': 'Cannot identify compare title from index title '})
+            self.logger_instance.debug(u"Cannot identify compare title from index title '%s' using regex '%s'" % (index_title, self.index_title_regex_strip))
+            index_dict.update({'result': 'failed', 'result_details': 'Cannot identify compare title from index title'})
             return index_dict
 
         self.logger_instance.info(u"Index title compare is '%s'" % index_title_compare)

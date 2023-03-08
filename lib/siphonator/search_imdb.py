@@ -50,8 +50,8 @@ class SearchIMDB(object):
 
             # get comparison dictionary for imdb_title
             tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-            custom_dict = tools_various_instance.custom_title_full_compare(imdb_title)
-            imdb_title_compare = custom_dict.get('custom_title_compare')
+            custom_title_compare_dict = tools_various_instance.custom_title_compare(imdb_title)
+            imdb_title_compare = custom_title_compare_dict.get('custom_title_compare')
 
             if imdb_title_compare not in self.index_title_compare:
 

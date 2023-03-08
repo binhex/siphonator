@@ -1,9 +1,8 @@
 import json
 import urllib.parse
 import lib.siphonator.tools_downloader as siphonator_tools_downloader
-import re
+import lib.siphonator.tools_various as siphonator_tools_various
 from datetime import datetime
-
 
 class SearchTMDB(object):
 
@@ -16,8 +15,6 @@ class SearchTMDB(object):
         self.logger_instance = logger_instance
 
     def find_imdb_id_tmdb(self):
-
-        tmdb_title_regex_strip = r'[^a-zA-Z0-9]+'
 
         search_tmdb_api_key = self.index_dict.get('search_tmdb_api_key')
         index_title_search_encoded = urllib.parse.quote(self.index_title_search)
@@ -56,19 +53,31 @@ class SearchTMDB(object):
 
             tmdb_title = tmdb_find_id["title"]
             tmdb_original_title = tmdb_find_id["original_title"]
-            tmdb_title_compare = re.sub(tmdb_title_regex_strip, '', tmdb_title).lower()
-            tmdb_original_title_strip = re.sub(tmdb_title_regex_strip, '', tmdb_original_title).lower()
+
+            # get comparison dictionary for tmdb_title
+            tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
+            custom_title_compare_dict = tools_various_instance.custom_title_compare(tmdb_title)
+            tmdb_title_compare = custom_title_compare_dict.get('custom_title_compare')
+
+            custom_original_title_compare_dict = tools_various_instance.custom_title_compare(tmdb_original_title)
+            tmdb_original_title_compare = custom_original_title_compare_dict.get('custom_title_compare')
 
             if tmdb_title_compare not in self.index_title_compare:
 
-                self.logger_instance.debug(u"TMDb title compare '%s' not in index title compare '%s', trying original title..." % (tmdb_title_compare, self.index_title_compare))
+                self.logger_instance.debug(u"TMDb title compare '%s' not in index title compare '%s', attempting comparison of original title..." % (tmdb_title_compare, self.index_title_compare))
 
-                if tmdb_original_title_strip not in self.index_title_compare:
+                if tmdb_original_title_compare not in self.index_title_compare:
 
                     self.logger_instance.debug(u"TMDb original title compare '%s' not in index title compare '%s'" % (tmdb_title_compare, self.index_title_compare))
                     continue
 
-            self.logger_instance.debug(u"TMDb title compare '%s' matches index title/original title compare '%s'" % (tmdb_title_compare, self.index_title_compare))
+                else:
+
+                    self.logger_instance.debug(u"TMDb original title compare '%s' matches index title compare '%s'" % (tmdb_title_compare, self.index_title_compare))
+
+            else:
+
+                self.logger_instance.debug(u"TMDb title compare '%s' matches index title compare '%s'" % (tmdb_title_compare, self.index_title_compare))
 
             tmdb_release_date = (tmdb_find_id["release_date"])
             tmdb_release_date_object = datetime.strptime(tmdb_release_date, '%Y-%m-%d')
@@ -146,6 +155,6 @@ class SearchTMDB(object):
             self.index_dict.update({'result': 'success', 'result_details': u"Found IMDb ID for movie '%s' using TMDb search" % self.index_title_search})
             return self.index_dict
 
-        self.index_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+        self.index_dict.update({'result': 'failed', 'result_details': u"Failed to identify movie '%s' using TMDb search" % self.index_title_search})
         return self.index_dict
 
