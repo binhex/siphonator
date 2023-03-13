@@ -126,7 +126,7 @@ class Siphonator(object):
                                         'index_site_category': '2000',
                                         'filter_minimum_size_mb': int(3000),
                                         'filter_maximum_size_mb': int(20000),
-                                        'filter_minimum_bitrate_mb': int(40)}
+                                        'filter_minimum_bitrate_mb': int(42)}
 
         index_site_search_2160p_remux_dict = {'index_site_search': '2160p remux',
                                         'index_site_category': '2000',
@@ -157,11 +157,12 @@ class Siphonator(object):
         filter_minimum_rating = '7.0'
         filter_minimum_votes = int(7500)
         filter_minimum_seeders = int(1)
-        filter_bad_index_title_list = ['3d', 'cam', 'hdcam', 'camrip', 'iptv', 'hqcam', 'hdts', 'hdtc', 'hc', 'ts',
-                                       'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german', 'foreign',
-                                       'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese', 'portugues',
-                                       'ger', 'fre', 'ita', 'spa', 'lpcm', 'hindi', 'nlsubs', 'xvid', 'divx', 'japanese',
-                                       'ads included', 'multi', 'pl', 'sub', 'dub']
+        filter_bad_index_title_list = ['3d', 'cam', 'camrip', 'hdcam', 'hdcamrip', 'iptv', 'hqcam', 'hqcamrip', 'hdts',
+                                       'hdtc', 'hc', 'ts', 'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german',
+                                       'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
+                                       'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'hindi', 'nlsubs', 'xvid',
+                                       'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
+                                       'dvdscr', 'screener']
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
         filter_override_character_list = ['bridget jones']

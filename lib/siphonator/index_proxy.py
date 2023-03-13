@@ -115,42 +115,15 @@ class IndexProxy(object):
 
             try:
 
-                list_named_attributes = node['http://torznab.com/schemas/2015/feed:attr']
-
-            except TypeError:
-
-                self.logger_instance.warning(u"Unable to process attributes from index site '%s'" % index_site)
-                return 1
-
-            for i in list_named_attributes:
-
-                attribute_name = i['@name']
-
-                if attribute_name == "seeders":
-
-                    seeders = i['@value']
-
-                if attribute_name == "peers":
-
-                    peers = i['@value']
-
-                if attribute_name == "magnet_url":
-
-                    magnet_url = i['@value']
-
-                if attribute_name == "imdbid":
-
-                    imdbid = i['@value']
-
-            try:
-
                 title = node["title"]
 
             except (KeyError, TypeError, IndexError, AttributeError):
 
-                title = None
+                self.logger_instance.warning(u"Unable to identify title from index site '%s'" % index_site)
+                continue
 
             self.logger_instance.debug(u"Checking if index title '%s' is already in the sqlite database..." % title)
+
             db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
             read_database_simple_bool = db_sqlite_instance.read_database_simple('history', 'index_title', title)
 
@@ -173,15 +146,45 @@ class IndexProxy(object):
 
             try:
 
-                link = node["link"]
+                torrent_url = node['enclosure']['@url']
 
             except (KeyError, TypeError, IndexError, AttributeError):
 
-                link = None
+                self.logger_instance.debug(u"Unable to determine torrent url from index site '%s'" % index_site)
 
-            if link != magnet_url:
+            try:
 
-                torrent_url = link
+                list_named_attributes = node['http://torznab.com/schemas/2015/feed:attr']
+
+            except TypeError:
+
+                self.logger_instance.info(u"Unable to process attributes from index site '%s'" % index_site)
+                continue
+
+            for i in list_named_attributes:
+
+                attribute_name = i['@name']
+
+                if "seeders" in attribute_name:
+
+                    seeders = i['@value']
+
+                if "peers" in attribute_name:
+
+                    peers = i['@value']
+
+                if "magnet" in attribute_name:
+
+                    magnet_url = i['@value']
+
+                if "imdb" in attribute_name:
+
+                    imdbid = i['@value']
+
+            if magnet_url is None and torrent_url is None:
+
+                self.logger_instance.info(u"No magnet or torrent url available, skipping processing for index title '%s'..." % title)
+                continue
 
             try:
 
