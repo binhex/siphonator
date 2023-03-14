@@ -135,14 +135,12 @@ class Siphonator(object):
                                         'filter_minimum_bitrate_mb': int(415)}
 
         index_rarbg_search_list_dict = [index_site_search_1080p_dict, index_site_search_2160p_remux_dict]
-        index_limetorrents_search_list_dict = [index_site_search_1080p_dict]
         index_thepiratebay_search_list_dict = [index_site_search_1080p_dict]
         index_torrentgalaxy_search_list_dict = [index_site_search_1080p_dict]
         index_knaben_search_list_dict = [index_site_search_1080p_dict]
         index_solidtorrents_search_list_dict = [index_site_search_1080p_dict]
-        index_yourbittorrent_search_list_dict = [index_site_search_1080p_dict]
 
-        index_site_list = ['rarbg', 'thepiratebay', 'torrentgalaxy', 'knaben', 'yourbittorrent', 'limetorrents','solidtorrents']
+        index_site_list = ['rarbg', 'thepiratebay', 'torrentgalaxy', 'knaben','solidtorrents']
         index_proxy_jackett_host = "192.168.1.10"
         index_proxy_jackett_port = "1900"
         index_proxy_jackett_api_key = "o4xte43ftp56m64aknxch4pe7cp3lhaj"

@@ -18,7 +18,7 @@ class SearchIMDB(object):
 
             imdb_find_id_dict = imdb_instance.search_for_title(self.index_title_compare)
 
-        except AttributeError:
+        except (AttributeError, ValueError):
 
             self.index_dict.update({'result': 'failed', 'result_details': u"Failed to search IMDb for index title compare '%s'" % self.index_title_compare})
             return self.index_dict

@@ -9,6 +9,11 @@ import lib.siphonator.torrent_clients as siphonator_torrent_clients
 import lib.siphonator.notification_email as siphonator_notification_email
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
+# NOTES yourbittorrent looks like its torrent only but does not download from jackett!!
+#limtorrents also looks to be torrent only but wee know it does magnet!!, torrent does not download!! - magnet just not available via jackett!, use raincoat?
+#limetorrents magnet links work for prowlarr but not jackett
+#1337x works for prowlarr torrent (and magnet?) but not for jackett
+
 class IndexProxy(object):
 
     def __init__(self, logger_instance, **kwargs):
