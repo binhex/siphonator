@@ -22,9 +22,10 @@ class NotificationEmail(object):
         imdb_id = self.index_dict.get('imdb_id')
         imdb_rating = self.index_dict.get('imdb_rating')
         imdb_votes = self.index_dict.get('imdb_votes')
-        imdb_plot = self.index_dict.get('imdb_plot_summary') #none?
+        imdb_plot = self.index_dict.get('imdb_plot_outline') #none?
         imdb_credits_cast_list = self.index_dict.get('imdb_credits_cast_list')
-        imdb_actors = ", ".join(imdb_credits_cast_list)
+        imdb_actors_limit_list = imdb_credits_cast_list[:10]
+        imdb_actors = ", ".join(imdb_actors_limit_list)
         imdb_genres_list = self.index_dict.get('imdb_genres_list')
         imdb_genres = ", ".join(imdb_genres_list)
         index_title = self.index_dict.get('index_title')
