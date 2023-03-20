@@ -100,7 +100,7 @@ class Siphonator(object):
         user_agent = u"Siphonator/%s; https://sourceforge.net/projects/moviegrabber" % current_version
 
         # begin definition of dictionary to pass around
-        index_dict = ({'db_filepath': db_filepath, 'db_version': db_version})
+        index_dict = ({'db_filepath': db_filepath, 'db_version': db_version, 'config_ini': config_ini})
 
         # create sqlite database
         db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, **index_dict)
@@ -123,25 +123,6 @@ class Siphonator(object):
         notification_email_from_address = 'paul.eccleston1@gmail.com'
         notification_email_to_address= 'paul.eccleston1@gmail.com'
 
-        index_site_search_1080p_dict = {'index_site_search': '1080p',
-                                        'index_site_category': '2000',
-                                        'filter_minimum_size_mb': int(3000),
-                                        'filter_maximum_size_mb': int(20000),
-                                        'filter_minimum_bitrate_mb': int(42)}
-
-        index_site_search_2160p_remux_dict = {'index_site_search': '2160p remux',
-                                        'index_site_category': '2000',
-                                        'filter_minimum_size_mb': int(30000),
-                                        'filter_maximum_size_mb': int(170000),
-                                        'filter_minimum_bitrate_mb': int(415)}
-
-        index_rarbg_search_list_dict = [index_site_search_1080p_dict, index_site_search_2160p_remux_dict]
-        index_thepiratebay_search_list_dict = [index_site_search_1080p_dict]
-        index_torrentgalaxy_search_list_dict = [index_site_search_1080p_dict]
-        index_knaben_search_list_dict = [index_site_search_1080p_dict]
-        index_solidtorrents_search_list_dict = [index_site_search_1080p_dict]
-
-        index_site_list = ['rarbg', 'thepiratebay', 'torrentgalaxy', 'knaben','solidtorrents']
         index_proxy_jackett_host = "192.168.1.10"
         index_proxy_jackett_port = "1900"
         index_proxy_jackett_api_key = "o4xte43ftp56m64aknxch4pe7cp3lhaj"
@@ -166,6 +147,22 @@ class Siphonator(object):
         filter_bad_movie_title_list = []
         filter_override_character_list = ['bridget jones']
 
+        index_site_search_1080p_dict = {
+            'index_site_search': '1080p',
+            'index_site_category': '2000',
+            'filter_minimum_size_mb': int(3000),
+            'filter_maximum_size_mb': int(20000),
+            'filter_minimum_bitrate_mb': int(42)
+        }
+
+        index_site_search_2160p_remux_dict = {
+            'index_site_search': '2160p remux',
+            'index_site_category': '2000',
+            'filter_minimum_size_mb': int(30000),
+            'filter_maximum_size_mb': int(170000),
+            'filter_minimum_bitrate_mb': int(415)
+        }
+
         search_tmdb_api_key = "1d93addd6def495cec493845cd3b2788"
         search_omdb_api_key = "bc61f97e"
 
@@ -173,61 +170,83 @@ class Siphonator(object):
         tools_various_instance = siphonator_tools_various.ToolsVarious(logger_instance)
         filter_library_path_walk = list(tools_various_instance.library_path_walk(library_path))
 
-        for index_site in index_site_list:
-            # TODO rename this as its crud, and use a dict to remove need for eval
-            index_site_search_list_dict = 'index_%s_search_list_dict' % index_site
+        # add in additional info to pass around as dict
+        index_dict.update({
+            'user_agent': user_agent,
+            'library_path': library_path,
+            'filter_library_path_walk': filter_library_path_walk,
+            'index_proxy_jackett_host': index_proxy_jackett_host,
+            'index_proxy_jackett_port': index_proxy_jackett_port,
+            'index_proxy_jackett_api_key': index_proxy_jackett_api_key,
+            'index_proxy_jackett_limit': index_proxy_jackett_limit,
+            'index_proxy_jackett_read_timeout': index_proxy_jackett_read_timeout,
+            'torrent_client': torrent_client,
+            'torrent_client_qbittorrent_host': torrent_client_qbittorrent_host,
+            'torrent_client_qbittorrent_port': torrent_client_qbittorrent_port,
+            'torrent_client_qbittorrent_username': torrent_client_qbittorrent_username,
+            'torrent_client_qbittorrent_password': torrent_client_qbittorrent_password,
+            'torrent_client_qbittorrent_add_paused': torrent_client_qbittorrent_add_paused,
+            'notification_email_enabled': notification_email_enabled,
+            'notification_email_host': notification_email_host,
+            'notification_email_port': notification_email_port,
+            'notification_email_enable_tls': notification_email_enable_tls,
+            'notification_email_enable_ssl': notification_email_enable_ssl,
+            'notification_email_username': notification_email_username,
+            'notification_email_password': notification_email_password,
+            'notification_email_from_address': notification_email_from_address,
+            'notification_email_to_address': notification_email_to_address,
+            'filter_minimum_year': filter_minimum_year,
+            'filter_minimum_runtime_mins': filter_minimum_runtime_mins,
+            'filter_genre_minimum_rating_dict': filter_genre_minimum_rating_dict,
+            'filter_minimum_rating': filter_minimum_rating,
+            'filter_minimum_votes': filter_minimum_votes,
+            'filter_minimum_seeders': filter_minimum_seeders,
+            'filter_bad_index_title_list': filter_bad_index_title_list,
+            'filter_good_language_list': filter_good_language_list,
+            'filter_override_character_list': filter_override_character_list,
+            'filter_bad_movie_title_list': filter_bad_movie_title_list,
+            'search_tmdb_api_key': search_tmdb_api_key,
+            'search_omdb_api_key': search_omdb_api_key
+        })
 
-            for index_site_search in eval(index_site_search_list_dict):
+        index_site_dict_list_dict = {
+            'rarbg': [index_site_search_1080p_dict, index_site_search_2160p_remux_dict],
+            'thepiratebay': [index_site_search_1080p_dict],
+            'torrentgalaxy': [index_site_search_1080p_dict],
+            'knaben': [index_site_search_1080p_dict],
+            'solidtorrents': [index_site_search_1080p_dict]
+        }
+
+        # loop over top level dict of index sites
+        for index_site in index_site_dict_list_dict:
+
+            index_site_list_dict = (index_site_dict_list_dict[index_site])
+
+            # loop over dict containing search criteria
+            for index_site_dict in index_site_list_dict:
+
+                index_site_search = (index_site_dict['index_site_search'])
+                index_site_category = (index_site_dict['index_site_category'])
+                filter_minimum_size_mb = (index_site_dict['filter_minimum_size_mb'])
+                filter_maximum_size_mb = (index_site_dict['filter_maximum_size_mb'])
+                filter_minimum_bitrate_mb = (index_site_dict['filter_minimum_bitrate_mb'])
 
                 # override category for solidtorrents as it incorrectly uses tv category (5000) for movies
                 if index_site == "solidtorrents":
 
-                    index_site_search.update({'index_site_category': '5000'})
+                    index_site_category = '5000'
 
-                index_dict.update({'filter_library_path_walk': filter_library_path_walk,
-                                    'library_path': library_path,
-                                    'index_proxy_jackett_host': index_proxy_jackett_host,
-                                    'index_proxy_jackett_port': index_proxy_jackett_port,
-                                    'index_proxy_jackett_api_key': index_proxy_jackett_api_key,
-                                    'index_site_category': index_site_search.get('index_site_category'),
-                                    'index_site': index_site,
-                                    'index_site_search': index_site_search.get('index_site_search'),
-                                    'index_proxy_jackett_limit': index_proxy_jackett_limit,
-                                    'user_agent': user_agent,
-                                    'index_proxy_jackett_read_timeout': index_proxy_jackett_read_timeout,
-                                    'torrent_client': torrent_client,
-                                    'torrent_client_qbittorrent_host': torrent_client_qbittorrent_host,
-                                    'torrent_client_qbittorrent_port': torrent_client_qbittorrent_port,
-                                    'torrent_client_qbittorrent_username': torrent_client_qbittorrent_username,
-                                    'torrent_client_qbittorrent_password': torrent_client_qbittorrent_password,
-                                    'torrent_client_qbittorrent_add_paused': torrent_client_qbittorrent_add_paused,
-                                    'notification_email_enabled': notification_email_enabled,
-                                    'notification_email_host': notification_email_host,
-                                    'notification_email_port': notification_email_port,
-                                    'notification_email_enable_tls': notification_email_enable_tls,
-                                    'notification_email_enable_ssl': notification_email_enable_ssl,
-                                    'notification_email_username': notification_email_username,
-                                    'notification_email_password': notification_email_password,
-                                    'notification_email_from_address': notification_email_from_address,
-                                    'notification_email_to_address': notification_email_to_address,
-                                    'filter_minimum_year': filter_minimum_year,
-                                    'search_tmdb_api_key': search_tmdb_api_key,
-                                    'search_omdb_api_key': search_omdb_api_key,
-                                    'filter_minimum_runtime_mins': filter_minimum_runtime_mins,
-                                    'filter_genre_minimum_rating_dict': filter_genre_minimum_rating_dict,
-                                    'filter_minimum_rating': filter_minimum_rating,
-                                    'filter_minimum_votes': filter_minimum_votes,
-                                    'filter_minimum_size_mb': index_site_search.get('filter_minimum_size_mb'),
-                                    'filter_maximum_size_mb': index_site_search.get('filter_maximum_size_mb'),
-                                    'filter_minimum_bitrate_mb': index_site_search.get('filter_minimum_bitrate_mb'),
-                                    'filter_minimum_seeders': filter_minimum_seeders,
-                                    'filter_bad_index_title_list': filter_bad_index_title_list,
-                                    'filter_good_language_list': filter_good_language_list,
-                                    'filter_override_character_list': filter_override_character_list,
-                                    'filter_bad_movie_title_list': filter_bad_movie_title_list})
+                # update dict with index site specific search criteria
+                index_dict.update({
+                    'index_site': index_site,
+                    'index_site_category': index_site_category,
+                    'index_site_search': index_site_search,
+                    'filter_minimum_size_mb': filter_minimum_size_mb,
+                    'filter_maximum_size_mb': filter_maximum_size_mb,
+                    'filter_minimum_bitrate_mb': filter_minimum_bitrate_mb
+                })
 
-                logger_instance.info(u"Processing index site '%s' for search criteria '%s' in category '%s'..." % (index_site, index_site_search.get('index_site_search'), index_site_search.get('index_site_category')))
-                logger_instance.debug(u"Search criteria dictionary is '%s'" % index_site_search)
+                logger_instance.info(u"Processing index site '%s' for search criteria '%s' in category '%s'..." % (index_site, index_site_search, index_site_category))
                 index_site_instance = siphonator_index_proxy.IndexProxy(logger_instance, **index_dict)
 
                 try:
@@ -242,6 +261,7 @@ class Siphonator(object):
         # close database
         db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, **index_dict)
         db_sqlite_instance.close_database()
+
         # TODO put in elapsed time
         current_time = self.current_time()
         logger_instance.info(u"Processing finished at '%s'" % current_time)
