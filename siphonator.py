@@ -137,12 +137,14 @@ class Siphonator(object):
         filter_minimum_rating = '7.0'
         filter_minimum_votes = int(7500)
         filter_minimum_seeders = int(1)
-        filter_bad_index_title_list = ['3d', 'cam', 'camrip', 'hdcam', 'hdcamrip', 'iptv', 'hqcam', 'hqcamrip', 'hdts',
-                                       'hdtc', 'hc', 'ts', 'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german',
-                                       'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
-                                       'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'hindi', 'nlsubs', 'xvid',
-                                       'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
-                                       'dvdscr', 'screener']
+        filter_bad_index_title_list = [
+            '3d', 'cam', 'camrip', 'hdcam', 'hdcamrip', 'iptv', 'hqcam', 'hqcamrip', 'hdts',
+            'hdtc', 'hc', 'ts', 'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german',
+            'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
+            'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'hindi', 'nlsubs', 'xvid',
+            'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
+            'dvdscr', 'screener'
+        ]
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
         filter_override_character_list = ['bridget jones']
@@ -340,10 +342,12 @@ if __name__ == '__main__':
     config_schedule_time_value = '30'
 
     # send schedule details
-    run_dict = ({'schedule_mode': config_schedule_mode,
-                 'schedule_time_key': config_schedule_time_key,
-                 'schedule_time_value': config_schedule_time_value,
-                 'config_schedule_mode': config_schedule_mode})
+    run_dict = ({
+        'schedule_mode': config_schedule_mode,
+        'schedule_time_key': config_schedule_time_key,
+        'schedule_time_value': config_schedule_time_value,
+        'config_schedule_mode': config_schedule_mode
+    })
 
     run_instance = Siphonator(logger_instance, **run_dict)
 

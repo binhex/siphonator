@@ -339,6 +339,8 @@ class FilterMovies(object):
         index_title = self.index_dict.get('index_title')
         index_title_compare = self.index_dict.get('index_title_compare')
         index_year_compare = self.index_dict.get('index_year_compare')
+        index_site_search = self.index_dict.get('index_site_search')
+        index_site_search_list = index_site_search.split()
 
         self.logger_instance.debug(u"Index title compare is '%s'" % index_title_compare)
         self.logger_instance.debug(u"Index year compare is '%s'" % index_year_compare)
@@ -347,26 +349,21 @@ class FilterMovies(object):
 
             for library_filename in files:
 
-                library_title_compare_lower = re.sub(self.regex_compare, "", library_filename).lower()
+                library_filename_compare_lower = re.sub(self.regex_compare, "", library_filename).lower()
 
-                if index_title_compare in library_title_compare_lower:
+                # check that index title is not in file in library
+                if index_title_compare in library_filename_compare_lower:
 
-                    if index_year_compare in library_title_compare_lower:
+                    # check that index year is not in file in library
+                    if index_year_compare in library_filename_compare_lower:
 
-                        self.logger_instance.warning(u"Index title '%s' already exists in library file '%s', skipping movie" % (index_title, library_filename))
-                        return False
+                        # if all of the search items in the search list are present in the library filename then return false (already downloaded)
+                        index_site_search_bool = all(index_site_search_item in library_filename_compare_lower for index_site_search_item in index_site_search_list)
 
-            for library_dirs in dirs:
+                        if index_site_search_bool:
 
-                library_title_compare_lower = re.sub(self.regex_compare, "", library_dirs).lower()
-                #self.logger_instance.debug(u"Index title compare is '%s',  library directory compare is '%s'" % (index_title_compare, library_title_compare))
-
-                if index_title_compare in library_title_compare_lower:
-
-                    if index_year_compare in library_title_compare_lower:
-
-                        self.logger_instance.warning(u"Index title '%s' already exists in library directory '%s', skipping movie" % (index_title, library_dirs))
-                        return False
+                            self.logger_instance.warning(u"Index title '%s' already exists in library file '%s', skipping movie" % (index_title, library_filename))
+                            return False
 
         self.logger_instance.debug(u"Index title '%s' not found in library '%s', continue processing..." % (index_title, library_path))
         return True
