@@ -22,7 +22,6 @@ class NotificationEmail(object):
         imdb_id = self.index_dict.get('imdb_id')
         imdb_rating = self.index_dict.get('imdb_rating')
         imdb_votes = self.index_dict.get('imdb_votes')
-        imdb_plot = self.index_dict.get('imdb_plot_outline') #none?
         imdb_credits_cast_list = self.index_dict.get('imdb_credits_cast_list')
         imdb_credits_director_list = self.index_dict.get('imdb_credits_director_list')
         imdb_credits_director = ", ".join(imdb_credits_director_list)
@@ -35,6 +34,10 @@ class NotificationEmail(object):
         index_size_mb = self.index_dict.get('index_size_mb')
         torrent_client = self.index_dict['torrent_client']
         torrent_client_add_paused_bool = self.index_dict["torrent_client_%s_add_paused" % torrent_client]
+
+        imdb_plot = self.index_dict.get('imdb_plot_outline')
+        if imdb_plot is None:
+            imdb_plot = self.index_dict.get('imdb_plot_summary')
 
         if torrent_client_add_paused_bool is True:
             queue_status = 'Paused'

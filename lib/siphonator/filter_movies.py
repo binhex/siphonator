@@ -397,9 +397,8 @@ class FilterMovies(object):
         return True
 
     def filter_bad_movie_title(self):
-        # TODO needs verify this works
+
         index_title_compare_lower = self.index_dict.get('index_title_compare')
-        index_year_compare = self.index_dict.get('index_year_compare')
         filter_bad_movie_title_list = self.index_dict.get('filter_bad_movie_title_list')
 
         if filter_bad_movie_title_list is None:
@@ -410,14 +409,12 @@ class FilterMovies(object):
 
             filter_bad_movie_title_lower = re.sub(self.regex_compare, "", filter_bad_movie_title).lower()
 
-            if index_title_compare_lower in filter_bad_movie_title_lower:
+            if filter_bad_movie_title_lower in index_title_compare_lower:
 
-                if index_year_compare in filter_bad_movie_title_lower:
+                self.logger_instance.warning(u"Index title '%s' contains bad movie title '%s', skipping movie" % (index_title_compare_lower, filter_bad_movie_title_lower))
+                return False
 
-                    self.logger_instance.warning(u"Index title '%s' found in bad movie title list, skipping movie" % index_title_compare_lower)
-                    return False
-
-        self.logger_instance.info(u"Index title '%s (%s)' NOT found in bad movie list" % (index_title_compare_lower, index_year_compare))
+        self.logger_instance.info(u"Index title '%s' does NOT contain bad movie titles from list '%s'" % (index_title_compare_lower, filter_bad_movie_title_list))
         return True
 
     def filter_bad_index_type(self):

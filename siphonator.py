@@ -99,13 +99,6 @@ class Siphonator(object):
 
         user_agent = u"Siphonator/%s; https://sourceforge.net/projects/moviegrabber" % current_version
 
-        # begin definition of dictionary to pass around
-        index_dict = ({'db_filepath': db_filepath, 'db_version': db_version, 'config_ini': config_ini})
-
-        # create sqlite database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, **index_dict)
-        db_sqlite_instance.create_database()
-
         torrent_client = 'qbittorrent'
         torrent_client_qbittorrent_host = '192.168.1.10'
         torrent_client_qbittorrent_port = 2100
@@ -129,7 +122,6 @@ class Siphonator(object):
         index_proxy_jackett_read_timeout = 60.0
         index_proxy_jackett_limit = "2000"
 
-        # TODO need different libray path depending on search criteria, e.g. 1080p vs 2160p
         library_path = "/media"
         filter_minimum_year = '1960'
         filter_minimum_runtime_mins = '60'
@@ -147,7 +139,7 @@ class Siphonator(object):
         ]
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
-        filter_override_character_list = ['bridget jones']
+        filter_override_character_list = ['bridget jones', 'Shazam']
 
         index_site_search_1080p_dict = {
             'index_site_search': '1080p',
@@ -171,6 +163,50 @@ class Siphonator(object):
         # walk library path and store in results dict, note we save it as a list so we can re-use it (costly)
         tools_various_instance = siphonator_tools_various.ToolsVarious(logger_instance)
         filter_library_path_walk = list(tools_various_instance.library_path_walk(library_path))
+
+        if args['test']:
+
+            logger_instance.info(u"Running in test mode...")
+            filter_minimum_year = '1900'
+            filter_minimum_runtime_mins = '1'
+            filter_genre_minimum_rating_dict = ({})
+            filter_minimum_rating = '1.0'
+            filter_minimum_votes = int(1)
+            filter_minimum_seeders = int(1)
+
+            filter_good_language_list = ['en']
+            filter_bad_movie_title_list = ['Inland Empire']
+            filter_override_character_list = []
+
+            index_site_search_1080p_dict = {
+                'index_site_search': '1080p',
+                'index_site_category': '2000',
+                'filter_minimum_size_mb': int(1),
+                'filter_maximum_size_mb': int(20000000),
+                'filter_minimum_bitrate_mb': int(1)
+            }
+
+            filter_bad_index_title_list = []
+
+            config_ini = os.path.join(config_path, u"config-test.ini")
+
+            # remove previous temp config.ini
+            if os.path.exists(config_ini):
+                os.remove(config_ini)
+
+            # set folder path for db files
+            db_filepath = os.path.join(db_path, u"siphonator-test.db")
+
+            # remove previous test db
+            if os.path.exists(db_filepath):
+                os.remove(db_filepath)
+
+        # begin definition of dictionary to pass around
+        index_dict = ({'db_filepath': db_filepath, 'db_version': db_version, 'config_ini': config_ini})
+
+        # create sqlite database
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger_instance, **index_dict)
+        db_sqlite_instance.create_database()
 
         # add in additional info to pass around as dict
         index_dict.update({
@@ -210,7 +246,7 @@ class Siphonator(object):
             'search_tmdb_api_key': search_tmdb_api_key,
             'search_omdb_api_key': search_omdb_api_key
         })
-
+        # TODO get list of enabled index sites from jackett:- 'http://192.168.1.10:1900/api/v2.0/indexers/all/results/torznab/api?configured=true&apikey=o4xte43ftp56m64aknxch4pe7cp3lhaj&t=indexers&q='
         index_site_dict_list_dict = {
             'rarbg': [index_site_search_1080p_dict, index_site_search_2160p_remux_dict],
             'thepiratebay': [index_site_search_1080p_dict],
@@ -284,12 +320,10 @@ if __name__ == '__main__':
     # set folder path for config files
     config_path = os.path.join(app_root_path, u"configs")
     config_path = os.path.normpath(config_path)
+    config_ini = os.path.join(config_path, u"config.ini")
 
     # set path for configspec.ini file
     configspec_ini = os.path.join(config_path, u"configspec.ini")
-
-    # set path for config.ini file
-    config_ini = os.path.join(config_path, u"config.ini")
 
     # create configobj instance, set config.ini file, set encoding and set configspec.ini file
     config_obj = configobj.ConfigObj(config_ini, list_values=False, write_empty_values=True, encoding='UTF-8', default_encoding='UTF-8', configspec=configspec_ini, unrepr=True)
@@ -331,6 +365,7 @@ if __name__ == '__main__':
     commandline_parser.add_argument(u"--config", metavar=u"<path>", help=u"specify path for config file e.g. --config /opt/siphonator/config/")
     commandline_parser.add_argument(u"--logs", metavar=u"<path>", help=u"specify path for log files e.g. --logs /opt/siphonator/logs/")
     commandline_parser.add_argument(u"--pidfile", metavar=u"<path>", help=u"specify path to pidfile e.g. --pid /var/run/siphonator/siphonator.pid")
+    commandline_parser.add_argument(u"--test", action=u"store_true", help=u"run in test mode")
     commandline_parser.add_argument(u"--daemon", action=u"store_true", help=u"run as daemonized process")
     commandline_parser.add_argument(u"--version", action=u"version", version=current_version)
 
