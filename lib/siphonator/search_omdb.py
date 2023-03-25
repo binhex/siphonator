@@ -71,8 +71,7 @@ class SearchOMDb(object):
 
         # get comparison dictionary for omdb_title
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-        custom_title_compare_dict = tools_various_instance.custom_title_compare(omdb_title)
-        omdb_title_compare = custom_title_compare_dict.get('custom_title_compare')
+        omdb_title_compare = tools_various_instance.custom_title_compare(omdb_title)
 
         if omdb_title_compare not in self.index_title_compare:
 

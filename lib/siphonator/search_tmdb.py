@@ -56,11 +56,9 @@ class SearchTMDB(object):
 
             # get comparison dictionary for tmdb_title
             tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-            custom_title_compare_dict = tools_various_instance.custom_title_compare(tmdb_title)
-            tmdb_title_compare = custom_title_compare_dict.get('custom_title_compare')
+            tmdb_title_compare = tools_various_instance.custom_title_compare(tmdb_title)
 
-            custom_original_title_compare_dict = tools_various_instance.custom_title_compare(tmdb_original_title)
-            tmdb_original_title_compare = custom_original_title_compare_dict.get('custom_title_compare')
+            tmdb_original_title_compare = tools_various_instance.custom_title_compare(tmdb_original_title)
 
             if tmdb_title_compare not in self.index_title_compare:
 

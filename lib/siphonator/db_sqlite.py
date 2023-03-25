@@ -79,12 +79,10 @@ class DbSqlite(object):
 
         # get comparison dictionary from index_title
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-        custom_title_full_compare_dict = tools_various_instance.custom_title_full_compare(index_title)
-        custom_title_full_compare = custom_title_full_compare_dict.get('custom_title_full_compare')
+        custom_title_full_compare = tools_various_instance.custom_title_full_compare(index_title)
 
         # get index title with sqlite wildcard char '%'
-        custom_title_sqlite_dict = tools_various_instance.custom_title_sqlite(index_title)
-        custom_title_sqlite_query = custom_title_sqlite_dict.get('custom_title_sqlite')
+        custom_title_sqlite_query = tools_various_instance.custom_title_sqlite(index_title)
         self.logger_instance.debug(u"Database index title query is '%s'" % custom_title_sqlite_query)
 
         # query database, note this maybe subject to sqlite injection as I am dynamically setting table and column
@@ -97,8 +95,7 @@ class DbSqlite(object):
 
             # get comparison dictionary for index title from sqlite query
             tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-            custom_title_full_compare_sqlite_dict = tools_various_instance.custom_title_full_compare(index_title_sqlite_result)
-            custom_title_full_compare_sqlite = custom_title_full_compare_sqlite_dict.get('custom_title_full_compare')
+            custom_title_full_compare_sqlite = tools_various_instance.custom_title_full_compare(index_title_sqlite_result)
 
             # compare index title against sqlite query index title
             if custom_title_full_compare == custom_title_full_compare_sqlite:

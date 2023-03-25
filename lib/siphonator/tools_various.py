@@ -1,5 +1,6 @@
 import re
 import os
+import datetime
 
 class ToolsVarious(object):
 
@@ -8,9 +9,19 @@ class ToolsVarious(object):
         self.logger_instance = logger_instance
         self.index_title_regex_search = r'\.|_'
         self.index_title_regex_sqlite = r'\.|_|-|\s'
+        self.index_title_regex_word_match =  r'\.|_|\[|\]|\(|\)'
         self.index_title_regex_strip = r'\s|,|\.|_|-|\'|\!|[\(\)]|[\[\]]'
         self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s).*$'
         self.index_title_year_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s)'
+
+    def current_time(self):
+
+        # datetime object containing current date and time
+        run_current_date_and_time = datetime.datetime.now()
+
+        # convert to human-readable format dd/mm/YY H:M:S
+        run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
+        return run_current_date_and_time_converted
 
     def custom_title_sqlite(self, custom_title):
 
@@ -19,17 +30,11 @@ class ToolsVarious(object):
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
-        self.logger_instance.debug(u"Custom title is '%s'" % custom_title)
-
         custom_title_strip = re.sub(self.index_title_remove_year_to_end_regex, '', custom_title)
         custom_title_search = re.sub(self.index_title_regex_search, ' ', custom_title_strip)
         custom_title_sqlite = re.sub(self.index_title_regex_sqlite, '%', custom_title_search)
         custom_title_sqlite = '%%%s%%' % custom_title_sqlite
-
-        custom_title_sqlite_dict = ({'custom_title_sqlite': custom_title_sqlite})
-
-        self.logger_instance.debug(u"Custom title sqlite dict is '%s'" % custom_title_sqlite_dict)
-        return custom_title_sqlite_dict
+        return custom_title_sqlite
 
     def custom_title_compare(self, custom_title):
 
@@ -38,14 +43,18 @@ class ToolsVarious(object):
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
-        self.logger_instance.debug(u"Custom title is '%s'" % custom_title)
-
         custom_title_compare = re.sub(self.index_title_regex_strip, '', custom_title).lower()
+        return custom_title_compare
 
-        custom_title_compare_dict = ({'custom_title_compare': custom_title_compare})
+    def custom_title_word_match_compare(self, custom_title):
 
-        self.logger_instance.debug(u"Custom title compare dict is '%s'" % custom_title_compare_dict)
-        return custom_title_compare_dict
+        if custom_title is None:
+
+            self.logger_instance.warning(u'No custom_title sent to function')
+            return None
+
+        custom_title_word_match_compare = re.sub(self.index_title_regex_word_match, ' ', custom_title).lower()
+        return custom_title_word_match_compare
 
     def custom_title_full_compare(self, custom_title):
 
@@ -54,14 +63,8 @@ class ToolsVarious(object):
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
-        self.logger_instance.debug(u"Custom title is '%s'" % custom_title)
-
         custom_title_full_compare = re.sub(self.index_title_regex_strip, '', custom_title).lower()
-
-        custom_title_full_compare_dict = ({'custom_title_full_compare': custom_title_full_compare})
-
-        self.logger_instance.debug(u"Custom title full compare dict is '%s'" % custom_title_full_compare_dict)
-        return custom_title_full_compare_dict
+        return custom_title_full_compare
 
     def index_title_compare_search(self, **index_dict):
 
@@ -131,13 +134,18 @@ class ToolsVarious(object):
         index_year_compare = re.sub(r'[._\s()]+', '', index_year_compare)
         self.logger_instance.info (u"Index year compare is '%s'" % index_year_compare)
 
-        index_dict.update({'index_title_compare': index_title_compare,
-                           'index_title_full_compare': index_title_full_compare,
-                           'index_year_compare': index_year_compare,
-                           'index_title_search': index_title_search,
-                           'index_title_year_to_end_compare': index_title_year_to_end_compare,
-                           'result': 'success',
-                           'result_details': 'Identified title and year from index title'})
+        index_title_and_year_compare = "%s%s" % (index_title_compare, index_year_compare)
+
+        index_dict.update({
+            'index_title_compare': index_title_compare,
+            'index_title_full_compare': index_title_full_compare,
+            'index_year_compare': index_year_compare,
+            'index_title_search': index_title_search,
+            'index_title_year_to_end_compare': index_title_year_to_end_compare,
+            'index_title_and_year_compare': index_title_and_year_compare,
+            'result': 'success',
+            'result_details': 'Identified title and year from index title'
+        })
 
         return index_dict
 

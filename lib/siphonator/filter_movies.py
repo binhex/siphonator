@@ -1,5 +1,6 @@
 from decimal import Decimal
 import re
+import lib.siphonator.tools_various as siphonator_tools_various
 
 # TODO add in cast, director, writer, bad genre
 # TODO filter_override_downloaded - if repack or proper then check for on disk, if there then possible override
@@ -13,7 +14,7 @@ class FilterMovies(object):
 
         self.index_dict = kwargs
         self.logger_instance = logger_instance
-        self.regex_compare = r'\s|,|\.|_|-|\'|\!|[\(\)]|[\[\]]'
+        self.tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
 
     def filter_index_movies(self):
 
@@ -76,7 +77,8 @@ class FilterMovies(object):
 
         # if override character bool is True then skip check for rating and votes
         filter_override_character = self.filter_override_character()
-        if not filter_override_character:
+        filter_override_movie_title = self.filter_override_movie_title()
+        if not filter_override_character and not filter_override_movie_title:
 
             filter_rating_result = self.filter_rating()
             if not filter_rating_result:
@@ -349,16 +351,17 @@ class FilterMovies(object):
 
             for library_filename in files:
 
-                library_filename_compare_lower = re.sub(self.regex_compare, "", library_filename).lower()
+                # get bad movie title compare using tools various
+                library_filename_compare = self.tools_various_instance.custom_title_compare(library_filename)
 
                 # check that index title is not in file in library
-                if index_title_compare in library_filename_compare_lower:
+                if index_title_compare in library_filename_compare:
 
                     # check that index year is not in file in library
-                    if index_year_compare in library_filename_compare_lower:
+                    if index_year_compare in library_filename_compare:
 
                         # if all of the search items in the search list are present in the library filename then return false (already downloaded)
-                        index_site_search_bool = all(index_site_search_item in library_filename_compare_lower for index_site_search_item in index_site_search_list)
+                        index_site_search_bool = all(index_site_search_item in library_filename_compare for index_site_search_item in index_site_search_list)
 
                         if index_site_search_bool:
 
@@ -370,12 +373,13 @@ class FilterMovies(object):
 
     def filter_bad_index_title(self):
 
-        index_title_regex = r'\.|_|\[|\]|\(|\)'
         index_title = self.index_dict.get('index_title')
-        index_title_strip_lower = re.sub(index_title_regex, ' ', index_title).lower()
-        self.logger_instance.debug(u"Index title for bad keyword comparison is '%s'" % index_title_strip_lower)
-
         filter_bad_title_list = self.index_dict.get('filter_bad_index_title_list')
+
+        # get bad index title compare using tools various
+        index_title_strip_lower = self.tools_various_instance.custom_title_word_match_compare(index_title)
+
+        self.logger_instance.debug(u"Index title for bad keyword comparison is '%s'" % index_title_strip_lower)
 
         if filter_bad_title_list is None:
 
@@ -383,7 +387,8 @@ class FilterMovies(object):
 
         for filter_bad_title in filter_bad_title_list:
 
-            filter_bad_title_lower = re.sub(self.regex_compare, "", filter_bad_title).lower()
+            # get bad keyword for index title compare using tools various
+            filter_bad_title_lower = self.tools_various_instance.custom_title_compare(filter_bad_title)
 
             # use spaces to ensure exact match
             filter_bad_title_word_match_lower = " %s " % filter_bad_title_lower
@@ -398,7 +403,7 @@ class FilterMovies(object):
 
     def filter_bad_movie_title(self):
 
-        index_title_compare_lower = self.index_dict.get('index_title_compare')
+        index_title_and_year_compare = self.index_dict.get('index_title_and_year_compare')
         filter_bad_movie_title_list = self.index_dict.get('filter_bad_movie_title_list')
 
         if filter_bad_movie_title_list is None:
@@ -407,14 +412,15 @@ class FilterMovies(object):
 
         for filter_bad_movie_title in filter_bad_movie_title_list:
 
-            filter_bad_movie_title_lower = re.sub(self.regex_compare, "", filter_bad_movie_title).lower()
+            # get bad movie title compare using tools various
+            filter_bad_movie_title_compare = self.tools_various_instance.custom_title_compare(filter_bad_movie_title)
 
-            if filter_bad_movie_title_lower in index_title_compare_lower:
+            if filter_bad_movie_title_compare in index_title_and_year_compare:
 
-                self.logger_instance.warning(u"Index title '%s' contains bad movie title '%s', skipping movie" % (index_title_compare_lower, filter_bad_movie_title_lower))
+                self.logger_instance.warning(u"Index title '%s' contains bad movie title '%s', skipping movie" % (index_title_and_year_compare, filter_bad_movie_title_compare))
                 return False
 
-        self.logger_instance.info(u"Index title '%s' does NOT contain bad movie titles from list '%s'" % (index_title_compare_lower, filter_bad_movie_title_list))
+        self.logger_instance.info(u"Index title '%s' does NOT match any bad movie titles in list" % index_title_and_year_compare)
         return True
 
     def filter_bad_index_type(self):
@@ -480,4 +486,26 @@ class FilterMovies(object):
                 return True
 
         self.logger_instance.debug(u"Override characters in list '%s' are NOT in IMDb credits character list '%s'" % (filter_override_character_lower_list, imdb_credits_character_lower_list))
+        return False
+
+    def filter_override_movie_title(self):
+
+        index_title_and_year_compare = self.index_dict.get('index_title_and_year_compare')
+        filter_override_movie_title_list = self.index_dict.get('filter_override_movie_title_list')
+
+        if filter_override_movie_title_list is None:
+
+            return True
+
+        for filter_override_movie_title in filter_override_movie_title_list:
+
+            # get bad movie title compare using tools various
+            filter_override_movie_title_compare = self.tools_various_instance.custom_title_compare(filter_override_movie_title)
+
+            if filter_override_movie_title_compare in index_title_and_year_compare:
+
+                self.logger_instance.info(u"Index title '%s' contains override movie title '%s'" % (index_title_and_year_compare, filter_override_movie_title_compare))
+                return True
+
+        self.logger_instance.debug(u"Index title '%s' does NOT match any override movie titles in list" % index_title_and_year_compare)
         return False
