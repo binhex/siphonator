@@ -123,7 +123,7 @@ class FilterMovies(object):
 
         # TODO regex to strip any wierd chars from imdb abd filter genre
 
-        if filter_genre_minimum_rating_dict is not None:
+        if filter_genre_minimum_rating_dict is not None and imdb_genres_list is not None:
 
             # sort by rating, lowest rating first
             filter_genre_minimum_rating_sorted = sorted(filter_genre_minimum_rating_dict.items(), key=lambda x: x[1])
@@ -147,29 +147,29 @@ class FilterMovies(object):
 
         imdb_rating = self.index_dict.get('imdb_rating')
         filter_minimum_rating = self.index_dict.get('filter_minimum_rating')
-
-        if imdb_rating is None:
-
-            self.logger_instance.warning(u"No IMDb rating available to filter on, assuming below threshold")
-            return False
-
         filter_genre_minimum_rating = self.filter_genre_rating()
 
+        # if override rating for genre found then specify as minimum rating
         if filter_genre_minimum_rating is not None:
 
             filter_minimum_rating = filter_genre_minimum_rating
 
-        minimum_rating_dec = Decimal(filter_minimum_rating)
+        if imdb_rating is not None:
 
-        if imdb_rating >= minimum_rating_dec:
+            filter_minimum_rating_dec = Decimal(filter_minimum_rating)
 
-            self.logger_instance.info(u"IMDb rating '%s' equal to/above threshold '%s'" % (imdb_rating, filter_minimum_rating))
-            return True
+            if imdb_rating >= filter_minimum_rating_dec:
 
-        else:
+                self.logger_instance.info(u"IMDb rating '%s' equal to/above threshold '%s'" % (imdb_rating, filter_minimum_rating))
+                return True
 
-            self.logger_instance.warning(u"IMDb rating '%s' below threshold '%s'" % (imdb_rating, filter_minimum_rating))
-            return False
+            else:
+
+                self.logger_instance.warning(u"IMDb rating '%s' below threshold '%s'" % (imdb_rating, filter_minimum_rating))
+                return False
+
+        self.logger_instance.warning(u"No IMDb rating available to filter on, assuming below threshold")
+        return False
 
     def filter_votes(self):
 
@@ -180,6 +180,11 @@ class FilterMovies(object):
 
             self.logger_instance.warning(u"No IMDb votes available to filter on, assuming below threshold")
             return False
+
+        if filter_minimum_votes == 0 or filter_minimum_votes is None:
+
+            self.logger_instance.info(u"No IMDb minimum votes defined, skipping votes check")
+            return True
 
         imdb_votes_int = int(imdb_votes)
 
