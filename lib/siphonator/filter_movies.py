@@ -122,26 +122,31 @@ class FilterMovies(object):
         filter_genre_minimum_rating_dict = self.index_dict.get('filter_genre_minimum_rating_dict')
 
         # TODO regex to strip any wierd chars from imdb abd filter genre
+        if imdb_genres_list is None:
 
-        if filter_genre_minimum_rating_dict is not None and imdb_genres_list is not None:
+            self.logger_instance.debug(u"IMDb genre not found, skipping filter genre rating")
+            return None
 
-            # sort by rating, lowest rating first
-            filter_genre_minimum_rating_sorted = sorted(filter_genre_minimum_rating_dict.items(), key=lambda x: x[1])
-            filter_genre_minimum_rating_sorted_dict = dict(filter_genre_minimum_rating_sorted)
+        if filter_genre_minimum_rating_dict is None:
 
-            # loop over user defined dictionary of genre minimum ratings
-            for genre_minimum_rating in filter_genre_minimum_rating_sorted_dict.keys():
+            self.logger_instance.debug(u"No genre minimum rating defined, skipping filter genre rating")
+            return None
 
-                # loop over imdb genre list
-                for imdb_genre in imdb_genres_list:
+        # sort by rating, lowest rating first
+        filter_genre_minimum_rating_sorted = sorted(filter_genre_minimum_rating_dict.items(), key=lambda x: x[1])
+        filter_genre_minimum_rating_sorted_dict = dict(filter_genre_minimum_rating_sorted)
 
-                    if genre_minimum_rating.lower() == imdb_genre.lower():
+        # loop over user defined dictionary of genre minimum ratings
+        for genre_minimum_rating in filter_genre_minimum_rating_sorted_dict.keys():
 
-                        filter_genre_minimum_rating = filter_genre_minimum_rating_dict.get(genre_minimum_rating)
-                        self.logger_instance.debug(u"Genre '%s' matches IMDb genre '%s', setting minimum IMDb rating to '%s'" % (genre_minimum_rating.lower(), imdb_genre.lower(), filter_genre_minimum_rating))
-                        return filter_genre_minimum_rating
+            # loop over imdb genre list
+            for imdb_genre in imdb_genres_list:
 
-        return None
+                if genre_minimum_rating.lower() == imdb_genre.lower():
+
+                    filter_genre_minimum_rating = filter_genre_minimum_rating_dict.get(genre_minimum_rating)
+                    self.logger_instance.debug(u"Genre '%s' matches IMDb genre '%s', setting minimum IMDb rating to '%s'" % (genre_minimum_rating.lower(), imdb_genre.lower(), filter_genre_minimum_rating))
+                    return filter_genre_minimum_rating
 
     def filter_rating(self):
 
@@ -149,42 +154,47 @@ class FilterMovies(object):
         filter_minimum_rating = self.index_dict.get('filter_minimum_rating')
         filter_genre_minimum_rating = self.filter_genre_rating()
 
+        if filter_minimum_rating is None:
+
+            self.logger_instance.debug(u"No IMDb minimum rating defined, assuming above threshold")
+            return True
+
+        if imdb_rating is None:
+
+            self.logger_instance.debug(u"No IMDb rating available to filter on, assuming below threshold")
+            return False
+
         # if override rating for genre found then specify as minimum rating
         if filter_genre_minimum_rating is not None:
 
             filter_minimum_rating = filter_genre_minimum_rating
 
-        if imdb_rating is not None:
+        filter_minimum_rating_dec = Decimal(filter_minimum_rating)
 
-            filter_minimum_rating_dec = Decimal(filter_minimum_rating)
+        if imdb_rating >= filter_minimum_rating_dec:
 
-            if imdb_rating >= filter_minimum_rating_dec:
+            self.logger_instance.info(u"IMDb rating '%s' equal to/above threshold '%s'" % (imdb_rating, filter_minimum_rating))
+            return True
 
-                self.logger_instance.info(u"IMDb rating '%s' equal to/above threshold '%s'" % (imdb_rating, filter_minimum_rating))
-                return True
+        else:
 
-            else:
-
-                self.logger_instance.warning(u"IMDb rating '%s' below threshold '%s'" % (imdb_rating, filter_minimum_rating))
-                return False
-
-        self.logger_instance.warning(u"No IMDb rating available to filter on, assuming below threshold")
-        return False
+            self.logger_instance.warning(u"IMDb rating '%s' below threshold '%s'" % (imdb_rating, filter_minimum_rating))
+            return False
 
     def filter_votes(self):
 
         imdb_votes = self.index_dict.get('imdb_votes')
         filter_minimum_votes = self.index_dict.get('filter_minimum_votes')
 
+        if filter_minimum_votes is None:
+
+            self.logger_instance.info(u"No IMDb minimum votes defined, skipping votes check")
+            return True
+
         if imdb_votes is None:
 
             self.logger_instance.warning(u"No IMDb votes available to filter on, assuming below threshold")
             return False
-
-        if filter_minimum_votes == 0 or filter_minimum_votes is None:
-
-            self.logger_instance.info(u"No IMDb minimum votes defined, skipping votes check")
-            return True
 
         imdb_votes_int = int(imdb_votes)
 
@@ -205,7 +215,7 @@ class FilterMovies(object):
         index_size = self.index_dict.get('index_size')
         filter_size_mb = self.index_dict.get('filter_%s_size_mb' % size)
 
-        if filter_size_mb == 0 or filter_size_mb is None:
+        if filter_size_mb is None:
 
             self.logger_instance.info(u"%s size not defined, skipping maximum size check" % size.capitalize())
             return True
@@ -247,6 +257,11 @@ class FilterMovies(object):
         imdb_runtime_in_minutes = self.index_dict.get('imdb_running_time_in_minutes')
         filter_minimum_bitrate_mb = self.index_dict.get('filter_minimum_bitrate_mb')
 
+        if filter_minimum_bitrate_mb is None:
+
+            self.logger_instance.warning(u"No minimum bitrate defined, assuming above threshold")
+            return True
+
         if index_size is None:
 
             self.logger_instance.warning(u"No Index size available to filter on, assuming below threshold")
@@ -276,6 +291,11 @@ class FilterMovies(object):
         index_year_compare = self.index_dict.get('index_year_compare')
         filter_minimum_year = self.index_dict.get('filter_minimum_year')
 
+        if filter_minimum_year is None:
+
+            self.logger_instance.warning(u"No minimum movie year defined, assuming above threshold")
+            return True
+
         if index_year_compare is None:
 
             self.logger_instance.warning(u"No movie year available to filter on, assuming below threshold")
@@ -299,6 +319,11 @@ class FilterMovies(object):
         imdb_runtime_in_minutes = self.index_dict.get('imdb_running_time_in_minutes')
         filter_minimum_runtime_mins = self.index_dict.get('filter_minimum_runtime_mins')
 
+        if filter_minimum_runtime_mins is None:
+
+            self.logger_instance.warning(u"No minimum runtime defined, assuming above threshold")
+            return True
+
         if imdb_runtime_in_minutes is None:
 
             self.logger_instance.warning(u"No movie runtime available to filter on, assuming below threshold")
@@ -321,6 +346,11 @@ class FilterMovies(object):
 
         index_seeders = self.index_dict.get('index_seeders')
         filter_minimum_seeders = self.index_dict.get('filter_minimum_seeders')
+
+        if filter_minimum_seeders is None:
+
+            self.logger_instance.warning(u"No minimum seeders defined, assuming equal to/above threshold")
+            return True
 
         if index_seeders is None:
 
@@ -348,6 +378,11 @@ class FilterMovies(object):
         index_year_compare = self.index_dict.get('index_year_compare')
         index_site_search = self.index_dict.get('index_site_search')
         index_site_search_list = index_site_search.split()
+
+        if filter_library_path_walk is None:
+
+            self.logger_instance.warning(u"No library path defined, assuming movie is not present in library")
+            return True
 
         self.logger_instance.debug(u"Index title compare is '%s'" % index_title_compare)
         self.logger_instance.debug(u"Index year compare is '%s'" % index_year_compare)
@@ -381,14 +416,15 @@ class FilterMovies(object):
         index_title = self.index_dict.get('index_title')
         filter_bad_title_list = self.index_dict.get('filter_bad_index_title_list')
 
+        if filter_bad_title_list is None:
+
+            self.logger_instance.warning(u"No bad index title keywords defined, skipping bad index title keyword check")
+            return True
+
         # get bad index title compare using tools various
         index_title_strip_lower = self.tools_various_instance.custom_title_word_match_compare(index_title)
 
         self.logger_instance.debug(u"Index title for bad keyword comparison is '%s'" % index_title_strip_lower)
-
-        if filter_bad_title_list is None:
-
-            return True
 
         for filter_bad_title in filter_bad_title_list:
 
@@ -413,6 +449,7 @@ class FilterMovies(object):
 
         if filter_bad_movie_title_list is None:
 
+            self.logger_instance.warning(u"No bad movie titles defined, skipping bad movie title check")
             return True
 
         for filter_bad_movie_title in filter_bad_movie_title_list:
@@ -432,6 +469,11 @@ class FilterMovies(object):
 
         index_title_year_to_end_compare = self.index_dict.get('index_title_year_to_end_compare')
         identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
+
+        if index_title_year_to_end_compare is None:
+
+            self.logger_instance.info(u"No year to end identified for index title, skipping bad index type check")
+            return True
 
         if re.search(identify_tv_season_or_episode_regex, index_title_year_to_end_compare):
 
@@ -477,7 +519,7 @@ class FilterMovies(object):
 
         if imdb_credits_character_list is None:
 
-            self.logger_instance.warning(u"IMDb credits character not found, skipping character checks")
+            self.logger_instance.warning(u"IMDb characters not found, skipping character checks")
             return False
 
         imdb_credits_character_lower_list = [x.lower() for x in imdb_credits_character_list]
@@ -500,7 +542,13 @@ class FilterMovies(object):
 
         if filter_override_movie_title_list is None:
 
-            return True
+            self.logger_instance.debug(u"Override movie title not defined, assuming movie title is not in override list")
+            return False
+
+        if index_title_and_year_compare is None:
+
+            self.logger_instance.debug(u"Index title and year for comparison not found, assuming movie title is not in override list")
+            return False
 
         for filter_override_movie_title in filter_override_movie_title_list:
 
