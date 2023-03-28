@@ -1,18 +1,19 @@
-apscheduler             # adds in scheduling to run the main process at set times in a crontab style format
-backoff                 # function decorator for backoff and retry for requests
-colorama                # colour support for consoloe output for all platforms
-imdbpie                 # python IMDB client using the IMDB JSON web service made available for their iOS application
+apscheduler             # Adds in scheduling to run the main process at set times in a crontab style format
+backoff                 # Function decorator for backoff and retry for requests
+colorama                # Colour support for consoloe output for all platforms
+imdbpie                 # Python IMDB client using the IMDB JSON web service made available for their iOS application
 xmltodict               # xmltodict is a simple library that aims at making XML feel like working with JSON
 mako                    # Mako is a web template library written in Python
-nmdmail                 # simplified email sender for Python
+nmdmail                 # Simplified email sender for Python
 uvicorn                 # Alternative to tornado, is async so much faster!
 tornado                 # Tornado is a Python web framework - non blocking i/o
-tornroutes              # web server routes decorator
-requests                # http library for humans
-urllib3                 # referenced by requests
+tornroutes              # Web server routes decorator
+requests                # HTTP library for humans
+urllib3                 # Referenced by requests
 sqlalchemy              # SQLAlchemy is the Python SQL toolkit and Object Relational Mapper that gives developers the full power and flexibility of SQL.
 sqlite-utils            # Python CLI utility and library for manipulating SQLite databases.
-validators              # used to validate data from user e.g. email, url etc
-configobj               # config reading, writing and validation
-ConfigArgParse          # drop-in replacement for argparse that allows options to be set via cli, config files and/or environment variables
+validators              # Used to validate data from user e.g. email, url etc
+configobj               # Config reading, writing and validation
+ConfigArgParse          # Drop-in replacement for argparse that allows options to be set via cli, config files and/or environment variables
 qbittorrent-api         # API support to add torrents/magnets to qbittorrent
+Pytest                  # Test framework for Python

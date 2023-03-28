@@ -11,15 +11,19 @@ from apscheduler.schedulers.background import BlockingScheduler
 # define path to siphonator root path - required for linux
 root_dir = os.path.dirname(os.path.realpath(__file__))
 
-python_version = sys.version_info
-
 # check version of python is 3.x.x
+python_version = sys.version_info
 if python_version < (3, 0, 0):
 
     sys.stderr.write("WARNING - You need Python 3.x.x installed to run Siphonator, your running version %s" % (python_version,))
     sys.exit(1)
 
 # -------------------- siphonator modules -----------------------------
+
+# check if app root directory is already on path, if not then append.
+# this is req to allow import of local modules (pex bug):-
+# https://github.com/pantsbuild/pex/issues/340#issuecomment-358775440
+sys.path.append('%s/' % root_dir)
 
 try:
 
@@ -34,28 +38,8 @@ try:
 
 except ImportError:
 
-    # TODO better solution than this
-    # check if app root directory is already on path, if not then append.
-    # this is req to allow import of local modules (pex bug):-
-    # https://github.com/pantsbuild/pex/issues/340#issuecomment-358775440
-    sys.path.append('%s/' % root_dir)
-
-    try:
-
-        import lib.siphonator.imdb_imdbpie as siphonator_imdb_imdbpie
-        import lib.siphonator.tools_downloader as siphonator_tools_downloader
-        import lib.siphonator.index_proxy as siphonator_index_proxy
-        import lib.siphonator.post_processing as siphonator_post_rename
-        import lib.siphonator.tools_logging as siphonator_tools_logging
-        import lib.siphonator.tools_various as siphonator_tools_various
-        import lib.siphonator.search_all as siphonator_search_all
-        import lib.siphonator.db_sqlite as siphonator_db_sqlite
-
-    except ImportError:
-
-        print("cannot import Siphonator modules, exiting...")
-        sys.exit(1)
-
+    print("cannot import Siphonator modules, exiting...")
+    sys.exit(1)
 
 class Siphonator(object):
 
@@ -164,42 +148,6 @@ class Siphonator(object):
         # walk library path and store in results dict, note we save it as a list so we can re-use it (costly)
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
         filter_library_path_walk = list(tools_various_instance.library_path_walk(library_path))
-
-        if args['test']:
-
-            self.logger_instance.info(u"Running in test mode...")
-            filter_minimum_year = '1900'
-            filter_minimum_runtime_mins = '1'
-            filter_genre_minimum_rating_dict = ({})
-            filter_minimum_rating = '1.0'
-            filter_minimum_votes = int(1)
-            filter_minimum_seeders = int(1)
-
-            filter_good_language_list = ['en']
-            filter_bad_movie_title_list = ['Time Lock']
-            filter_override_character_list = ['fav char']
-            filter_bad_index_title_list = ['badkeyword']
-
-            index_site_search_1080p_dict = {
-                'index_site_search': '1080p',
-                'index_site_category': '2000',
-                'filter_minimum_size_mb': int(1),
-                'filter_maximum_size_mb': int(20000000),
-                'filter_minimum_bitrate_mb': int(1)
-            }
-
-            self.config_ini = os.path.join(self.config_path, u"config-test.ini")
-
-            # remove previous temp config.ini
-            if os.path.exists(self.config_ini):
-                os.remove(self.config_ini)
-
-            # set folder path for db files
-            self.db_filepath = os.path.join(self.db_path, u"siphonator-test.db")
-
-            # remove previous test db
-            if os.path.exists(self.db_filepath):
-                os.remove(self.db_filepath)
 
         # begin definition of dictionary to pass around
         index_dict = ({'db_filepath': self.db_filepath, 'db_version': db_version, 'config_ini': self.config_ini})
