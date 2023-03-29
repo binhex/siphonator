@@ -4,7 +4,7 @@ import configobj
 import validate
 import argparse
 import datetime
-
+import pytest
 from imdbpie import ImdbAPIError
 from apscheduler.schedulers.background import BlockingScheduler
 
@@ -286,6 +286,10 @@ if __name__ == '__main__':
 
     # save arguments in dictionary
     args = vars(commandline_parser.parse_args())
+
+    if args['test']:
+        return_code = pytest.main(["--verbose"])
+        exit(return_code)
 
     # TODO temporary hack until we read in config.ini
     config_schedule_mode = 'foreground'
