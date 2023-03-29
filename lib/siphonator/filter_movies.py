@@ -159,7 +159,8 @@ class FilterMovies(object):
             self.logger_instance.debug(u"No IMDb minimum rating defined, assuming above threshold")
             return True
 
-        if filter_minimum_rating > 10.0:
+        filter_minimum_rating_dec = Decimal(filter_minimum_rating)
+        if filter_minimum_rating_dec > Decimal('10.0'):
 
             self.logger_instance.debug(u"IMDb rating defined as '%s' is greater than the maximum value of 10.0, assuming above threshold" % filter_minimum_rating)
             return True
@@ -175,7 +176,6 @@ class FilterMovies(object):
             filter_minimum_rating = filter_genre_minimum_rating
 
         filter_minimum_rating_dec = Decimal(filter_minimum_rating)
-
         if imdb_rating >= filter_minimum_rating_dec:
 
             self.logger_instance.info(u"IMDb rating '%s' equal to/above threshold '%s'" % (imdb_rating, filter_minimum_rating))

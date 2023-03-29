@@ -5,7 +5,7 @@ import pytest
 import lib.siphonator.filter_movies as siphonator_filter_movies
 import lib.siphonator.tools_logging as siphonator_tools_logging
 
-# to run tests use command 'python -m pytest --verbose'
+# to run tests from command line use 'python -m pytest --verbose'
 
 @pytest.fixture
 def create_logger():
