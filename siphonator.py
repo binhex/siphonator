@@ -119,7 +119,7 @@ class Siphonator(object):
             'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
             'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'hindi', 'nlsubs', 'xvid',
             'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
-            'dvdscr', 'screener'
+            'dvdscr', 'screener', 'spa', 'dual', 'protected'
         ]
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []

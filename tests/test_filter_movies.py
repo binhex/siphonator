@@ -5,6 +5,8 @@ import pytest
 import lib.siphonator.filter_movies as siphonator_filter_movies
 import lib.siphonator.tools_logging as siphonator_tools_logging
 
+# to run tests use command 'python -m pytest --verbose'
+
 @pytest.fixture
 def create_logger():
 
@@ -47,13 +49,13 @@ def create_logger():
     yield logger
 
 @pytest.fixture
-def filter_rating(create_logger):
+def filter_rating(create_logger, imdb_rating):
 
     logger = create_logger
 
     # Arrange
     test_data = {
-        'imdb_rating': 4.0,
+        'imdb_rating': imdb_rating,
         'filter_minimum_rating': 6.0,
         'filter_genre_minimum_rating': None
     }
@@ -66,14 +68,14 @@ def filter_rating(create_logger):
     yield response
 
 @pytest.fixture
-def filter_bad_index_title(create_logger):
+def filter_bad_index_title(create_logger, filter_bad_index_title_list):
 
     logger = create_logger
 
     # Arrange
     test_data = {
         'index_title': 'my bad movie title',
-        'filter_bad_index_title_list': ['bad']
+        'filter_bad_index_title_list': filter_bad_index_title_list
     }
 
     # Act
@@ -84,14 +86,14 @@ def filter_bad_index_title(create_logger):
     yield response
 
 @pytest.fixture
-def filter_genre_rating(create_logger):
+def filter_genre_rating(create_logger, filter_genre_minimum_rating_dict):
 
     logger = create_logger
 
     # Arrange
     test_data = {
         'imdb_genres_list': ['sci-fi', 'comedy'],
-        'filter_genre_minimum_rating_dict': ({'sci-fi': 6.5, 'comedy': 6.5})
+        'filter_genre_minimum_rating_dict': filter_genre_minimum_rating_dict
     }
 
     # Act
@@ -101,23 +103,42 @@ def filter_genre_rating(create_logger):
     # yield used instead of return to allow us to do cleanup afterwards
     yield response
 
-def test_filter_bad_index_title(filter_bad_index_title):
+# tests
+###
+
+@pytest.mark.parametrize('filter_bad_index_title_list, exp_assert', [
+    (['bad'], False),   # keyword found in index title
+    (['good'], True),   # keyword good not found in index title
+])
+def test_filter_bad_index_title(filter_bad_index_title, filter_bad_index_title_list, exp_assert):
 
     response = filter_bad_index_title
 
-    # Assert - check index title with bad keyword matches bad keyword list
-    assert response == False
+    # Assert
+    assert response == exp_assert
 
-def test_filter_genre_rating(filter_genre_rating):
+@pytest.mark.parametrize('filter_genre_minimum_rating_dict, exp_assert', [
+    (({'sci-fi': 6.5, 'comedy': 8.5}), 6.5),    # genres both match, set to lowest rating value
+    (({'sci-fi': 8.5, 'music': 6.5}), 8.5),     # single genre matches
+    (({'music': 8.5, 'romance': 6.5}), None),   # neither genre match
+])
+def test_filter_genre_rating(filter_genre_rating, filter_genre_minimum_rating_dict, exp_assert):
 
     response = filter_genre_rating
 
-    # Assert - check genre rating matches index rating and returns rating value (not None)
-    assert response is not None
+    # Assert
+    assert response == exp_assert
 
-def test_filter_rating(filter_rating):
+@pytest.mark.parametrize('imdb_rating, exp_assert', [
+    (100.0, True),  # rating is bad value
+    (0.0, False),   # rating is lowest
+    (10.0, True),   # rating is highest
+    (6.0, True),    # rating is equal to threshold
+    (7.0, True),    # rating is above to threshold
+])
+def test_filter_rating(filter_rating, imdb_rating, exp_assert):
 
     response = filter_rating
 
-    # Assert - check imdb rating below minimum threshold and thus returns false
-    assert response == False
+    # Assert
+    assert response == exp_assert
