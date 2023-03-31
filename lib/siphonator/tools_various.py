@@ -2,6 +2,15 @@ import re
 import os
 import datetime
 
+def current_time():
+
+    # datetime object containing current date and time
+    run_current_date_and_time = datetime.datetime.now()
+
+    # convert to human-readable format dd/mm/YY H:M:S
+    run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
+    return run_current_date_and_time_converted
+
 class ToolsVarious(object):
 
     def __init__(self, logger_instance):
@@ -12,16 +21,8 @@ class ToolsVarious(object):
         self.index_title_regex_word_match =  r'\.|_|\[|\]|\(|\)'
         self.index_title_regex_strip = r'\s|,|\.|_|-|\'|\!|[\(\)]|[\[\]]'
         self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s).*$'
+        # TODO bug, incorrectly identifies year as 2013 for title 'Cloudy with a Chance of Meatballs (2009, 2013) BDRip 1080p H.265 [UKR_ENG] [Hurtom]'
         self.index_title_year_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s)'
-
-    def current_time(self):
-
-        # datetime object containing current date and time
-        run_current_date_and_time = datetime.datetime.now()
-
-        # convert to human-readable format dd/mm/YY H:M:S
-        run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
-        return run_current_date_and_time_converted
 
     def custom_title_sqlite(self, custom_title):
 

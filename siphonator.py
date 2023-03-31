@@ -8,15 +8,15 @@ import pytest
 from imdbpie import ImdbAPIError
 from apscheduler.schedulers.background import BlockingScheduler
 
-# define path to siphonator root path - required for linux
-root_dir = os.path.dirname(os.path.realpath(__file__))
-
 # check version of python is 3.x.x
 python_version = sys.version_info
 if python_version < (3, 0, 0):
 
-    sys.stderr.write("WARNING - You need Python 3.x.x installed to run Siphonator, your running version %s" % (python_version,))
+    sys.stderr.write("WARNING - You need Python 3.x.x installed to run Siphonator, your running version '%s'" % (python_version,))
     sys.exit(1)
+
+# define path to siphonator root path - required for linux
+root_dir = os.path.dirname(os.path.realpath(__file__))
 
 # -------------------- siphonator modules -----------------------------
 
@@ -25,21 +25,10 @@ if python_version < (3, 0, 0):
 # https://github.com/pantsbuild/pex/issues/340#issuecomment-358775440
 sys.path.append('%s/' % root_dir)
 
-try:
-
-    import lib.siphonator.imdb_imdbpie as siphonator_imdb_imdbpie
-    import lib.siphonator.tools_downloader as siphonator_tools_downloader
-    import lib.siphonator.index_proxy as siphonator_index_proxy
-    import lib.siphonator.post_processing as siphonator_post_rename
-    import lib.siphonator.tools_logging as siphonator_tools_logging
-    import lib.siphonator.tools_various as siphonator_tools_various
-    import lib.siphonator.search_all as siphonator_search_all
-    import lib.siphonator.db_sqlite as siphonator_db_sqlite
-
-except ImportError:
-
-    print("cannot import Siphonator modules, exiting...")
-    sys.exit(1)
+import lib.siphonator.index_proxy as siphonator_index_proxy
+import lib.siphonator.tools_logging as siphonator_tools_logging
+import lib.siphonator.tools_various as siphonator_tools_various
+import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
 class Siphonator(object):
 
@@ -76,8 +65,7 @@ class Siphonator(object):
 
         self.logger_instance.info(u"Welcome to Siphonator - Coded by binhex.")
 
-        tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-        current_time = tools_various_instance.current_time()
+        current_time = siphonator_tools_various.current_time()
 
         self.logger_instance.info(u"Processing started at '%s'" % current_time)
 
@@ -123,7 +111,7 @@ class Siphonator(object):
         ]
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
-        filter_override_character_list = ['bridget jones', 'Shazam']
+        filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond']
         filter_override_movie_title_list = ['Star Trek']
 
         index_site_search_1080p_dict = {
@@ -250,7 +238,7 @@ class Siphonator(object):
         db_sqlite_instance.close_database()
 
         # TODO put in elapsed time
-        current_time = tools_various_instance.current_time()
+        current_time = siphonator_tools_various.current_time()
 
         self.logger_instance.info(u"Processing finished at '%s'" % current_time)
 
