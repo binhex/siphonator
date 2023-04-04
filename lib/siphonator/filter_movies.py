@@ -1,9 +1,10 @@
-from decimal import Decimal
+import os
 import re
+from decimal import Decimal
 import lib.siphonator.tools_various as siphonator_tools_various
 
 # TODO if remastered or extended or directors cut then check for on disk, if on disk then check size, if larger then download
-# TODO add in cast, director, writer, bad genre
+# TODO add in cast, director, writer
 # TODO filter_override_downloaded - if repack or proper then check for on disk, if there then possible override
 # TODO if in completed then do not download, or in qbittorrent queue, or in qbittorrent history (possible?)
 # TODO if size of movie is larger on disk compared to index title then ignore, UNLESS its remastered, proper etc.
@@ -67,6 +68,12 @@ class FilterMovies(object):
         return self.index_dict
 
     def filter_imdb_movies(self):
+
+        filter_bad_genre_result = self.filter_bad_genre()
+        if not filter_bad_genre_result:
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_genre'" % self.index_dict.get('index_title'))
+            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_bad_genre'" % self.index_dict.get('index_title')})
+            return self.index_dict
 
         # IMDb filters
         filter_bitrate_result = self.filter_bitrate()
@@ -394,9 +401,11 @@ class FilterMovies(object):
 
         for root, dirs, files in filter_library_path_walk:
 
+            # check index title against existing library filename including search criteria, if it does match ALL the
+            # search criteria then return false
             for library_filename in files:
 
-                # get bad movie title compare using tools various
+                # get library filename compare using tools various
                 library_filename_compare = self.tools_various_instance.custom_title_compare(library_filename)
 
                 # check that index title is not in file in library
@@ -405,7 +414,7 @@ class FilterMovies(object):
                     # check that index year is not in file in library
                     if index_year_compare in library_filename_compare:
 
-                        # if all of the search items in the search list are present in the library filename then return false (already downloaded)
+                        # if all the search items in the search list are present in the library filename then return false (already downloaded)
                         index_site_search_bool = all(index_site_search_item in library_filename_compare for index_site_search_item in index_site_search_list)
 
                         if index_site_search_bool:
@@ -413,7 +422,71 @@ class FilterMovies(object):
                             self.logger_instance.warning(u"Index title '%s' already exists in library file '%s', skipping movie" % (index_title, library_filename))
                             return False
 
+            # check index title against existing library directories, if match found then analyze library file to
+            # determine the resolution to see if it matches the search criteria, if it does match ANY of the search
+            # criteria then return false
+            for library_dirs in dirs:
+
+                library_dirs_compare = self.tools_various_instance.custom_title_compare(library_dirs)
+
+                if index_title_compare in library_dirs_compare:
+
+                    if index_year_compare in library_dirs_compare:
+
+                        # construct absolute library path
+                        library_dirs_abs_path = os.path.join(root, library_dirs)
+
+                        # walk absolute path
+                        library_dirs_abs_path_gen = self.tools_various_instance.library_path_walk(library_dirs_abs_path)
+
+                        # loop over generator absolute path
+                        for dirs_root, dirs_dirs, dirs_files in library_dirs_abs_path_gen:
+
+                            for dir_filename in dirs_files:
+
+                                # only check video container formats
+                                if dir_filename.lower().endswith(('.mkv', '.mp4', '.avi')):
+
+                                    # get filename and join to absolute path
+                                    library_dirs_abs_filepath = os.path.join(library_dirs_abs_path, dir_filename)
+
+                                    # get resolution of library file
+                                    library_dirs_abs_filepath_height_resolution = siphonator_tools_various.ffmpeg_resolution(library_dirs_abs_filepath)
+
+                                    # if any of the search items contain resolution and that matches the resolution for the library file then return false (already downloaded)
+                                    index_site_search_bool = any(str(library_dirs_abs_filepath_height_resolution) in index_site_search_item for index_site_search_item in index_site_search_list)
+
+                                    if index_site_search_bool:
+
+                                        self.logger_instance.warning(u"Index title '%s' already exists in library directory '%s', skipping movie" % (index_title, library_dirs))
+                                        return False
+
         self.logger_instance.debug(u"Index title '%s' not found in library '%s', continue processing..." % (index_title, library_path))
+        return True
+
+    def filter_bad_genre(self):
+
+        imdb_genres_list = self.index_dict.get('imdb_genres_list')
+        filter_bad_genre_list = self.index_dict.get('filter_bad_genre_list')
+
+        if filter_bad_genre_list is None:
+
+            self.logger_instance.debug(u"No bad genre(s) defined, skipping bad genre check")
+            return True
+
+        if imdb_genres_list is None:
+
+            self.logger_instance.debug(u"No IMDb genre(s) found, skipping bad genre check")
+            return True
+
+        for filter_bad_genre in filter_bad_genre_list:
+
+            if filter_bad_genre.lower() in imdb_genres_list:
+
+                self.logger_instance.info(u"IMDb genre(s) '%s' match bad genre(s) list '%s', skipping movie" % (imdb_genres_list, filter_bad_genre_list))
+                return False
+
+        self.logger_instance.info(u"IMDb genre(s) '%s' does NOT match any of the bad genre(s) '%s'" % (imdb_genres_list, filter_bad_genre_list))
         return True
 
     def filter_bad_index_title(self):
@@ -423,7 +496,7 @@ class FilterMovies(object):
 
         if filter_bad_title_list is None:
 
-            self.logger_instance.warning(u"No bad index title keywords defined, skipping bad index title keyword check")
+            self.logger_instance.debug(u"No bad index title keywords defined, skipping bad index title keyword check")
             return True
 
         # get bad index title compare using tools various

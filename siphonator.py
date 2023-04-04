@@ -107,11 +107,14 @@ class Siphonator(object):
             'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
             'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'hindi', 'nlsubs', 'xvid',
             'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
-            'dvdscr', 'screener', 'spa', 'dual', 'protected'
+            'dvdscr', 'screener', 'spa', 'dual', 'protected', 'www'
         ]
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
+        filter_bad_genre_list = ['musical', 'music']
         filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond']
+        # TODO needs implementing!!
+        filter_override_actor_list = ['Jason Statham']
         filter_override_movie_title_list = ['Star Trek']
 
         index_site_search_1080p_dict = {
@@ -175,9 +178,11 @@ class Siphonator(object):
             'filter_minimum_rating': filter_minimum_rating,
             'filter_minimum_votes': filter_minimum_votes,
             'filter_minimum_seeders': filter_minimum_seeders,
+            'filter_bad_genre_list': filter_bad_genre_list,
             'filter_bad_index_title_list': filter_bad_index_title_list,
             'filter_good_language_list': filter_good_language_list,
             'filter_override_character_list': filter_override_character_list,
+            'filter_override_actor_list': filter_override_actor_list,
             'filter_override_movie_title_list': filter_override_movie_title_list,
             'filter_bad_movie_title_list': filter_bad_movie_title_list,
             'search_tmdb_api_key': search_tmdb_api_key,

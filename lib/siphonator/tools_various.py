@@ -1,6 +1,7 @@
 import re
 import os
 import datetime
+import ffmpeg
 
 def current_time():
 
@@ -10,6 +11,25 @@ def current_time():
     # convert to human-readable format dd/mm/YY H:M:S
     run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
     return run_current_date_and_time_converted
+
+def ffmpeg_resolution(media_filepath):
+
+    # get resolution of media
+    video_streams = ffmpeg.probe(media_filepath, select_streams="v")
+    stream_width = video_streams['streams'][0]['width']
+    stream_height = video_streams['streams'][0]['height']
+
+    if stream_width == '1920':
+
+        # hard set as video height may not be consistent but width should be
+        stream_height = '1080'
+
+    elif stream_width == '3840':
+
+        # hard set as video height may not be consistent but width should be
+        stream_height = '2160'
+
+    return stream_height
 
 class ToolsVarious(object):
 
