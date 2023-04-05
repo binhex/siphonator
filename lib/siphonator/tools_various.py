@@ -12,25 +12,6 @@ def current_time():
     run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
     return run_current_date_and_time_converted
 
-def ffmpeg_resolution(media_filepath):
-
-    # get resolution of media
-    video_streams = ffmpeg.probe(media_filepath, select_streams="v")
-    stream_width = video_streams['streams'][0]['width']
-    stream_height = video_streams['streams'][0]['height']
-
-    if stream_width == '1920':
-
-        # hard set as video height may not be consistent but width should be
-        stream_height = '1080'
-
-    elif stream_width == '3840':
-
-        # hard set as video height may not be consistent but width should be
-        stream_height = '2160'
-
-    return stream_height
-
 class ToolsVarious(object):
 
     def __init__(self, logger_instance):
@@ -40,9 +21,49 @@ class ToolsVarious(object):
         self.index_title_regex_sqlite = r'\.|_|-|\s'
         self.index_title_regex_word_match =  r'\.|_|\[|\]|\(|\)'
         self.index_title_regex_strip = r'\s|,|\.|_|-|\'|\!|[\(\)]|[\[\]]'
+        self.index_title_resolution_regex = r'\d{3,4}p'
         self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s).*$'
         # TODO bug, incorrectly identifies year as 2013 for title 'Cloudy with a Chance of Meatballs (2009, 2013) BDRip 1080p H.265 [UKR_ENG] [Hurtom]'
         self.index_title_year_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s)'
+
+    def resolution_from_filename(self, custom_title):
+
+        filename_resolution_search = re.search(self.index_title_resolution_regex, custom_title)
+        if filename_resolution_search:
+
+            filename_resolution = filename_resolution_search.group(0)
+
+        else:
+
+            filename_resolution = None
+
+        self.logger_instance.debug(u"Resolution from library file '%s' is '%s'" % (custom_title, filename_resolution))
+        return filename_resolution
+
+    def resolution_from_ffmpeg(self, media_filepath):
+
+        # get resolution of media
+        video_streams = ffmpeg.probe(media_filepath, select_streams="v")
+        stream_width = video_streams['streams'][0]['width']
+        stream_height = video_streams['streams'][0]['height']
+
+        if stream_width == 1920:
+
+            # hard set as video height may not be consistent but width should be
+            stream_height = '1080'
+
+        elif stream_width == 3840:
+
+            # hard set as video height may not be consistent but width should be
+            stream_height = '2160'
+
+        elif stream_width == 1280:
+
+            # hard set as video height may not be consistent but width should be
+            stream_height = '720'
+
+        self.logger_instance.debug(u"Resolution from ffmpeg for filepath '%s' is '%s'" % (media_filepath, stream_height))
+        return stream_height
 
     def custom_title_sqlite(self, custom_title):
 
@@ -174,5 +195,5 @@ class ToolsVarious(object):
 
         filter_library_path_walk = os.walk(library_path, topdown=False)
 
-        self.logger_instance.info (u"Filter library path '%s' walked" % library_path)
+        self.logger_instance.debug (u"Filter library path '%s' walked" % library_path)
         return filter_library_path_walk

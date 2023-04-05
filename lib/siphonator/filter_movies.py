@@ -56,11 +56,19 @@ class FilterMovies(object):
             self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_seeders'" % self.index_dict.get('index_title')})
             return self.index_dict
 
-        filter_downloaded_result = self.filter_downloaded()
-        if not filter_downloaded_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_downloaded'" % self.index_dict.get('index_title')})
+        # if library file filter returns false then file exists in library
+        filter_downloaded_file_result = self.filter_downloaded_file()
+        if not filter_downloaded_file_result:
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_file'" % self.index_dict.get('index_title'))
+            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_downloaded_dir_result'" % self.index_dict.get('index_title')})
             return self.index_dict
+        # if library file not found (return True) then check directory names and resolution to match search criteria
+        else:
+            filter_downloaded_dir_result = self.filter_downloaded_dir()
+            if not filter_downloaded_dir_result:
+                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.index_dict.get('index_title'))
+                self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.index_dict.get('index_title')})
+                return self.index_dict
 
         self.logger_instance.debug(u"Index title '%s' passed index filters" % self.index_dict.get('index_title'))
 
@@ -381,7 +389,7 @@ class FilterMovies(object):
             self.logger_instance.warning(u"Index seeders '%s' below minimum seeders threshold '%s'" % (index_seeders_int, filter_minimum_seeders))
             return False
 
-    def filter_downloaded(self):
+    def filter_downloaded_file(self):
 
         filter_library_path_walk = self.index_dict.get('filter_library_path_walk')
         library_path = self.index_dict.get('library_path')
@@ -401,8 +409,8 @@ class FilterMovies(object):
 
         for root, dirs, files in filter_library_path_walk:
 
-            # check index title against existing library filename including search criteria, if it does match ALL the
-            # search criteria then return false
+            # check index title against existing library filename, including search criteria, if it does match ALL the
+            # search criteria then return false (movie file already downloaded)
             for library_filename in files:
 
                 # get library filename compare using tools various
@@ -422,9 +430,32 @@ class FilterMovies(object):
                             self.logger_instance.warning(u"Index title '%s' already exists in library file '%s', skipping movie" % (index_title, library_filename))
                             return False
 
+        self.logger_instance.debug(u"Index title '%s' not found in library '%s', continue processing..." % (index_title, library_path))
+        return True
+
+    def filter_downloaded_dir(self):
+
+        filter_library_path_walk = self.index_dict.get('filter_library_path_walk')
+        library_path = self.index_dict.get('library_path')
+        index_title = self.index_dict.get('index_title')
+        index_title_compare = self.index_dict.get('index_title_compare')
+        index_year_compare = self.index_dict.get('index_year_compare')
+        index_site_search = self.index_dict.get('index_site_search')
+        index_site_search_list = index_site_search.split()
+
+        if filter_library_path_walk is None:
+
+            self.logger_instance.warning(u"No library path defined, assuming movie is not present in library")
+            return True
+
+        self.logger_instance.debug(u"Index title compare is '%s'" % index_title_compare)
+        self.logger_instance.debug(u"Index year compare is '%s'" % index_year_compare)
+
+        for root, dirs, files in filter_library_path_walk:
+
             # check index title against existing library directories, if match found then analyze library file to
             # determine the resolution to see if it matches the search criteria, if it does match ANY of the search
-            # criteria then return false
+            # criteria then return false (movies already downloaded)
             for library_dirs in dirs:
 
                 library_dirs_compare = self.tools_various_instance.custom_title_compare(library_dirs)
@@ -450,11 +481,20 @@ class FilterMovies(object):
                                     # get filename and join to absolute path
                                     library_dirs_abs_filepath = os.path.join(library_dirs_abs_path, dir_filename)
 
-                                    # get resolution of library file
-                                    library_dirs_abs_filepath_height_resolution = siphonator_tools_various.ffmpeg_resolution(library_dirs_abs_filepath)
+                                    # get resolution of library file by regex on filename
+                                    library_dirs_abs_filepath_height_resolution = self.tools_various_instance.resolution_from_filename(dir_filename)
+
+                                    # if we cannot determine resolution from filename then use ffmpeg to analyze file
+                                    if library_dirs_abs_filepath_height_resolution is None:
+
+                                        # get resolution of library file by analysing file using ffmpeg
+                                        library_dirs_abs_filepath_height_resolution = self.tools_various_instance.resolution_from_ffmpeg(library_dirs_abs_filepath)
+
+                                    self.logger_instance.debug(u"Library file resolution identified as '%s' for library file '%s'" % (library_dirs_abs_filepath_height_resolution, library_dirs_abs_filepath))
 
                                     # if any of the search items contain resolution and that matches the resolution for the library file then return false (already downloaded)
                                     index_site_search_bool = any(str(library_dirs_abs_filepath_height_resolution) in index_site_search_item for index_site_search_item in index_site_search_list)
+                                    self.logger_instance.debug(u"Library file resolution boolean to match index site search items '%s' is '%s'" % (index_site_search_list, index_site_search_bool))
 
                                     if index_site_search_bool:
 
@@ -463,7 +503,6 @@ class FilterMovies(object):
 
         self.logger_instance.debug(u"Index title '%s' not found in library '%s', continue processing..." % (index_title, library_path))
         return True
-
     def filter_bad_genre(self):
 
         imdb_genres_list = self.index_dict.get('imdb_genres_list')
