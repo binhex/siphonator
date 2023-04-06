@@ -64,9 +64,7 @@ class Siphonator(object):
     def run(self):
 
         self.logger_instance.info(u"Welcome to Siphonator - Coded by binhex.")
-
         current_time = siphonator_tools_various.current_time()
-
         self.logger_instance.info(u"Processing started at '%s'" % current_time)
 
         user_agent = u"Siphonator/%s; https://sourceforge.net/projects/moviegrabber" % current_version
@@ -99,7 +97,7 @@ class Siphonator(object):
         filter_minimum_runtime_mins = '60'
         filter_genre_minimum_rating_dict = ({'sci-fi': 6.5, 'animation': 5.5, 'romance': 6.5, 'comedy': 6.5})
         filter_minimum_rating = '7.0'
-        filter_minimum_votes = int(7500)
+        filter_minimum_votes = int(5000)
         filter_minimum_seeders = int(1)
         filter_bad_index_title_list = [
             '3d', 'cam', 'camrip', 'hdcam', 'hdcamrip', 'iptv', 'hqcam', 'hqcamrip', 'hdts',
@@ -112,9 +110,10 @@ class Siphonator(object):
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
         filter_bad_genre_list = ['musical', 'music']
-        filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond']
-        # TODO needs implementing!!
-        filter_override_actor_list = ['Jason Statham']
+        filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow']
+        filter_override_cast_list = ['Jason Statham']
+        filter_override_writer_list = []
+        filter_override_director_list = ['Steven Spielberg', 'Stanley Kubrick', 'James Cameron', 'Quentin Tarantino']
         filter_override_movie_title_list = ['Star Trek']
 
         index_site_search_1080p_dict = {
@@ -182,7 +181,9 @@ class Siphonator(object):
             'filter_bad_index_title_list': filter_bad_index_title_list,
             'filter_good_language_list': filter_good_language_list,
             'filter_override_character_list': filter_override_character_list,
-            'filter_override_actor_list': filter_override_actor_list,
+            'filter_override_director_list': filter_override_director_list,
+            'filter_override_writer_list': filter_override_writer_list,
+            'filter_override_cast_list': filter_override_cast_list,
             'filter_override_movie_title_list': filter_override_movie_title_list,
             'filter_bad_movie_title_list': filter_bad_movie_title_list,
             'search_tmdb_api_key': search_tmdb_api_key,

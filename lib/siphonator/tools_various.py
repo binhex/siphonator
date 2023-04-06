@@ -40,10 +40,18 @@ class ToolsVarious(object):
         self.logger_instance.debug(u"Resolution from library file '%s' is '%s'" % (custom_title, filename_resolution))
         return filename_resolution
 
-    def resolution_from_ffmpeg(self, media_filepath):
+    def resolution_from_ffprobe(self, media_filepath):
 
-        # get resolution of media
-        video_streams = ffmpeg.probe(media_filepath, select_streams="v")
+        try:
+
+            # get resolution of media
+            video_streams = ffmpeg.probe(media_filepath, select_streams="v")
+
+        except FileNotFoundError:
+
+            self.logger_instance.info(u"ffprobe missing or not on path")
+            return None
+
         stream_width = video_streams['streams'][0]['width']
         stream_height = video_streams['streams'][0]['height']
 
@@ -108,6 +116,7 @@ class ToolsVarious(object):
         custom_title_full_compare = re.sub(self.index_title_regex_strip, '', custom_title).lower()
         return custom_title_full_compare
 
+    # TODO break this up into separate methods and then call each and append to dict
     def index_title_compare_search(self, **index_dict):
 
         if index_dict is None:

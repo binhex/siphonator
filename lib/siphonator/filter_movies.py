@@ -4,7 +4,6 @@ from decimal import Decimal
 import lib.siphonator.tools_various as siphonator_tools_various
 
 # TODO if remastered or extended or directors cut then check for on disk, if on disk then check size, if larger then download
-# TODO add in cast, director, writer
 # TODO filter_override_downloaded - if repack or proper then check for on disk, if there then possible override
 # TODO if in completed then do not download, or in qbittorrent queue, or in qbittorrent history (possible?)
 # TODO if size of movie is larger on disk compared to index title then ignore, UNLESS its remastered, proper etc.
@@ -90,22 +89,33 @@ class FilterMovies(object):
             self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_bitrate'" % self.index_dict.get('index_title')})
             return self.index_dict
 
-        # if override character bool is True then skip check for rating and votes
-        filter_override_character = self.filter_override_character()
-        filter_override_movie_title = self.filter_override_movie_title()
-        if not filter_override_character and not filter_override_movie_title:
+        filter_override_character = self.filter_override_person('character')
 
-            filter_rating_result = self.filter_rating()
-            if not filter_rating_result:
-                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title'))
-                self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title')})
-                return self.index_dict
+        if not filter_override_character:
+            filter_override_director = self.filter_override_person('director')
 
-            filter_votes_result = self.filter_votes()
-            if not filter_votes_result:
-                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title'))
-                self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title')})
-                return self.index_dict
+            if not filter_override_director:
+                filter_override_writer = self.filter_override_person('writer')
+
+                if not filter_override_writer:
+                    filter_override_cast = self.filter_override_person('cast')
+
+                    if not filter_override_cast:
+                        filter_override_movie_title = self.filter_override_movie_title()
+
+                        if not filter_override_movie_title:
+
+                            filter_rating_result = self.filter_rating()
+                            if not filter_rating_result:
+                                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title'))
+                                self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title')})
+                                return self.index_dict
+
+                            filter_votes_result = self.filter_votes()
+                            if not filter_votes_result:
+                                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title'))
+                                self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title')})
+                                return self.index_dict
 
         filter_year_result = self.filter_year()
         if not filter_year_result:
@@ -487,8 +497,13 @@ class FilterMovies(object):
                                     # if we cannot determine resolution from filename then use ffmpeg to analyze file
                                     if library_dirs_abs_filepath_height_resolution is None:
 
-                                        # get resolution of library file by analysing file using ffmpeg
-                                        library_dirs_abs_filepath_height_resolution = self.tools_various_instance.resolution_from_ffmpeg(library_dirs_abs_filepath)
+                                        # get resolution of library file by analysing file using ffprobe
+                                        library_dirs_abs_filepath_height_resolution = self.tools_various_instance.resolution_from_ffprobe(library_dirs_abs_filepath)
+
+                                        if library_dirs_abs_filepath_height_resolution is None:
+
+                                            self.logger_instance.warning(u"Unable to determine resolution using ffprobe, index title '%s' already exists in library directory '%s', skipping movie" % (index_title, library_dirs))
+                                            return False
 
                                     self.logger_instance.debug(u"Library file resolution identified as '%s' for library file '%s'" % (library_dirs_abs_filepath_height_resolution, library_dirs_abs_filepath))
 
@@ -624,32 +639,32 @@ class FilterMovies(object):
         self.logger_instance.debug(u"IMDb language '%s' is not in good language list '%s'" % (imdb_spoken_languages_list, filter_good_language_list))
         return False
 
-    def filter_override_character(self):
+    def filter_override_person(self, person):
 
-        imdb_credits_character_list = self.index_dict.get('imdb_credits_character_list')
-        filter_override_character_list = self.index_dict.get('filter_override_character_list')
+        imdb_credits_person_list = self.index_dict.get('imdb_credits_%s_list' % person)
+        filter_override_person_list = self.index_dict.get('filter_override_%s_list' % person)
 
-        if filter_override_character_list is None:
+        if filter_override_person_list is None:
 
-            self.logger_instance.debug(u"Override character not defined, skipping character checks")
+            self.logger_instance.debug(u"Override %s not defined, skipping character checks" % person)
             return False
 
-        if imdb_credits_character_list is None:
+        if imdb_credits_person_list is None:
 
-            self.logger_instance.warning(u"IMDb characters not found, skipping character checks")
+            self.logger_instance.warning(u"IMDb %s not found, skipping character checks" % person)
             return False
 
-        imdb_credits_character_lower_list = [x.lower() for x in imdb_credits_character_list]
-        filter_override_character_lower_list = [x.lower() for x in filter_override_character_list]
+        imdb_credits_person_lower_list = [x.lower() for x in imdb_credits_person_list]
+        filter_override_person_lower_list = [x.lower() for x in filter_override_person_list]
 
-        for filter_override_character_lower in filter_override_character_lower_list:
+        for filter_override_person_lower in filter_override_person_lower_list:
 
-            if filter_override_character_lower in imdb_credits_character_lower_list:
+            if filter_override_person_lower in imdb_credits_person_lower_list:
 
-                self.logger_instance.info(u"Override character '%s' is in IMDb credits character list '%s', skipping votes and rating checks" % (filter_override_character_lower, imdb_credits_character_lower_list))
+                self.logger_instance.info(u"Override %s '%s' is in IMDb credits %s list '%s', skipping votes and rating checks" % (person, filter_override_person_lower, person, imdb_credits_person_lower_list))
                 return True
 
-        self.logger_instance.debug(u"Override characters in list '%s' are NOT in IMDb credits character list '%s'" % (filter_override_character_lower_list, imdb_credits_character_lower_list))
+        self.logger_instance.debug(u"Override %s in list '%s' are NOT in IMDb credits %s list '%s'" % (person, filter_override_person_lower_list, person, imdb_credits_person_lower_list))
         return False
 
     def filter_override_movie_title(self):
