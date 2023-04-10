@@ -18,75 +18,76 @@ class FilterMovies(object):
 
     def filter_index_movies(self):
 
+        self.index_dict.update({'result': 'failed'})
         # Local/Index filters
         filter_size_result = self.filter_size('minimum')
         if not filter_size_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_size' (minimum)" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_size' (minimum)" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed index filter 'filter_size' (minimum)"})
             return self.index_dict
 
         filter_size_result = self.filter_size('maximum')
         if not filter_size_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_size' (maximum)" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_size' (maximum)" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed index filter 'filter_size' (maximum)"})
             return self.index_dict
 
         filter_bad_index_title = self.filter_bad_index_title()
         if not filter_bad_index_title:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_index_title'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_bad_index_title'" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed index filter 'filter_bad_index_title'"})
             return self.index_dict
 
         filter_bad_index_type = self.filter_bad_index_type()
         if not filter_bad_index_type:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_index_type'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_bad_index_type'" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed index filter 'filter_bad_index_type'"})
             return self.index_dict
 
         filter_bad_movie_title = self.filter_bad_movie_title()
         if not filter_bad_movie_title:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_movie_title'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_bad_movie_title'" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed index filter 'filter_bad_movie_title'"})
             return self.index_dict
 
         filter_seeders_result = self.filter_seeders()
         if not filter_seeders_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_seeders'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_seeders'" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed index filter 'filter_seeders'"})
             return self.index_dict
 
         # if library file filter returns false then file exists in library
         filter_downloaded_file_result = self.filter_downloaded_file()
         if not filter_downloaded_file_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_file'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_downloaded_dir_result'" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_dir_result'"})
             return self.index_dict
         # if library file not found (return True) then check directory names and resolution to match search criteria
         else:
             filter_downloaded_dir_result = self.filter_downloaded_dir()
             if not filter_downloaded_dir_result:
                 self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.index_dict.get('index_title'))
-                self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.index_dict.get('index_title')})
+                self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_dir'"})
                 return self.index_dict
 
-        self.logger_instance.debug(u"Index title '%s' passed index filters" % self.index_dict.get('index_title'))
-
-        self.index_dict.update({'result': 'passed','result_details': u"Index title '%s' passed index filters" % self.index_dict.get('index_title')})
+        self.logger_instance.debug(u"Index title '%s' passed all index filters" % self.index_dict.get('index_title'))
         return self.index_dict
 
     def filter_imdb_movies(self):
 
+        self.index_dict.update({'result': 'failed'})
+
         filter_bad_genre_result = self.filter_bad_genre()
         if not filter_bad_genre_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_genre'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_bad_genre'" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_bad_genre'"})
             return self.index_dict
 
         # IMDb filters
         filter_bitrate_result = self.filter_bitrate()
         if not filter_bitrate_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bitrate'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_bitrate'" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_bitrate'"})
             return self.index_dict
 
         filter_override_character = self.filter_override_person('character')
@@ -108,37 +109,34 @@ class FilterMovies(object):
                             filter_rating_result = self.filter_rating()
                             if not filter_rating_result:
                                 self.logger_instance.debug(u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title'))
-                                self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title')})
+                                self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_rating'"})
                                 return self.index_dict
 
                             filter_votes_result = self.filter_votes()
                             if not filter_votes_result:
                                 self.logger_instance.debug(u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title'))
-                                self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title')})
+                                self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_votes'"})
                                 return self.index_dict
 
         filter_year_result = self.filter_year()
         if not filter_year_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_year'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_year'" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_year'"})
             return self.index_dict
 
         filter_runtime_result = self.filter_runtime()
         if not filter_runtime_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_runtime'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_runtime'" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_runtime'"})
             return self.index_dict
 
         filter_good_language_result = self.filter_good_language()
         if not filter_good_language_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result': 'failed', 'result_details': u"Index title '%s' failed filter 'filter_good_language'" % self.index_dict.get('index_title')})
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language'"})
             return self.index_dict
 
-        # all filters passed mark as good movie
-        self.index_dict.update({'good_movie': 'yes'})
-
-        self.logger_instance.debug(u"Index title '%s' passed IMDb filters" % self.index_dict.get('index_title'))
+        self.logger_instance.debug(u"Index title '%s' passed all IMDb filters" % self.index_dict.get('index_title'))
         return self.index_dict
 
     def filter_genre_rating(self):

@@ -63,7 +63,6 @@ class Siphonator(object):
 
     def run(self):
 
-        self.logger_instance.info(u"Welcome to Siphonator - Coded by binhex.")
         current_time = siphonator_tools_various.current_time()
         self.logger_instance.info(u"Processing started at '%s'" % current_time)
 
@@ -340,8 +339,9 @@ if __name__ == '__main__':
         'db_filepath': db_filepath
     })
 
-    siphonator_instance = Siphonator(logger_create_instance, **run_dict)
+    logger_create_instance.info(u"Welcome to Siphonator - Coded by binhex.")
 
+    siphonator_instance = Siphonator(logger_create_instance, **run_dict)
     if config_schedule_mode == 'foreground':
         # run on schedule foreground blocking, note ext run is now
         schedule = BlockingScheduler()

@@ -298,7 +298,7 @@ class IndexProxy(object):
 
             if self.index_dict.get('result') != 'failed':
 
-                self.index_dict.update({'result': 'success', 'result_details': u"Movie passed all checks"})
+                self.index_dict.update({'result': 'success', 'result_details': u"Passed all Index and IMDb filters"})
 
                 # write to database
                 db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
