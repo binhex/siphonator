@@ -69,7 +69,7 @@ def imdb_json_api(logger_instance, **kwargs):
                 if credits_character_name not in credits_character_list:
                     credits_character_list.append(credits_character_name)
 
-    except KeyError:
+    except (IndexError, KeyError, TypeError):
         if not credits_character_list:
             logger_instance.warning(u"Unable to identify IMDb Credits Characters")
             credits_character_list = None
