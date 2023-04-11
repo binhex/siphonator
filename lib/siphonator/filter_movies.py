@@ -60,7 +60,7 @@ class FilterMovies(object):
         filter_downloaded_file_result = self.filter_downloaded_file()
         if not filter_downloaded_file_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_file'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_dir_result'"})
+            self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_file'"})
             return self.index_dict
         # if library file not found (return True) then check directory names and resolution to match search criteria
         else:
@@ -71,6 +71,8 @@ class FilterMovies(object):
                 return self.index_dict
 
         self.logger_instance.debug(u"Index title '%s' passed all index filters" % self.index_dict.get('index_title'))
+        self.index_dict.update({'result': 'index passed'})
+
         return self.index_dict
 
     def filter_imdb_movies(self):
@@ -137,6 +139,8 @@ class FilterMovies(object):
             return self.index_dict
 
         self.logger_instance.debug(u"Index title '%s' passed all IMDb filters" % self.index_dict.get('index_title'))
+        self.index_dict.update({'result': 'imdb passed'})
+
         return self.index_dict
 
     def filter_genre_rating(self):

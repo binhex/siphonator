@@ -112,11 +112,24 @@ class IndexProxy(object):
         # this breaks down the rss feed page into tag sections
         for node in site_feed_parse:
 
-            seeders = None
-            peers = None
-            magnet_url = None
-            torrent_url = None
-            imdbid = None
+            self.logger_instance.info(u"Resetting IMDb values for dict from previous run...")
+            self.index_dict.update({
+                'imdb_title': None,
+                'imdb_year': None,
+                'imdb_poster_url': None,
+                'imdb_plot_summary': None,
+                'imdb_plot_outline': None,
+                'imdb_rating': None,
+                'imdb_votes': None,
+                'imdb_title_type': None,
+                'imdb_running_time_in_minutes': None,
+                'imdb_genres_list': None,
+                'imdb_credits_director_list': None,
+                'imdb_credits_writer_list': None,
+                'imdb_credits_cast_list': None,
+                'imdb_spoken_languages_list': None,
+                'imdb_credits_character_list': None
+            })
 
             try:
 
@@ -156,6 +169,7 @@ class IndexProxy(object):
             except (KeyError, TypeError, IndexError, AttributeError):
 
                 self.logger_instance.debug(u"Unable to determine torrent url from index site '%s'" % index_site)
+                torrent_url = None
 
             try:
 
@@ -165,6 +179,11 @@ class IndexProxy(object):
 
                 self.logger_instance.info(u"Unable to process attributes from index site '%s'" % index_site)
                 continue
+
+            seeders = None
+            peers = None
+            magnet_url = None
+            imdbid = None
 
             for i in list_named_attributes:
 
@@ -225,19 +244,21 @@ class IndexProxy(object):
 
                 pubdate = None
 
-            self.logger_instance.info(u"Starting processing index title '%s'..." % title)
-            self.index_dict.update({'index_title': title,
-                                    'torrent_url': torrent_url,
-                                    'index_size': size,
-                                    'index_size_mb': size_mb,
-                                    'download_link': details,
-                                    'index_details': comments,
-                                    'index_pubdate': pubdate,
-                                    'index_seeders': seeders,
-                                    'index_peers': peers,
-                                    'imdb_id': imdbid,
-                                    'magnet_url': magnet_url,
-                                    'category': category})
+            self.logger_instance.debug(u"Saving index details to dict for index title '%s'..." % title)
+            self.index_dict.update({
+                'index_title': title,
+                'torrent_url': torrent_url,
+                'index_size': size,
+                'index_size_mb': size_mb,
+                'download_link': details,
+                'index_details': comments,
+                'index_pubdate': pubdate,
+                'index_seeders': seeders,
+                'index_peers': peers,
+                'imdb_id': imdbid,
+                'magnet_url': magnet_url,
+                'category': category
+            })
 
             tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
             self.index_dict = tools_various_instance.index_title_compare_search(**self.index_dict)
