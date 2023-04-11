@@ -1,8 +1,5 @@
 import imdbpie
 
-# TODO set output to unicode,
-
-
 def imdb_json_api(logger_instance, **kwargs):
 
     index_dict = kwargs
@@ -10,6 +7,8 @@ def imdb_json_api(logger_instance, **kwargs):
     credits_director_list = []
     credits_writer_list = []
     credits_character_list = []
+    spoken_languages_list = []
+    genres_list = []
 
     imdb_id = index_dict.get('imdb_id', None)
     logger_instance.info(u"Getting title attributes for movie with IMDb ID '%s'..." % imdb_id)
@@ -31,55 +30,65 @@ def imdb_json_api(logger_instance, **kwargs):
         credits_director_json = (imdb_get_title_credits_dict['credits']['director'])
         for i in credits_director_json:
             credits_director_name = i['name']
-            credits_director_list.append(credits_director_name)
+            if credits_director_name not in credits_director_list:
+                credits_director_list.append(credits_director_name)
 
     except (IndexError, KeyError, TypeError):
-        logger_instance.warning(u"Unable to identify IMDb Credits Director")
-        credits_director_list = None
+        if not credits_director_list:
+            logger_instance.warning(u"Unable to identify IMDb Credits Director")
+            credits_director_list = None
 
     try:
         credits_writer_json = (imdb_get_title_credits_dict['credits']['writer'])
         for i in credits_writer_json:
             credits_writer_name = i['name']
-            credits_writer_list.append(credits_writer_name)
+            if credits_writer_name not in credits_writer_list:
+                credits_writer_list.append(credits_writer_name)
 
     except (IndexError, KeyError, TypeError):
-        logger_instance.warning(u"Unable to identify IMDb Credits Writer")
-        credits_writer_list = None
+        if not credits_writer_list:
+            logger_instance.warning(u"Unable to identify IMDb Credits Writer")
+            credits_writer_list = None
 
     try:
         credits_cast_json = (imdb_get_title_credits_dict['credits']['cast'])
         for i in credits_cast_json:
             credits_cast_name = i['name']
-            credits_cast_list.append(credits_cast_name)
+            if credits_cast_name not in credits_cast_list:
+                credits_cast_list.append(credits_cast_name)
 
     except (IndexError, KeyError, TypeError):
-        logger_instance.warning(u"Unable to identify IMDb Credits Cast")
-        credits_cast_list = None
+        if not credits_cast_list:
+            logger_instance.warning(u"Unable to identify IMDb Credits Cast")
+            credits_cast_list = None
 
     try:
         credits_cast_json = (imdb_get_title_credits_dict['credits']['cast'])
         for i in credits_cast_json:
-            credits_character_name = i['characters'][0]
-            credits_character_list.append(credits_character_name)
+            for credits_character_name in i['characters']:
+                if credits_character_name not in credits_character_list:
+                    credits_character_list.append(credits_character_name)
 
-    except (IndexError, KeyError, TypeError):
-        logger_instance.warning(u"Unable to identify IMDb Credits Character")
-        credits_character_list = None
+    except KeyError:
+        if not credits_character_list:
+            logger_instance.warning(u"Unable to identify IMDb Credits Characters")
+            credits_character_list = None
 
     try:
         spoken_languages_list = imdb_get_title_auxiliary_dict['spokenLanguages']
 
     except (IndexError, KeyError, TypeError):
-        logger_instance.warning(u"Unable to identify IMDb Spoken Languages")
-        spoken_languages_list = None
+        if not spoken_languages_list:
+            logger_instance.warning(u"Unable to identify IMDb Spoken Languages")
+            spoken_languages_list = None
 
     try:
         genres_list = (imdb_get_title_genres_dict['genres'])
 
     except (IndexError, KeyError, TypeError):
-        logger_instance.warning(u"Unable to identify IMDb Genres")
-        genres_list = None
+        if not genres_list:
+            logger_instance.warning(u"Unable to identify IMDb Genres")
+            genres_list = None
 
     try:
         imdb_title = (imdb_get_title_dict['base']['title'])
