@@ -108,7 +108,7 @@ class Siphonator(object):
         ]
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
-        filter_bad_genre_list = ['musical', 'music']
+        filter_bad_genre_list = ['Musical', 'Music', 'Documentary']
         filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow']
         filter_override_cast_list = ['Jason Statham']
         filter_override_writer_list = []
