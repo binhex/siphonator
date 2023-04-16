@@ -106,6 +106,7 @@ class Siphonator(object):
             'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
             'dvdscr', 'screener', 'spa', 'dual', 'protected', 'www'
         ]
+        filter_good_country_list = ['gb', 'us', 'ca', 'au', 'ie', 'nz']
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
         filter_bad_genre_list = ['Musical', 'Music', 'Documentary']
@@ -144,6 +145,9 @@ class Siphonator(object):
         # create sqlite database
         db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **index_dict)
         db_sqlite_instance.create_database()
+
+        # upgrade database if required
+        db_sqlite_instance.upgrade_database()
 
         # add in additional info to pass around as dict
         index_dict.update({
@@ -185,6 +189,7 @@ class Siphonator(object):
             'filter_override_cast_list': filter_override_cast_list,
             'filter_override_movie_title_list': filter_override_movie_title_list,
             'filter_bad_movie_title_list': filter_bad_movie_title_list,
+            'filter_good_country_list': filter_good_country_list,
             'search_tmdb_api_key': search_tmdb_api_key,
             'search_omdb_api_key': search_omdb_api_key
         })
@@ -256,7 +261,7 @@ if __name__ == '__main__':
 
     # set siphonator and db schema version numbers
     current_version = "1.0.0"
-    db_version = int(1)
+    db_version = int(2)
 
     # custom argparse to redirect user to help if unknown argument specified
     class ArgparseCustom(argparse.ArgumentParser):

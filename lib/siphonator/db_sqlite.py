@@ -19,7 +19,7 @@ class DbSqlite(object):
         db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
 
         # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
-        db_sqlite_connection.execute( "PRAGMA user_version = {v:d}".format(v=self.db_version) )
+        self.set_db_version(self.db_version)
 
         # create tables with columns if it doesn't already exist
         db_sqlite_connection["history"].create({
@@ -53,6 +53,7 @@ class DbSqlite(object):
             "imdb_credits_cast_list": str,
             "imdb_credits_character_list": str,
             "imdb_spoken_languages_list": str,
+            'imdb_country_origins_list': str,
         }, pk="id", if_not_exists=True)
 
         # duplicate table
@@ -99,6 +100,7 @@ class DbSqlite(object):
             "imdb_credits_cast_list": (self.index_dict.get('imdb_credits_cast_list')),
             "imdb_credits_character_list": (self.index_dict.get('imdb_credits_character_list')),
             "imdb_spoken_languages_list": (self.index_dict.get('imdb_spoken_languages_list')),
+            "imdb_country_origins_list": (self.index_dict.get('imdb_country_origins_list')),
         }], pk="id", column_order=(
             "index_title",
             "result",
@@ -129,6 +131,7 @@ class DbSqlite(object):
             "imdb_credits_cast_list",
             "imdb_credits_character_list",
             "imdb_spoken_languages_list",
+            'imdb_country_origins_list',
         ))
 
     def read_database_simple(self, sqlite_table, sqlite_column, index_title):
@@ -180,11 +183,42 @@ class DbSqlite(object):
 
         return False
 
-        # append to db
+    def upgrade_database(self):
 
-        # upgrade db
+        # create database connection
+        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
+
+        # get db_version from existing database
+        disk_db_version_gen = db_sqlite_connection.query("PRAGMA user_version")
+
+        # get db on disk version
+        disk_db_version_list = [(i.get('user_version')) for i in disk_db_version_gen]
+        disk_db_version = disk_db_version_list[0]
+
+        # if database is up to date then do nothing
+        if self.db_version == disk_db_version:
+
+            return
+
+        # if v1 then upgrade to v2 by adding in the missing column
+        if disk_db_version == 1:
+
+            db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN imdb_country_origins_list text")
+
+            self.set_db_version(2)
+
+        # set db to current version
+        self.set_db_version(self.db_version)
 
         # delete db
+
+    def set_db_version(self, version):
+
+        # create database connection
+        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
+
+        # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
+        db_sqlite_connection.execute( "PRAGMA user_version = {v:d}".format(v=version) )
 
     def vacuum_database(self):
 

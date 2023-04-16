@@ -133,10 +133,16 @@ class FilterMovies(object):
             self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_runtime'"})
             return self.index_dict
 
-        filter_good_language_result = self.filter_good_language()
+        filter_good_language_result = self.filter_good_language_country('language')
         if not filter_good_language_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language'"})
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type '%s'" % (self.index_dict.get('index_title'), 'language'))
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type '%s'" % 'language'})
+            return self.index_dict
+
+        filter_good_country_result = self.filter_good_language_country('country')
+        if not filter_good_country_result:
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type '%s'" % (self.index_dict.get('index_title'), 'country'))
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type '%s'" % 'country'})
             return self.index_dict
 
         self.logger_instance.debug(u"Index title '%s' passed all IMDb filters" % self.index_dict.get('index_title'))
@@ -617,57 +623,60 @@ class FilterMovies(object):
 
         return True
 
-    def filter_good_language(self):
+    def filter_good_language_country(self, filter_type):
 
-        imdb_spoken_languages_list = self.index_dict.get('imdb_spoken_languages_list')
-        filter_good_language_list = self.index_dict.get('filter_good_language_list')
+        imdb_list = self.index_dict.get('imdb_%s_list' % filter_type)
+        filter_list = self.index_dict.get('filter_good_%s_list' % filter_type)
 
-        if filter_good_language_list is None:
+        if filter_list is None:
 
-            self.logger_instance.debug(u"IMDb good language not defined, skipping language checks")
+            self.logger_instance.debug(u"Filter for %s not defined, skipping %s checks" % (filter_type, filter_type))
             return True
 
-        if imdb_spoken_languages_list is None:
+        if imdb_list is None:
 
-            self.logger_instance.warning(u"IMDb spoken language not found, assuming language is OK")
+            self.logger_instance.warning(u"IMDb %s not found, assuming %s is OK" % (filter_type, filter_type))
             return True
 
-        for filter_good_language in filter_good_language_list:
+        imdb_lower_list = [x.lower() for x in imdb_list]
+        filter_lower_list = [x.lower() for x in filter_list]
 
-            if filter_good_language.lower() in imdb_spoken_languages_list:
+        for filter_lower_item in filter_lower_list:
 
-                self.logger_instance.info(u"IMDb language '%s' is in good language list '%s'" % (imdb_spoken_languages_list, filter_good_language_list))
+            if filter_lower_item in imdb_lower_list:
+
+                self.logger_instance.info(u"IMDb %s list '%s' is in good %s list '%s'" % (filter_type, imdb_lower_list, filter_type, filter_lower_list))
                 return True
 
-        self.logger_instance.debug(u"IMDb language '%s' is not in good language list '%s'" % (imdb_spoken_languages_list, filter_good_language_list))
+        self.logger_instance.debug(u"IMDb %s list '%s' is not in good %s list '%s'" % (filter_type, imdb_lower_list, filter_type, filter_lower_list))
         return False
 
-    def filter_override_person(self, person):
+    def filter_override_person(self, filter_type):
 
-        imdb_credits_person_list = self.index_dict.get('imdb_credits_%s_list' % person)
-        filter_override_person_list = self.index_dict.get('filter_override_%s_list' % person)
+        imdb_list = self.index_dict.get('imdb_credits_%s_list' % filter_type)
+        filter_list = self.index_dict.get('filter_override_%s_list' % filter_type)
 
-        if filter_override_person_list is None:
+        if filter_list is None:
 
-            self.logger_instance.debug(u"Override %s not defined, skipping character checks" % person)
+            self.logger_instance.debug(u"Filter for %s not defined, skipping %s checks" % (filter_type, filter_type))
             return False
 
-        if imdb_credits_person_list is None:
+        if imdb_list is None:
 
-            self.logger_instance.warning(u"IMDb %s not found, skipping character checks" % person)
+            self.logger_instance.warning(u"IMDb %s not found, assuming %s is OK" % (filter_type, filter_type))
             return False
 
-        imdb_credits_person_lower_list = [x.lower() for x in imdb_credits_person_list]
-        filter_override_person_lower_list = [x.lower() for x in filter_override_person_list]
+        imdb_lower_list = [x.lower() for x in imdb_list]
+        filter_lower_list = [x.lower() for x in filter_list]
 
-        for filter_override_person_lower in filter_override_person_lower_list:
+        for filter_lower_item in filter_lower_list:
 
-            if filter_override_person_lower in imdb_credits_person_lower_list:
+            if filter_lower_item in imdb_lower_list:
 
-                self.logger_instance.info(u"Override %s '%s' is in IMDb credits %s list '%s', skipping votes and rating checks" % (person, filter_override_person_lower, person, imdb_credits_person_lower_list))
+                self.logger_instance.info(u"IMDb %s list '%s' is in good %s list '%s', skipping votes and rating checks" % (filter_type, imdb_list, filter_type, filter_list))
                 return True
 
-        self.logger_instance.debug(u"Override %s in list '%s' are NOT in IMDb credits %s list '%s'" % (person, filter_override_person_lower_list, person, imdb_credits_person_lower_list))
+        self.logger_instance.debug(u"IMDb %s list '%s' is not in good %s list '%s'" % (filter_type, imdb_list, filter_type, filter_list))
         return False
 
     def filter_override_movie_title(self):

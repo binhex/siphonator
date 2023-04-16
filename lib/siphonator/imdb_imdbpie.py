@@ -8,6 +8,7 @@ def imdb_json_api(logger_instance, **kwargs):
     credits_writer_list = []
     credits_character_list = []
     spoken_languages_list = []
+    country_origins_list = []
     genres_list = []
 
     imdb_id = index_dict.get('imdb_id', None)
@@ -81,6 +82,14 @@ def imdb_json_api(logger_instance, **kwargs):
         if not spoken_languages_list:
             logger_instance.warning(u"Unable to identify IMDb Spoken Languages")
             spoken_languages_list = None
+
+    try:
+        country_origins_list = imdb_get_title_auxiliary_dict['origins']
+
+    except (IndexError, KeyError, TypeError):
+        if not spoken_languages_list:
+            logger_instance.warning(u"Unable to identify IMDb Country Origins")
+            country_origins_list = None
 
     try:
         genres_list = (imdb_get_title_genres_dict['genres'])
@@ -160,7 +169,8 @@ def imdb_json_api(logger_instance, **kwargs):
         'imdb_running_time_in_minutes': running_time_in_minutes, 'imdb_genres_list': genres_list,
         'imdb_credits_director_list': credits_director_list,
         'imdb_credits_writer_list': credits_writer_list, 'imdb_credits_cast_list': credits_cast_list,
-        'imdb_spoken_languages_list': spoken_languages_list,
+        'imdb_language_list': spoken_languages_list,
+        'imdb_country_list': country_origins_list,
         'imdb_credits_character_list': credits_character_list
     })
 
