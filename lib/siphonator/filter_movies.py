@@ -86,11 +86,34 @@ class FilterMovies(object):
             self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_bad_genre'"})
             return self.index_dict
 
-        # IMDb filters
         filter_bitrate_result = self.filter_bitrate()
         if not filter_bitrate_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bitrate'" % self.index_dict.get('index_title'))
             self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_bitrate'"})
+            return self.index_dict
+
+        filter_year_result = self.filter_year()
+        if not filter_year_result:
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_year'" % self.index_dict.get('index_title'))
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_year'"})
+            return self.index_dict
+
+        filter_runtime_result = self.filter_runtime()
+        if not filter_runtime_result:
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_runtime'" % self.index_dict.get('index_title'))
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_runtime'"})
+            return self.index_dict
+
+        filter_good_language_result = self.filter_good_language_country('language')
+        if not filter_good_language_result:
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type 'language'" % self.index_dict.get('index_title'))
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type 'language'"})
+            return self.index_dict
+
+        filter_good_country_result = self.filter_good_language_country('country')
+        if not filter_good_country_result:
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type 'country'" % self.index_dict.get('index_title'))
+            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type 'country'"})
             return self.index_dict
 
         filter_override_character = self.filter_override_person('character')
@@ -120,30 +143,6 @@ class FilterMovies(object):
                                 self.logger_instance.debug(u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title'))
                                 self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_votes'"})
                                 return self.index_dict
-
-        filter_year_result = self.filter_year()
-        if not filter_year_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_year'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_year'"})
-            return self.index_dict
-
-        filter_runtime_result = self.filter_runtime()
-        if not filter_runtime_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_runtime'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_runtime'"})
-            return self.index_dict
-
-        filter_good_language_result = self.filter_good_language_country('language')
-        if not filter_good_language_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type '%s'" % (self.index_dict.get('index_title'), 'language'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type '%s'" % 'language'})
-            return self.index_dict
-
-        filter_good_country_result = self.filter_good_language_country('country')
-        if not filter_good_country_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type '%s'" % (self.index_dict.get('index_title'), 'country'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type '%s'" % 'country'})
-            return self.index_dict
 
         self.logger_instance.debug(u"Index title '%s' passed all IMDb filters" % self.index_dict.get('index_title'))
         self.index_dict.update({'result': 'imdb passed'})
