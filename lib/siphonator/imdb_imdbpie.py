@@ -164,14 +164,19 @@ def imdb_json_api(logger_instance, **kwargs):
 
     index_dict.update({
         'imdb_title': imdb_title, 'imdb_year': imdb_year, 'imdb_poster_url': poster_url,
-        'imdb_plot_summary': plot_summary, 'imdb_plot_outline': plot_outline, 'imdb_rating': rating,
-        'imdb_votes': votes, 'imdb_title_type': title_type,
-        'imdb_running_time_in_minutes': running_time_in_minutes, 'imdb_genres_list': genres_list,
+        'imdb_plot_summary': plot_summary,
+        'imdb_plot_outline': plot_outline,
+        'imdb_rating': rating,
+        'imdb_votes': votes,
+        'imdb_title_type': title_type,
+        'imdb_running_time_in_minutes': running_time_in_minutes,
+        'imdb_genres_list': genres_list,
+        'imdb_credits_character_list': credits_character_list,
         'imdb_credits_director_list': credits_director_list,
-        'imdb_credits_writer_list': credits_writer_list, 'imdb_credits_cast_list': credits_cast_list,
-        'imdb_language_list': spoken_languages_list,
-        'imdb_country_list': country_origins_list,
-        'imdb_credits_character_list': credits_character_list
+        'imdb_credits_writer_list': credits_writer_list,
+        'imdb_credits_cast_list': credits_cast_list,
+        'imdb_spoken_languages_list': spoken_languages_list,
+        'imdb_country_origins_list': country_origins_list,
     })
 
     index_dict.update({'result': 'success', 'result_details': u"Identified IMDb metadata using IMDbPie"})
