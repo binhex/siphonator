@@ -261,7 +261,7 @@ if __name__ == '__main__':
 
     # set siphonator and db schema version numbers
     current_version = "1.0.0"
-    db_version = int(3)
+    db_version = int(2)
 
     # custom argparse to redirect user to help if unknown argument specified
     class ArgparseCustom(argparse.ArgumentParser):

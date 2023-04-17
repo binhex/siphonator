@@ -123,13 +123,12 @@ class IndexProxy(object):
                 'imdb_votes': None,
                 'imdb_title_type': None,
                 'imdb_running_time_in_minutes': None,
-                'imdb_genre_list': None,
-                'imdb_director_list': None,
-                'imdb_writer_list': None,
-                'imdb_cast_list': None,
-                'imdb_languages_list': None,
-                'imdb_country_list': None,
-                'imdb_character_list': None
+                'imdb_genres_list': None,
+                'imdb_credits_director_list': None,
+                'imdb_credits_writer_list': None,
+                'imdb_credits_cast_list': None,
+                'imdb_spoken_languages_list': None,
+                'imdb_credits_character_list': None
             })
 
             try:

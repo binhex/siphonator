@@ -92,7 +92,7 @@ def filter_genre_rating(create_logger, filter_genre_minimum_rating_dict):
 
     # Arrange
     test_data = {
-        'imdb_genre_list': ['sci-fi', 'comedy'],
+        'imdb_genres_list': ['sci-fi', 'comedy'],
         'filter_genre_minimum_rating_dict': filter_genre_minimum_rating_dict
     }
 
