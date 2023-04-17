@@ -128,7 +128,8 @@ class IndexProxy(object):
                 'imdb_credits_writer_list': None,
                 'imdb_credits_cast_list': None,
                 'imdb_spoken_languages_list': None,
-                'imdb_credits_character_list': None
+                'imdb_credits_character_list': None,
+                'imdb_country_origins_list': None,
             })
 
             try:
