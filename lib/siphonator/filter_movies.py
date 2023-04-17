@@ -3,7 +3,6 @@ import re
 from decimal import Decimal
 import lib.siphonator.tools_various as siphonator_tools_various
 
-# TODO filter for country of origin
 # TODO if remastered or extended or directors cut then check for on disk, if on disk then check size, if larger then download
 # TODO filter_override_downloaded - if repack or proper then check for on disk, if there then possible override
 # TODO if in completed then do not download, or in qbittorrent queue, or in qbittorrent history (possible?)

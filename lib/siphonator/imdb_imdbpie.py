@@ -31,7 +31,7 @@ def imdb_json_api(logger_instance, **kwargs):
         credits_director_json = (imdb_get_title_credits_dict['credits']['director'])
         for i in credits_director_json:
             credits_director_name = i['name']
-            if credits_director_name not in credits_director_list:
+            if credits_director_name not in credits_director_list and len(credits_director_list) < 20:
                 credits_director_list.append(credits_director_name)
 
     except (IndexError, KeyError, TypeError):
@@ -43,7 +43,7 @@ def imdb_json_api(logger_instance, **kwargs):
         credits_writer_json = (imdb_get_title_credits_dict['credits']['writer'])
         for i in credits_writer_json:
             credits_writer_name = i['name']
-            if credits_writer_name not in credits_writer_list:
+            if credits_writer_name not in credits_writer_list and len(credits_writer_list) < 20:
                 credits_writer_list.append(credits_writer_name)
 
     except (IndexError, KeyError, TypeError):
@@ -55,7 +55,7 @@ def imdb_json_api(logger_instance, **kwargs):
         credits_cast_json = (imdb_get_title_credits_dict['credits']['cast'])
         for i in credits_cast_json:
             credits_cast_name = i['name']
-            if credits_cast_name not in credits_cast_list:
+            if credits_cast_name not in credits_cast_list and len(credits_cast_list) < 20:
                 credits_cast_list.append(credits_cast_name)
 
     except (IndexError, KeyError, TypeError):
@@ -67,7 +67,7 @@ def imdb_json_api(logger_instance, **kwargs):
         credits_cast_json = (imdb_get_title_credits_dict['credits']['cast'])
         for i in credits_cast_json:
             for credits_character_name in i['characters']:
-                if credits_character_name not in credits_character_list:
+                if credits_character_name not in credits_character_list and len(credits_character_list) < 20:
                     credits_character_list.append(credits_character_name)
 
     except (IndexError, KeyError, TypeError):
