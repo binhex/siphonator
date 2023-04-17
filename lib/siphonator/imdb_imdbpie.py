@@ -163,7 +163,9 @@ def imdb_json_api(logger_instance, **kwargs):
         votes = None
 
     index_dict.update({
-        'imdb_title': imdb_title, 'imdb_year': imdb_year, 'imdb_poster_url': poster_url,
+        'imdb_title': imdb_title,
+        'imdb_year': imdb_year,
+        'imdb_poster_url': poster_url,
         'imdb_plot_summary': plot_summary,
         'imdb_plot_outline': plot_outline,
         'imdb_rating': rating,
