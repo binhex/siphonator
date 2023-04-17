@@ -47,13 +47,13 @@ class DbSqlite(object):
             "imdb_votes": str,
             "imdb_title_type": str,
             "imdb_running_time_in_minutes": str,
-            "imdb_genres_list": str,
-            "imdb_credits_director_list": str,
-            "imdb_credits_writer_list": str,
-            "imdb_credits_cast_list": str,
-            "imdb_credits_character_list": str,
-            "imdb_spoken_languages_list": str,
-            'imdb_country_origins_list': str,
+            "imdb_genre_list": str,
+            "imdb_director_list": str,
+            "imdb_writer_list": str,
+            "imdb_cast_list": str,
+            "imdb_character_list": str,
+            "imdb_languages_list": str,
+            'imdb_country_list': str,
         }, pk="id", if_not_exists=True)
 
         # duplicate table
@@ -94,13 +94,13 @@ class DbSqlite(object):
             "imdb_votes": (self.index_dict.get('imdb_votes')),
             "imdb_title_type": (self.index_dict.get('imdb_title_type')),
             "imdb_running_time_in_minutes": (self.index_dict.get('imdb_running_time_in_minutes')),
-            "imdb_genres_list": (self.index_dict.get('imdb_genres_list')),
-            "imdb_credits_director_list": (self.index_dict.get('imdb_credits_director_list')),
-            "imdb_credits_writer_list": (self.index_dict.get('imdb_credits_writer_list')),
-            "imdb_credits_cast_list": (self.index_dict.get('imdb_credits_cast_list')),
-            "imdb_credits_character_list": (self.index_dict.get('imdb_credits_character_list')),
-            "imdb_spoken_languages_list": (self.index_dict.get('imdb_spoken_languages_list')),
-            "imdb_country_origins_list": (self.index_dict.get('imdb_country_origins_list')),
+            "imdb_genre_list": (self.index_dict.get('imdb_genre_list')),
+            "imdb_director_list": (self.index_dict.get('imdb_director_list')),
+            "imdb_writer_list": (self.index_dict.get('imdb_writer_list')),
+            "imdb_cast_list": (self.index_dict.get('imdb_cast_list')),
+            "imdb_character_list": (self.index_dict.get('imdb_character_list')),
+            "imdb_languages_list": (self.index_dict.get('imdb_languages_list')),
+            "imdb_country_list": (self.index_dict.get('imdb_country_list')),
         }], pk="id", column_order=(
             "index_title",
             "result",
@@ -125,13 +125,13 @@ class DbSqlite(object):
             "imdb_votes",
             "imdb_title_type",
             "imdb_running_time_in_minutes",
-            "imdb_genres_list",
-            "imdb_credits_director_list",
-            "imdb_credits_writer_list",
-            "imdb_credits_cast_list",
-            "imdb_credits_character_list",
-            "imdb_spoken_languages_list",
-            'imdb_country_origins_list',
+            "imdb_genre_list",
+            "imdb_director_list",
+            "imdb_writer_list",
+            "imdb_cast_list",
+            "imdb_character_list",
+            "imdb_languages_list",
+            'imdb_country_list',
         ))
 
     def read_database_simple(self, sqlite_table, sqlite_column, index_title):
@@ -204,8 +204,19 @@ class DbSqlite(object):
         if disk_db_version == 1:
 
             db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN imdb_country_origins_list text")
-
             self.set_db_version(2)
+
+        # if v2 then upgrade to v3 by rename columns
+        if disk_db_version == 2:
+
+            db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_genres_list TO imdb_genre_list")
+            db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_country_origins_list TO imdb_country_list")
+            db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_spoken_languages_list TO imdb_languages_list")
+            db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_credits_director_list TO imdb_director_list")
+            db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_credits_writer_list TO imdb_writer_list")
+            db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_credits_cast_list TO imdb_cast_list")
+            db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_credits_character_list TO imdb_character_list")
+            self.set_db_version(3)
 
         # set db to current version
         self.set_db_version(self.db_version)
