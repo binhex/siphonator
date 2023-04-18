@@ -67,6 +67,6 @@ class TorrentClients(object):
 
         self.logger_instance.debug(u"Magnet/Torrent link is '%s'" % download_url)
 
-        # add torrent/magnet to quue
+        # add torrent/magnet to queue
         self.qbt_client.torrents_add(urls=download_url, category='movies-siphonator', is_paused=self.add_paused_bool)
         self.qbt_client.torrents_reannounce(torrent_hashes='all')

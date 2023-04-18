@@ -153,7 +153,6 @@ class FilterMovies(object):
         imdb_genres_list = self.index_dict.get('imdb_genres_list')
         filter_genre_minimum_rating_dict = self.index_dict.get('filter_genre_minimum_rating_dict')
 
-        # TODO regex to strip any wierd chars from imdb abd filter genre
         if imdb_genres_list is None:
 
             self.logger_instance.debug(u"IMDb genre not found, skipping filter genre rating")
@@ -704,3 +703,43 @@ class FilterMovies(object):
 
         self.logger_instance.debug(u"Index title '%s' does NOT match any override movie titles in list" % index_title_and_year_compare)
         return False
+
+
+    # TODO dev
+    def filter_year_runtime(self, process_dict_key, filter_dict_key):
+
+        log_message = 'movie year'
+        process_dict_key = 'index_year_compare'
+        filter_dict_key = 'filter_minimum_year'
+
+        log_message = 'movie runtime'
+        process_dict_key = 'imdb_running_time_in_minutes'
+        filter_dict_key = 'filter_minimum_runtime_mins'
+
+        process_compare = self.index_dict.get(process_dict_key)
+        filter_compare = self.index_dict.get(filter_dict_key)
+
+        if filter_compare is None:
+
+            self.logger_instance.warning(u"No minimum %s defined, assuming above threshold" % log_message)
+            return True
+
+        if process_compare is None:
+
+            self.logger_instance.warning(u"No %s available to filter on, assuming below threshold" % log_message)
+            return False
+
+        process_compare_int = int(process_compare)
+        filter_compare_int = int(filter_compare)
+
+        if process_compare_int >= filter_compare_int:
+
+            self.logger_instance.info(u"%s '%s' equal to/above minimum threshold '%s'" % (log_message, process_compare, filter_compare))
+            return True
+
+        else:
+
+            self.logger_instance.warning(u"%s '%s' below minimum threshold '%s'" % (log_message, process_compare, filter_compare))
+            return False
+
+

@@ -167,6 +167,10 @@ class IndexProxy(object):
 
                 torrent_url = node['enclosure']['@url']
 
+                # if torrent url looks like a magnet then raise error
+                if torrent_url.startswith('magnet'):
+                    raise TypeError
+
             except (KeyError, TypeError, IndexError, AttributeError):
 
                 self.logger_instance.debug(u"Unable to determine torrent url from index site '%s'" % index_site)

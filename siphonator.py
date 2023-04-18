@@ -110,7 +110,7 @@ class Siphonator(object):
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
         filter_bad_genre_list = ['Musical', 'Music', 'Documentary']
-        filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow']
+        filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow', 'Superman']
         filter_override_cast_list = ['Jason Statham']
         filter_override_writer_list = []
         filter_override_director_list = ['Steven Spielberg', 'Stanley Kubrick', 'James Cameron', 'Quentin Tarantino']
@@ -197,9 +197,10 @@ class Siphonator(object):
         index_site_dict_list_dict = {
             'rarbg': [index_site_search_1080p_dict, index_site_search_2160p_remux_dict],
             'thepiratebay': [index_site_search_1080p_dict],
-            'torrentgalaxy': [index_site_search_1080p_dict],
+            'torrentgalaxy': [index_site_search_1080p_dict, index_site_search_2160p_remux_dict],
             'knaben': [index_site_search_1080p_dict],
-            'solidtorrents': [index_site_search_1080p_dict]
+            '1337x': [index_site_search_1080p_dict],
+            'solidtorrents': [index_site_search_1080p_dict, index_site_search_2160p_remux_dict],
         }
 
         # loop over top level dict of index sites
