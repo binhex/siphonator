@@ -53,7 +53,6 @@ class TorrentClients(object):
 
     def qbittorrent_add(self):
 
-        # TODO seems to be a bug in getting torrent_url, seems to be magnet or empty?
         download_url = self.index_dict['magnet_url']
         if download_url is None:
 
@@ -62,7 +61,7 @@ class TorrentClients(object):
             download_url = self.index_dict['torrent_url']
             if download_url is None:
 
-                self.logger_instance.info(u"No torrent file present, cannot download index title '%s'" % self.index_dict['index_title'])
+                self.logger_instance.info(u"No torrent/magnet present, cannot download index title '%s'" % self.index_dict['index_title'])
                 return None
 
         self.logger_instance.debug(u"Magnet/Torrent link is '%s'" % download_url)
