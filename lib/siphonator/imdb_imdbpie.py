@@ -177,8 +177,8 @@ def imdb_json_api(logger_instance, **kwargs):
         'imdb_credits_director_list': credits_director_list,
         'imdb_credits_writer_list': credits_writer_list,
         'imdb_credits_cast_list': credits_cast_list,
-        'imdb_spoken_languages_list': spoken_languages_list,
-        'imdb_country_origins_list': country_origins_list,
+        'imdb_language_list': spoken_languages_list,
+        'imdb_country_list': country_origins_list,
     })
 
     index_dict.update({'result': 'success', 'result_details': u"Identified IMDb metadata using IMDbPie"})
