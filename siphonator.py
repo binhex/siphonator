@@ -87,6 +87,7 @@ class Siphonator(object):
         notification_email_from_address = 'paul.eccleston1@gmail.com'
         notification_email_to_address= 'paul.eccleston1@gmail.com'
 
+        index_proxy = 'jackett'
         index_proxy_jackett_host = "192.168.1.10"
         index_proxy_jackett_port = "1900"
         index_proxy_jackett_api_key = "o4xte43ftp56m64aknxch4pe7cp3lhaj"
@@ -207,6 +208,11 @@ class Siphonator(object):
             read_timeout=index_proxy_jackett_read_timeout,
         )
 
+        # ensure jackett is operational by checking for status code 200
+        if index_sites_status_code != 200:
+            self.logger_instance.warning(f"Unable to access index site '{index_proxy}', retrying in {config_schedule_time_mins} minutes")
+            return index_sites_status_code
+
         # parse xml from jackett
         index_sites_xml = elementTree.fromstring(index_sites_content)
 
@@ -311,7 +317,7 @@ if __name__ == '__main__':
     # TODO temporary hack until we read in config.ini
     config_schedule_mode = 'foreground'
     config_schedule_time_key = 'minutes'
-    config_schedule_time_value = '30'
+    config_schedule_time_mins = 30
 
     app_root_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -351,7 +357,7 @@ if __name__ == '__main__':
     run_dict = ({
         'schedule_mode': config_schedule_mode,
         'schedule_time_key': config_schedule_time_key,
-        'schedule_time_value': config_schedule_time_value,
+        'schedule_time_value': config_schedule_time_mins,
         'config_schedule_mode': config_schedule_mode,
         'config_ini': config_ini,
         'config_path': config_path,
@@ -369,5 +375,5 @@ if __name__ == '__main__':
     if config_schedule_mode == 'foreground':
         # run on schedule foreground blocking, note ext run is now
         schedule = BlockingScheduler()
-        schedule.add_job(siphonator_instance.run, 'interval', minutes=30, next_run_time=datetime.datetime.now())
+        schedule.add_job(siphonator_instance.run, 'interval', minutes=config_schedule_time_mins, next_run_time=datetime.datetime.now())
         schedule.start()
