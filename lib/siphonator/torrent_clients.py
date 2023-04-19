@@ -1,7 +1,5 @@
 import qbittorrentapi
 
-# TODO search and identify if existing movie already paused/downloading/downloaded
-
 class TorrentClients(object):
 
     def __init__(self, logger_instance, **kwargs):
@@ -14,7 +12,6 @@ class TorrentClients(object):
         port = self.index_dict['torrent_client_qbittorrent_port']
         username = self.index_dict['torrent_client_qbittorrent_username']
         password = self.index_dict['torrent_client_qbittorrent_password']
-
 
         # instantiate a Client using the appropriate WebUI configuration
         self.qbt_client = qbittorrentapi.Client(
@@ -35,6 +32,7 @@ class TorrentClients(object):
 
             self.logger_instance.warning(u"qBittorrent login failed for username '%s' with error '%s'" % (username, e))
 
+    # TODO search and identify if existing movie already paused/downloading/downloaded
     def qbittorrent_search(self):
 
         # display qBittorrent info

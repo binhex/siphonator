@@ -5,6 +5,7 @@ import validate
 import argparse
 import datetime
 import pytest
+import xml.etree.ElementTree as elementTree
 from imdbpie import ImdbAPIError
 from apscheduler.schedulers.background import BlockingScheduler
 
@@ -28,6 +29,7 @@ sys.path.append('%s/' % root_dir)
 import lib.siphonator.index_proxy as siphonator_index_proxy
 import lib.siphonator.tools_logging as siphonator_tools_logging
 import lib.siphonator.tools_various as siphonator_tools_various
+import lib.siphonator.tools_downloader as siphonator_tools_downloader
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
 class Siphonator(object):
@@ -193,20 +195,36 @@ class Siphonator(object):
             'search_tmdb_api_key': search_tmdb_api_key,
             'search_omdb_api_key': search_omdb_api_key
         })
-        # TODO get list of enabled index sites from jackett:- 'http://192.168.1.10:1900/api/v2.0/indexers/all/results/torznab/api?configured=true&apikey=o4xte43ftp56m64aknxch4pe7cp3lhaj&t=indexers&q='
-        index_site_dict_list_dict = {
-            'rarbg': [index_site_search_1080p_dict, index_site_search_2160p_remux_dict],
-            'thepiratebay': [index_site_search_1080p_dict],
-            'torrentgalaxy': [index_site_search_1080p_dict, index_site_search_2160p_remux_dict],
-            'knaben': [index_site_search_1080p_dict],
-            '1337x': [index_site_search_1080p_dict],
-            'solidtorrents': [index_site_search_1080p_dict, index_site_search_2160p_remux_dict],
-        }
+
+        # construct url to jackett api to get list of enabled index sites
+        url = f'http://{index_proxy_jackett_host}:{index_proxy_jackett_port}/api/v2.0/indexers/all/results/torznab/api?configured=true&apikey={index_proxy_jackett_api_key}&t=indexers&q='
+
+        # download list of enabled index sites from jackett
+        index_sites_return_code, index_sites_status_code, index_sites_content = siphonator_tools_downloader.http_client(
+            self.logger_instance, url=url,
+            user_agent=user_agent,
+            request_type="get",
+            read_timeout=index_proxy_jackett_read_timeout,
+        )
+
+        # parse xml from jackett
+        index_sites_xml = elementTree.fromstring(index_sites_content)
+
+        # empty dict to store configured index sites
+        index_sites_configured_dict = {}
+        for i in index_sites_xml:
+
+            index_site_dict = i.attrib
+            index_site_configured = index_site_dict['configured']
+            index_site_name = index_site_dict['id']
+
+            if index_site_configured == 'true':
+                index_sites_configured_dict.update({index_site_name: [index_site_search_1080p_dict, index_site_search_2160p_remux_dict]})
 
         # loop over top level dict of index sites
-        for index_site in index_site_dict_list_dict:
+        for index_site in index_sites_configured_dict:
 
-            index_site_list_dict = (index_site_dict_list_dict[index_site])
+            index_site_list_dict = (index_sites_configured_dict[index_site])
 
             # loop over dict containing search criteria
             for index_site_dict in index_site_list_dict:
@@ -262,7 +280,7 @@ if __name__ == '__main__':
 
     # set siphonator and db schema version numbers
     current_version = "1.0.0"
-    db_version = int(2)
+    db_version = int(3)
 
     # custom argparse to redirect user to help if unknown argument specified
     class ArgparseCustom(argparse.ArgumentParser):
