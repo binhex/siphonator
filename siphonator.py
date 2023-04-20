@@ -7,6 +7,7 @@ import datetime
 import pytest
 import xml.etree.ElementTree as elementTree
 from imdbpie import ImdbAPIError
+from pathlib import Path
 from apscheduler.schedulers.background import BlockingScheduler
 
 # check version of python is 3.x.x
@@ -32,6 +33,22 @@ import lib.siphonator.tools_various as siphonator_tools_various
 import lib.siphonator.tools_downloader as siphonator_tools_downloader
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
+def set_paths(config_arg, config_filename):
+    if args[config_arg]:
+
+        pathname = args[config_arg]
+        pathname = os.path.normpath(pathname)
+
+    else:
+
+        pathname = os.path.join(app_root_path, config_arg)
+        pathname = os.path.normpath(pathname)
+
+    Path(pathname).mkdir(parents=True, exist_ok=True)
+    config_filepath = os.path.join(pathname, config_filename)
+
+    return pathname, config_filepath
+
 class Siphonator(object):
 
     def __init__(self, logger_instance, **kwargs):
@@ -39,7 +56,7 @@ class Siphonator(object):
         self.logger_instance = logger_instance
         self.config_dict = kwargs
         self.config_ini = self.config_dict['config_ini']
-        self.config_path = self.config_dict['config_path']
+        self.configs_path = self.config_dict['configs_path']
         self.logs_path = self.config_dict['logs_path']
         self.app_root_path = self.config_dict['app_root_path']
         self.schedule_mode = self.config_dict['schedule_mode']
@@ -300,10 +317,11 @@ if __name__ == '__main__':
     commandline_parser = ArgparseCustom(prog="Siphonator", description="Welcome to %(prog)s - Coded by binhex." + current_version, usage="%(prog)s [--help] [--config <path>] [--logs <path>] [--pidfile <path>] [--daemon] [--version]", formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=50))
 
     # add argparse command line flags
-    commandline_parser.add_argument(u"--config", metavar=u"<path>", help=u"specify path for config file e.g. --config /opt/siphonator/config/")
+    commandline_parser.add_argument(u"--test", action=u"store_true", help=u"run tests")
+    commandline_parser.add_argument(u"--configs", metavar=u"<path>", help=u"specify path for config file e.g. --configs /opt/siphonator/config/")
     commandline_parser.add_argument(u"--logs", metavar=u"<path>", help=u"specify path for log files e.g. --logs /opt/siphonator/logs/")
+    commandline_parser.add_argument(u"--db", metavar=u"<path>", help=u"specify path for sqlite database e.g. --db /opt/siphonator/db/")
     commandline_parser.add_argument(u"--pidfile", metavar=u"<path>", help=u"specify path to pidfile e.g. --pid /var/run/siphonator/siphonator.pid")
-    commandline_parser.add_argument(u"--test", action=u"store_true", help=u"run in test mode")
     commandline_parser.add_argument(u"--daemon", action=u"store_true", help=u"run as daemonized process")
     commandline_parser.add_argument(u"--version", action=u"version", version=current_version)
 
@@ -311,45 +329,34 @@ if __name__ == '__main__':
     args = vars(commandline_parser.parse_args())
 
     if args['test']:
+
         return_code = pytest.main(["--verbose"])
         exit(return_code)
 
-    # TODO temporary hack until we read in config.ini
     config_schedule_mode = 'foreground'
     config_schedule_time_key = 'minutes'
     config_schedule_time_mins = 30
 
     app_root_path = os.path.dirname(os.path.realpath(__file__))
 
-    # set folder path for config files
-    config_path = os.path.join(app_root_path, u"configs")
-    config_path = os.path.normpath(config_path)
-    config_ini = os.path.join(config_path, u"config.ini")
+    # set folder paths and filepaths
+    configs_path, configs_filepath = set_paths('configs', 'config.ini')
+    logs_path, logs_filepath = set_paths('logs', 'siphonator.log')
+    db_path, db_filepath = set_paths('db', 'siphonator.db')
 
-    # set path for configspec.ini file
-    configspec_ini = os.path.join(config_path, u"configspec.ini")
-
-    # set folder path for log files
-    logs_path = os.path.join(app_root_path, u"logs")
-    logs_path = os.path.normpath(logs_path)
-    log_file = os.path.join(logs_path, u"siphonator.log")
-
-    # set folder path for db files
-    db_path = os.path.join(app_root_path, u"db")
-    db_path = os.path.normpath(db_path)
-    db_filepath = os.path.join(db_path, u"siphonator.db")
+    configspec_filepath = os.path.join(configs_path, u"configspec.ini")
 
     # create configobj instance, set config.ini file, set encoding and set configspec.ini file
-    config_obj = configobj.ConfigObj(config_ini, list_values=False, write_empty_values=True, encoding='UTF-8',
-                                     default_encoding='UTF-8', configspec=configspec_ini, unrepr=True)
+    config_obj = configobj.ConfigObj(configs_filepath, list_values=False, write_empty_values=True, encoding='UTF-8',
+                                     default_encoding='UTF-8', configspec=configspec_filepath, unrepr=True)
 
     # create config.ini
     validator = validate.Validator()
     config_obj.validate(validator, copy=True)
-    config_obj.filename = config_ini
+    config_obj.filename = configs_filepath
     config_obj.write()
 
-    logger = siphonator_tools_logging.app_logging(config_obj, log_file)
+    logger = siphonator_tools_logging.app_logging(config_obj, logs_filepath)
     logger_create_instance = logger.get('logger')
     logger_handler = logger.get('handler')
 
@@ -359,12 +366,12 @@ if __name__ == '__main__':
         'schedule_time_key': config_schedule_time_key,
         'schedule_time_value': config_schedule_time_mins,
         'config_schedule_mode': config_schedule_mode,
-        'config_ini': config_ini,
-        'config_path': config_path,
+        'config_ini': configs_filepath,
+        'configs_path': configs_path,
         'app_root_path': app_root_path,
         'logs_path': logs_path,
-        'configspec_ini': configspec_ini,
-        'log_file': log_file,
+        'configspec_ini': configspec_filepath,
+        'log_file': logs_filepath,
         'db_path': db_path,
         'db_filepath': db_filepath
     })

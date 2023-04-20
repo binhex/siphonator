@@ -15,17 +15,17 @@ def create_logger():
     app_root_path, current_directory = os.path.split(app_root_path)
 
     # set folder path for config files
-    config_path = os.path.join(app_root_path, u"configs")
-    config_path = os.path.normpath(config_path)
-    config_ini = os.path.join(config_path, u"test_config.ini")
+    configs_path = os.path.join(app_root_path, u"configs")
+    configs_path = os.path.normpath(configs_path)
+    configs_filepath = os.path.join(configs_path, u"test_config.ini")
 
     # set path for configspec.ini file
-    configspec_ini = os.path.join(config_path, u"configspec.ini")
+    configspec_filepath = os.path.join(configs_path, u"configspec.ini")
 
     # set folder path for log files
     logs_path = os.path.join(app_root_path, u"logs")
     logs_path = os.path.normpath(logs_path)
-    log_file = os.path.join(logs_path, u"test_siphonator.log")
+    logs_filepath = os.path.join(logs_path, u"test_siphonator.log")
 
     # set folder path for db files
     db_path = os.path.join(app_root_path, u"db")
@@ -33,19 +33,19 @@ def create_logger():
     db_filepath = os.path.join(db_path, u"test_siphonator.db")
 
     # create configobj instance, set config.ini file, set encoding and set configspec.ini file
-    config_obj = configobj.ConfigObj(config_ini, list_values=False, write_empty_values=True, encoding='UTF-8',
-                                     default_encoding='UTF-8', configspec=configspec_ini, unrepr=True)
+    config_obj = configobj.ConfigObj(configs_filepath, list_values=False, write_empty_values=True, encoding='UTF-8',
+                                     default_encoding='UTF-8', configspec=configspec_filepath, unrepr=True)
 
     # create config.ini
     validator = validate.Validator()
     config_obj.validate(validator, copy=True)
-    config_obj.filename = config_ini
+    config_obj.filename = configs_filepath
     config_obj.write()
 
-    logger_instance = siphonator_tools_logging.app_logging(config_obj, log_file)
+    logger_instance = siphonator_tools_logging.app_logging(config_obj, logs_filepath)
     logger = logger_instance.get('logger')
 
-    # yield used instead of return to allow us to do cleanup afterwards
+    # yield used instead of return to allow us to do cleanup afterward
     yield logger
 
 @pytest.fixture
@@ -64,7 +64,7 @@ def filter_rating(create_logger, imdb_rating):
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
     response = siphonator_filter_movies_instance.filter_rating()
 
-    # yield used instead of return to allow us to do cleanup afterwards
+    # yield used instead of return to allow us to do cleanup afterward
     yield response
 
 @pytest.fixture
@@ -82,7 +82,7 @@ def filter_bad_index_title(create_logger, filter_bad_index_title_list):
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
     response = siphonator_filter_movies_instance.filter_bad_index_title()
 
-    # yield used instead of return to allow us to do cleanup afterwards
+    # yield used instead of return to allow us to do cleanup afterward
     yield response
 
 @pytest.fixture
@@ -100,7 +100,7 @@ def filter_genre_rating(create_logger, filter_genre_minimum_rating_dict):
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
     response = siphonator_filter_movies_instance.filter_genre_rating()
 
-    # yield used instead of return to allow us to do cleanup afterwards
+    # yield used instead of return to allow us to do cleanup afterward
     yield response
 
 # tests
@@ -118,7 +118,7 @@ def test_filter_bad_index_title(filter_bad_index_title, filter_bad_index_title_l
     assert response == exp_assert
 
 @pytest.mark.parametrize('filter_genre_minimum_rating_dict, exp_assert', [
-    (({'sci-fi': 6.5, 'comedy': 8.5}), 6.5),    # genres both match, set to lowest rating value
+    (({'sci-fi': 6.5, 'comedy': 8.5}), 6.5),    # genres both match, set to the lowest rating value
     (({'sci-fi': 8.5, 'music': 6.5}), 8.5),     # single genre matches
     (({'music': 8.5, 'romance': 6.5}), None),   # neither genre match
 ])
