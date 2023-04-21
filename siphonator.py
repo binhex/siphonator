@@ -12,9 +12,9 @@ from apscheduler.schedulers.background import BlockingScheduler
 
 # check version of python is 3.x.x
 python_version = sys.version_info
-if python_version < (3, 0, 0):
+if python_version < (3, 10, 0):
 
-    sys.stderr.write("WARNING - You need Python 3.x.x installed to run Siphonator, your running version '%s'" % (python_version,))
+    sys.stderr.write(f"WARNING - You need Python 3.10.x or later installed to run Siphonator, your running version '{python_version,}'")
     sys.exit(1)
 
 # define path to siphonator root path - required for linux
@@ -114,7 +114,7 @@ class Siphonator(object):
         library_path = "/media"
         filter_minimum_year = '1960'
         filter_minimum_runtime_mins = '60'
-        filter_genre_minimum_rating_dict = ({'sci-fi': 6.5, 'animation': 5.5, 'romance': 6.5, 'comedy': 6.5})
+        filter_genre_minimum_rating_dict = ({'sci-fi': 6.5, 'animation': 5.0})
         filter_minimum_rating = '7.0'
         filter_minimum_votes = int(5000)
         filter_minimum_seeders = int(1)
@@ -135,6 +135,9 @@ class Siphonator(object):
         filter_override_writer_list = []
         filter_override_director_list = ['Steven Spielberg', 'Stanley Kubrick', 'James Cameron', 'Quentin Tarantino']
         filter_override_movie_title_list = ['Star Trek']
+
+        index_site_ignore_list = ['showrss']
+        index_site_ignore_list_lower = [x.lower() for x in index_site_ignore_list]
 
         index_site_search_1080p_dict = {
             'index_site_search': '1080p',
@@ -247,6 +250,7 @@ class Siphonator(object):
         # loop over top level dict of index sites
         for index_site in index_sites_configured_dict:
 
+            index_site_lower = index_site.lower()
             index_site_list_dict = (index_sites_configured_dict[index_site])
 
             # loop over dict containing search criteria
@@ -258,8 +262,14 @@ class Siphonator(object):
                 filter_maximum_size_mb = (index_site_dict['filter_maximum_size_mb'])
                 filter_minimum_bitrate_mb = (index_site_dict['filter_minimum_bitrate_mb'])
 
+                # we may want to ignore certain index sites
+                if index_site_lower in index_site_ignore_list_lower:
+
+                    self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{index_site_ignore_list_lower}', skipping processing...")
+                    continue
+
                 # override category for solidtorrents as it incorrectly uses tv category (5000) for movies
-                if index_site == "solidtorrents":
+                if index_site_lower == "solidtorrents":
 
                     index_site_category = '5000'
 
