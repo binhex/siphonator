@@ -524,6 +524,7 @@ class FilterMovies(object):
 
         self.logger_instance.debug(u"Index title '%s' not found in library '%s', continue processing..." % (index_title, library_path))
         return True
+
     def filter_bad_genre(self):
 
         imdb_genres_list = self.index_dict.get('imdb_genres_list')
@@ -539,14 +540,17 @@ class FilterMovies(object):
             self.logger_instance.debug(u"No IMDb genre(s) found, skipping bad genre check")
             return True
 
-        for filter_bad_genre in filter_bad_genre_list:
+        imdb_genres_list_lower = [x.lower() for x in imdb_genres_list]
+        filter_bad_genre_list_lower = [x.lower() for x in filter_bad_genre_list]
 
-            if filter_bad_genre.lower() in imdb_genres_list:
+        for filter_bad_genre in filter_bad_genre_list_lower:
 
-                self.logger_instance.info(u"IMDb genre(s) '%s' match bad genre(s) list '%s', skipping movie" % (imdb_genres_list, filter_bad_genre_list))
+            if filter_bad_genre in imdb_genres_list_lower:
+
+                self.logger_instance.info(u"IMDb genre(s) '%s' match bad genre(s) list '%s', skipping movie" % (imdb_genres_list_lower, filter_bad_genre_list_lower))
                 return False
 
-        self.logger_instance.info(u"IMDb genre(s) '%s' does NOT match any of the bad genre(s) '%s'" % (imdb_genres_list, filter_bad_genre_list))
+        self.logger_instance.info(u"IMDb genre(s) '%s' does NOT match any of the bad genre(s) '%s'" % (imdb_genres_list_lower, filter_bad_genre_list_lower))
         return True
 
     def filter_bad_index_title(self):

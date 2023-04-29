@@ -64,7 +64,7 @@ class DbSqlite(object):
         except sqlite3.OperationalError:
 
             pass
-    # TODO send kwargs to here, not init, and then strip out duplicate instances for dbsqlite calls in index_proxy
+
     def write_database(self):
 
         # create database connection

@@ -87,6 +87,7 @@ class Siphonator(object):
 
         user_agent = u"Siphonator/%s; https://sourceforge.net/projects/moviegrabber" % current_version
 
+        # TODO all the below needs to be put in config.ini
         torrent_client = 'qbittorrent'
         torrent_client_qbittorrent_host = '192.168.1.10'
         torrent_client_qbittorrent_port = 2100
@@ -389,6 +390,7 @@ if __name__ == '__main__':
     logger_create_instance.info(u"Welcome to Siphonator - Coded by binhex.")
 
     siphonator_instance = Siphonator(logger_create_instance, **run_dict)
+    # TODO work out how to run daemonize, need check for os win, as cannot run daemonize
     if config_schedule_mode == 'foreground':
         # run on schedule foreground blocking, note ext run is now
         schedule = BlockingScheduler()
