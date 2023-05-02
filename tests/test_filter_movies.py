@@ -49,6 +49,24 @@ def create_logger():
     yield logger
 
 @pytest.fixture
+def filter_bad_genre(create_logger, imdb_genres_list):
+
+    logger = create_logger
+
+    # Arrange
+    test_data = {
+        'imdb_genres_list': imdb_genres_list,
+        'filter_bad_genre_list': ['Documentary'],
+    }
+
+    # Act
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    response = siphonator_filter_movies_instance.filter_bad_genre()
+
+    # yield used instead of return to allow us to do cleanup afterward
+    yield response
+
+@pytest.fixture
 def filter_rating(create_logger, imdb_rating):
 
     logger = create_logger
@@ -139,6 +157,20 @@ def test_filter_genre_rating(filter_genre_rating, filter_genre_minimum_rating_di
 def test_filter_rating(filter_rating, imdb_rating, exp_assert):
 
     response = filter_rating
+
+    # Assert
+    assert response == exp_assert
+
+@pytest.mark.parametrize('imdb_genres_list, exp_assert', [
+    ([], True),                         # genre does not match Documentary
+    (['Music'], True),                  # genre does not match Documentary
+    (['documentary'], False),           # genre does match Documentary
+    (['Documentary'], False),           # genre does match Documentary
+    (['Documentary', 'Music'], False),  # genre does match Documentary
+])
+def test_filter_bad_genre(filter_bad_genre, imdb_genres_list, exp_assert):
+
+    response = filter_bad_genre
 
     # Assert
     assert response == exp_assert
