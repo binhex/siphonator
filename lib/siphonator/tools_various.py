@@ -18,7 +18,7 @@ class ToolsVarious(object):
 
         self.logger_instance = logger_instance
         self.index_title_regex_search = r'\.|_'
-        self.index_title_regex_sqlite = r'\.|_|-|\s'
+        self.index_title_regex_sqlite = r'\.|_|-|\s|&'
         self.index_title_regex_word_match =  r'\.|_|\[|\]|\(|\)'
         self.index_title_regex_strip = r'\s|,|:|<|>|\?|\*|\.|_|-|\'|\!|[\(\)]|[\[\]]'
         self.index_title_resolution_regex = r'\d{3,4}p'
@@ -81,8 +81,7 @@ class ToolsVarious(object):
             return None
 
         custom_title_strip = re.sub(self.index_title_remove_year_to_end_regex, '', custom_title)
-        custom_title_search = re.sub(self.index_title_regex_search, ' ', custom_title_strip)
-        custom_title_sqlite = re.sub(self.index_title_regex_sqlite, '%', custom_title_search)
+        custom_title_sqlite = re.sub(self.index_title_regex_sqlite, '%', custom_title_strip)
         custom_title_sqlite = '%%%s%%' % custom_title_sqlite
         return custom_title_sqlite
 
