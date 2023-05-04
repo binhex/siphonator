@@ -7,6 +7,7 @@ import lib.siphonator.tools_logging as siphonator_tools_logging
 
 # to run tests from command line use 'python -m pytest --verbose'
 
+
 @pytest.fixture
 def create_logger():
 
@@ -48,6 +49,7 @@ def create_logger():
     # yield used instead of return to allow us to do cleanup afterward
     yield logger
 
+
 @pytest.fixture
 def filter_bad_genre(create_logger, imdb_genres_list):
 
@@ -65,6 +67,7 @@ def filter_bad_genre(create_logger, imdb_genres_list):
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
+
 
 @pytest.fixture
 def filter_rating(create_logger, imdb_rating):
@@ -85,6 +88,7 @@ def filter_rating(create_logger, imdb_rating):
     # yield used instead of return to allow us to do cleanup afterward
     yield response
 
+
 @pytest.fixture
 def filter_bad_index_title(create_logger, filter_bad_index_title_list):
 
@@ -102,6 +106,7 @@ def filter_bad_index_title(create_logger, filter_bad_index_title_list):
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
+
 
 @pytest.fixture
 def filter_genre_rating(create_logger, filter_genre_minimum_rating_dict):
@@ -124,6 +129,7 @@ def filter_genre_rating(create_logger, filter_genre_minimum_rating_dict):
 # tests
 ###
 
+
 @pytest.mark.parametrize('filter_bad_index_title_list, exp_assert', [
     (['bad'], False),   # keyword found in index title
     (['good'], True),   # keyword good not found in index title
@@ -134,6 +140,7 @@ def test_filter_bad_index_title(filter_bad_index_title, filter_bad_index_title_l
 
     # Assert
     assert response == exp_assert
+
 
 @pytest.mark.parametrize('filter_genre_minimum_rating_dict, exp_assert', [
     (({'sci-fi': 6.5, 'comedy': 8.5}), 6.5),    # genres both match, set to the lowest rating value
@@ -146,6 +153,7 @@ def test_filter_genre_rating(filter_genre_rating, filter_genre_minimum_rating_di
 
     # Assert
     assert response == exp_assert
+
 
 @pytest.mark.parametrize('imdb_rating, exp_assert', [
     (100.0, True),  # rating is bad value
@@ -160,6 +168,7 @@ def test_filter_rating(filter_rating, imdb_rating, exp_assert):
 
     # Assert
     assert response == exp_assert
+
 
 @pytest.mark.parametrize('imdb_genres_list, exp_assert', [
     ([], True),                         # genre does not match Documentary

@@ -8,6 +8,7 @@ import lib.siphonator.tools_various as siphonator_tools_various
 # TODO if in completed then do not download, or in qbittorrent queue, or in qbittorrent history (possible?)
 # TODO if size of movie is larger on disk compared to index title then ignore, UNLESS its remastered, proper etc.
 
+
 class FilterMovies(object):
 
     def __init__(self, logger_instance, **kwargs):
@@ -708,7 +709,6 @@ class FilterMovies(object):
         self.logger_instance.debug(u"Index title '%s' does NOT match any override movie titles in list" % index_title_and_year_compare)
         return False
 
-
     # TODO dev
     def filter_year_runtime(self, process_dict_key, filter_dict_key):
 
@@ -745,5 +745,3 @@ class FilterMovies(object):
 
             self.logger_instance.warning(u"%s '%s' below minimum threshold '%s'" % (log_message, process_compare, filter_compare))
             return False
-
-

@@ -1,5 +1,6 @@
 import imdbpie
 
+
 def imdb_json_api(logger_instance, **kwargs):
 
     index_dict = kwargs
@@ -114,6 +115,27 @@ def imdb_json_api(logger_instance, **kwargs):
         imdb_year = None
 
     try:
+        imdb_trailer_list = (imdb_get_title_auxiliary_dict['videos']['mainTrailer']['encodings'])
+
+    except (IndexError, KeyError, TypeError):
+        logger_instance.warning(u"Unable to identify IMDb Trailer")
+        imdb_trailer_list = None
+
+    trailer_url = None
+
+    if imdb_trailer_list:
+
+        for i in imdb_trailer_list:
+
+            # get mimeType, this ensures its a video stream
+            mime_type = (i['mimeType'])
+
+            # if mimetype is video then get first url (highest resolution first)
+            if 'video' in mime_type:
+                trailer_url = (i['play'])
+                break
+
+    try:
         poster_url = (imdb_get_title_dict['base']['image']['url'])
 
     except (IndexError, KeyError, TypeError):
@@ -166,6 +188,7 @@ def imdb_json_api(logger_instance, **kwargs):
         'imdb_title': imdb_title,
         'imdb_year': imdb_year,
         'imdb_poster_url': poster_url,
+        'imdb_trailer_url': trailer_url,
         'imdb_plot_summary': plot_summary,
         'imdb_plot_outline': plot_outline,
         'imdb_rating': rating,

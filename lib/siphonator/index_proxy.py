@@ -117,6 +117,7 @@ class IndexProxy(object):
                 'imdb_title': None,
                 'imdb_year': None,
                 'imdb_poster_url': None,
+                'imdb_trailer_url': None,
                 'imdb_plot_summary': None,
                 'imdb_plot_outline': None,
                 'imdb_rating': None,

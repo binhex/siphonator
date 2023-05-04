@@ -33,6 +33,7 @@ import lib.siphonator.tools_various as siphonator_tools_various
 import lib.siphonator.tools_downloader as siphonator_tools_downloader
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
+
 def set_paths(config_arg, config_filename):
     if args[config_arg]:
 
@@ -48,6 +49,7 @@ def set_paths(config_arg, config_filename):
     config_filepath = os.path.join(pathname, config_filename)
 
     return pathname, config_filepath
+
 
 class Siphonator(object):
 
@@ -101,9 +103,9 @@ class Siphonator(object):
         notification_email_enable_tls = True
         notification_email_enable_ssl = False
         notification_email_username = 'paul.eccleston1@gmail.com'
-        notification_email_password= 'quzpugkhxvimjwwv'
+        notification_email_password = 'quzpugkhxvimjwwv'
         notification_email_from_address = 'paul.eccleston1@gmail.com'
-        notification_email_to_address= 'paul.eccleston1@gmail.com'
+        notification_email_to_address = 'paul.eccleston1@gmail.com'
 
         index_proxy = 'jackett'
         index_proxy_jackett_host = "192.168.1.10"
@@ -309,12 +311,13 @@ class Siphonator(object):
 
             self.schedule_msg()
 
+
 # required to prevent separate process from trying to load parent process
 if __name__ == '__main__':
 
     # set siphonator and db schema version numbers
     current_version = "1.0.0"
-    db_version = int(3)
+    db_version = int(4)
 
     # custom argparse to redirect user to help if unknown argument specified
     class ArgparseCustom(argparse.ArgumentParser):

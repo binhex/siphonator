@@ -4,6 +4,7 @@ import lib.siphonator.tools_various as siphonator_tools_various
 
 # TODO once we have all imdb details in the database then any index title that matches an existing processed title can use the same imdb details without the need to contact imdb
 
+
 class DbSqlite(object):
 
     def __init__(self, logger_instance, **kwargs):
@@ -41,6 +42,7 @@ class DbSqlite(object):
             "imdb_title": str,
             "imdb_year": str,
             "imdb_poster_url": str,
+            "imdb_trailer_url": str,
             "imdb_plot_summary": str,
             "imdb_plot_outline": str,
             "imdb_rating": str,
@@ -88,6 +90,7 @@ class DbSqlite(object):
             "imdb_title": (self.index_dict.get('imdb_title')),
             "imdb_year": (self.index_dict.get('imdb_year')),
             "imdb_poster_url": (self.index_dict.get('imdb_poster_url')),
+            "imdb_trailer_url": (self.index_dict.get('imdb_trailer_url')),
             "imdb_plot_summary": (self.index_dict.get('imdb_plot_summary')),
             "imdb_plot_outline": (self.index_dict.get('imdb_plot_outline')),
             "imdb_rating": (self.index_dict.get('imdb_rating')),
@@ -119,6 +122,7 @@ class DbSqlite(object):
             "imdb_title",
             "imdb_year",
             "imdb_poster_url",
+            "imdb_trailer_url",
             "imdb_plot_summary",
             "imdb_plot_outline",
             "imdb_rating",
@@ -211,6 +215,13 @@ class DbSqlite(object):
 
             self.set_db_version(3)
 
+        # if v3 then upgrade to v4 by adding in the missing column
+        if disk_db_version == 3:
+
+            db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN imdb_trailer_url text")
+
+            self.set_db_version(4)
+
         # set db to current version, all upgrades performed
         self.set_db_version(self.db_version)
 
@@ -220,7 +231,7 @@ class DbSqlite(object):
         db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
 
         # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
-        db_sqlite_connection.execute( "PRAGMA user_version = {v:d}".format(v=version) )
+        db_sqlite_connection.execute("PRAGMA user_version = {v:d}".format(v=version))
 
     def get_db_version(self):
 
@@ -249,7 +260,7 @@ class DbSqlite(object):
         # create database connection
         db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
 
-        #c lose database
+        # close database
         db_sqlite_connection.close()
 
     def delete_database(self):

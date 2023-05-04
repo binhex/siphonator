@@ -3,6 +3,7 @@ import os
 import datetime
 import ffmpeg
 
+
 def current_time():
 
     # datetime object containing current date and time
@@ -12,6 +13,7 @@ def current_time():
     run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
     return run_current_date_and_time_converted
 
+
 class ToolsVarious(object):
 
     def __init__(self, logger_instance):
@@ -19,7 +21,7 @@ class ToolsVarious(object):
         self.logger_instance = logger_instance
         self.index_title_regex_search = r'\.|_'
         self.index_title_regex_sqlite = r'\.|_|-|\s|&'
-        self.index_title_regex_word_match =  r'\.|_|\[|\]|\(|\)'
+        self.index_title_regex_word_match = r'\.|_|\[|\]|\(|\)'
         self.index_title_regex_strip = r'\s|,|:|<|>|\?|\*|\.|_|-|\'|\!|[\(\)]|[\[\]]'
         self.index_title_resolution_regex = r'\d{3,4}p'
         self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s).*$'
@@ -182,7 +184,7 @@ class ToolsVarious(object):
             return index_dict
 
         index_year_compare = re.sub(r'[._\s()]+', '', index_year_compare)
-        self.logger_instance.info (u"Index year compare is '%s'" % index_year_compare)
+        self.logger_instance.info(u"Index year compare is '%s'" % index_year_compare)
 
         index_title_and_year_compare = "%s%s" % (index_title_compare, index_year_compare)
 
@@ -203,5 +205,5 @@ class ToolsVarious(object):
 
         filter_library_path_walk = os.walk(library_path, topdown=False)
 
-        self.logger_instance.debug (u"Filter library path '%s' walked" % library_path)
+        self.logger_instance.debug(u"Filter library path '%s' walked" % library_path)
         return filter_library_path_walk

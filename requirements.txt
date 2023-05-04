@@ -1,6 +1,7 @@
 apscheduler             # Adds in scheduling to run the main process at set times in a crontab style format
 backoff                 # Function decorator for backoff and retry for requests
 colorama                # Colour support for consoloe output for all platforms
+diskcache               # Required by imdbpie, need to ensure we install latest due to Collections error
 ffmpeg-python           # Used to identify resolution of existing media
 imdbpie                 # Python IMDB client using the IMDB JSON web service made available for their iOS application
 xmltodict               # xmltodict is a simple library that aims at making XML feel like working with JSON

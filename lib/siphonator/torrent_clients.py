@@ -1,5 +1,6 @@
 import qbittorrentapi
 
+
 class TorrentClients(object):
 
     def __init__(self, logger_instance, **kwargs):
@@ -15,10 +16,10 @@ class TorrentClients(object):
 
         # instantiate a Client using the appropriate WebUI configuration
         self.qbt_client = qbittorrentapi.Client(
-            host = host,
-            port = port,
-            username = username,
-            password = password,
+            host=host,
+            port=port,
+            username=username,
+            password=password,
         )
 
         # the Client will automatically acquire/maintain a logged-in state
@@ -38,7 +39,8 @@ class TorrentClients(object):
         # display qBittorrent info
         print(f'qBittorrent: {self.qbt_client.app.version}')
         print(f'qBittorrent Web API: {self.qbt_client.app.web_api_version}')
-        for k,v in self.qbt_client.app.build_info.items(): print(f'{k}: {v}')
+        for k, v in self.qbt_client.app.build_info.items():
+            print(f'{k}: {v}')
 
         # retrieve and show torrents tagged as added by siphonator
         for torrent in self.qbt_client.torrents_info(tag='siphonator'):
