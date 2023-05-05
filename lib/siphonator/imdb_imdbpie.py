@@ -1,4 +1,5 @@
 import imdbpie
+import re
 
 
 def imdb_json_api(logger_instance, **kwargs):
@@ -121,8 +122,9 @@ def imdb_json_api(logger_instance, **kwargs):
         logger_instance.warning(u"Unable to identify IMDb Trailer")
         imdb_trailer_list = None
 
+    # TODO can we simplify this as we only need vi number now, not embedded stream?
     trailer_url = None
-
+    imdb_trailer_embedded_url = None
     if imdb_trailer_list:
 
         for i in imdb_trailer_list:
@@ -132,8 +134,15 @@ def imdb_json_api(logger_instance, **kwargs):
 
             # if mimetype is video then get first url (highest resolution first)
             if 'video' in mime_type:
-                trailer_url = (i['play'])
+                imdb_trailer_embedded_url = (i['play'])
                 break
+
+        if imdb_trailer_embedded_url:
+            imdb_vi_number_search = re.search('vi[0-9]+', imdb_trailer_embedded_url)
+
+            if imdb_vi_number_search:
+                imdb_vi_number = imdb_vi_number_search.group()
+                trailer_url = f'https://imdb.com/video/{imdb_vi_number}'
 
     try:
         poster_url = (imdb_get_title_dict['base']['image']['url'])
