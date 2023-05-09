@@ -136,7 +136,7 @@ class Siphonator(object):
         filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow', 'Superman']
         filter_override_cast_list = ['Jason Statham']
         filter_override_writer_list = []
-        filter_override_director_list = ['Steven Spielberg', 'Stanley Kubrick', 'James Cameron', 'Quentin Tarantino']
+        filter_override_director_list = ['Steven Spielberg', 'Stanley Kubrick', 'James Cameron', 'Quentin Tarantino', 'Guy Ritchie']
         filter_override_movie_title_list = ['Star Trek']
 
         index_site_ignore_list = ['showrss']

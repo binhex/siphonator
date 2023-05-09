@@ -1,3 +1,4 @@
+import lib.siphonator.search_google as siphonator_search_google
 import lib.siphonator.search_imdb as siphonator_search_imdb
 import lib.siphonator.search_tmdb as siphonator_search_tmdb
 import lib.siphonator.search_omdb as siphonator_search_omdb
@@ -33,8 +34,15 @@ class SearchAll(object):
 
                 if self.index_dict.get('result') == 'failed':
 
-                    self.logger_instance.warning(u"Failed to identify ID from OMDb, no other methods currently defined")
-                    return self.index_dict
+                    self.logger_instance.warning(u"Failed to identify ID from OMDb, switching to Google...")
+
+                    search_google_instance = siphonator_search_google.SearchGoogle(self.logger_instance, **self.index_dict)
+                    self.index_dict = search_google_instance.find_imdb_id_google()
+
+                    if self.index_dict.get('result') == 'failed':
+
+                        self.logger_instance.warning(u"Failed to identify ID from Google, no other methods currently defined")
+                        return self.index_dict
 
         self.index_dict.update({'result': 'success', 'result_details': u"Identified IMDb ID using search"})
         return self.index_dict

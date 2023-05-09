@@ -24,7 +24,7 @@ class ToolsVarious(object):
         self.index_title_regex_word_match = r'\.|_|\[|\]|\(|\)'
         self.index_title_regex_strip = r'\s|,|:|<|>|\?|\*|\.|_|-|\'|\!|[\(\)]|[\[\]]'
         self.index_title_resolution_regex = r'\d{3,4}p'
-        self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s).*$'
+        self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s?).*$'
         # TODO bug, incorrectly identifies year as 2013 for title 'Cloudy with a Chance of Meatballs (2009, 2013) BDRip 1080p H.265 [UKR_ENG] [Hurtom]'
         self.index_title_year_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s)'
 
@@ -116,6 +116,15 @@ class ToolsVarious(object):
 
         custom_title_full_compare = re.sub(self.index_title_regex_strip, '', custom_title).lower()
         return custom_title_full_compare
+
+    def custom_title_remove_year_to_end_compare(self, custom_title):
+
+        if custom_title is None:
+            self.logger_instance.warning(u'No custom_title sent to function')
+            return None
+
+        custom_title_remove_year_to_end_compare = re.sub(self.index_title_remove_year_to_end_regex, '', custom_title).lower()
+        return custom_title_remove_year_to_end_compare
 
     # TODO break this up into separate methods and then call each and append to dict
     def index_title_compare_search(self, **index_dict):
