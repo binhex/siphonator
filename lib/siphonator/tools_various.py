@@ -2,6 +2,7 @@ import re
 import os
 import datetime
 import ffmpeg
+import yaml
 
 
 def current_time():
@@ -12,6 +13,11 @@ def current_time():
     # convert to human-readable format dd/mm/YY H:M:S
     run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
     return run_current_date_and_time_converted
+
+
+def pretty_print_yaml(yaml_string):
+
+    print(yaml.dump(yaml_string, allow_unicode=True, default_flow_style=False))
 
 
 class ToolsVarious(object):
@@ -25,7 +31,6 @@ class ToolsVarious(object):
         self.index_title_regex_strip = r'\s|,|:|<|>|\?|\*|\.|_|-|\'|\!|[\(\)]|[\[\]]'
         self.index_title_resolution_regex = r'\d{3,4}p'
         self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s?).*$'
-        # TODO bug, incorrectly identifies year as 2013 for title 'Cloudy with a Chance of Meatballs (2009, 2013) BDRip 1080p H.265 [UKR_ENG] [Hurtom]'
         self.index_title_year_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s)'
 
     def resolution_from_filename(self, custom_title):

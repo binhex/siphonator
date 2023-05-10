@@ -1,5 +1,6 @@
 import nmdmail
 
+
 class NotificationEmail(object):
 
     def __init__(self, logger_instance, **kwargs):
@@ -58,8 +59,10 @@ class NotificationEmail(object):
         """ % (imdb_title, imdb_year, imdb_id, imdb_rating, imdb_votes, imdb_plot, imdb_actors, imdb_credits_director,
                imdb_genres, queue_status, index_title, index_details, index_size_mb)
 
-        nmdmail.send(content,
+        nmdmail.send(
+            content,
             subject='Siphonator: %s (%s) - IMDb rating %s - Action Queued' % (imdb_title, imdb_year, imdb_rating),
             from_email=self.index_dict.get('notification_email_from_address'),
             to_email=self.index_dict.get('notification_email_to_address'),
-            smtp=self.smtp)
+            smtp=self.smtp
+        )
