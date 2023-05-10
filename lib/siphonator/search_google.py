@@ -39,7 +39,7 @@ class SearchGoogle(object):
         self.logger_instance.info(u"IMDb title is '%s'" % imdb_title)
         self.logger_instance.info(u"IMDb URL is '%s'" % imdb_url)
 
-        # get comparison dictionary for imdb_title
+        # create imdb_title to compare
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
         imdb_title_remove_year_to_end = tools_various_instance.custom_title_remove_year_to_end_compare(imdb_title)
         imdb_title_compare = tools_various_instance.custom_title_compare(imdb_title_remove_year_to_end)
