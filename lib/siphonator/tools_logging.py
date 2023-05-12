@@ -7,8 +7,13 @@ def app_logging(config_obj, app_log_file):
     # read log levels
     log_level = config_obj["general"]["log_level"]
 
-    # setup formatting for log messages
-    app_formatter = logging.Formatter("%(asctime)s %(threadName)s %(module)s %(funcName)s :: [%(levelname)s] %(message)s")
+    # setup log formatting
+    app_formatter = logging.Formatter("%(asctime)s :: [%(levelname)s] %(message)s")
+
+    if log_level.lower() == "debug":
+
+        # setup log formatting for debug
+        app_formatter = logging.Formatter("%(asctime)s %(threadName)s %(module)s %(funcName)s :: [%(levelname)s] %(message)s")
 
     # setup logger for app
     app_logger = logging.getLogger("app")

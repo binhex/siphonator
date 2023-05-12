@@ -125,9 +125,9 @@ class Siphonator(object):
             '3d', 'cam', 'camrip', 'hdcam', 'hdcamrip', 'iptv', 'hqcam', 'hqcamrip', 'hdts',
             'hdtc', 'hc', 'ts', 'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german',
             'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
-            'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'hindi', 'nlsubs', 'xvid',
+            'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'nlsubs', 'xvid', 'chi'
             'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
-            'dvdscr', 'screener', 'spa', 'dual', 'protected', 'www'
+            'dvdscr', 'screener', 'dual', 'protected', 'www', 'tam', 'hin'
         ]
         filter_good_country_list = ['gb', 'us', 'ca', 'au', 'ie', 'nz']
         filter_good_language_list = ['en']
