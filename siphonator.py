@@ -8,6 +8,7 @@ import pytest
 import xml.etree.ElementTree as elementTree
 from imdbpie import ImdbAPIError
 from pathlib import Path
+from daemonize import Daemonize
 from apscheduler.schedulers.background import BlockingScheduler
 
 # check version of python is 3.x.x
@@ -21,8 +22,6 @@ if python_version < (3, 10, 0):
 root_dir = os.path.dirname(os.path.realpath(__file__))
 
 # -------------------- siphonator modules -----------------------------
-
-# check if app root directory is already on path, if not then append.
 # this is req to allow import of local modules (pex bug):-
 # https://github.com/pantsbuild/pex/issues/340#issuecomment-358775440
 sys.path.append('%s/' % root_dir)
@@ -68,6 +67,21 @@ class Siphonator(object):
         self.log_file = self.config_dict['log_file']
         self.db_path = self.config_dict['db_path']
         self.db_filepath = self.config_dict['db_filepath']
+
+    def schedule_run(self):
+
+        schedule = BlockingScheduler()
+        self.logger_instance.info(f"Running schedule in '{config_schedule_mode}' mode")
+
+        try:
+
+            schedule.add_job(siphonator_instance.run, 'interval', minutes=config_schedule_time_mins, next_run_time=datetime.datetime.now())
+            schedule.start()
+
+        except (KeyboardInterrupt, SystemExit):
+
+            self.logger_instance.info(u"Keyboard interrupt or system exit detected, shutting down...")
+            schedule.shutdown()
 
     def schedule_msg(self):
 
@@ -306,10 +320,7 @@ class Siphonator(object):
         current_time = siphonator_tools_various.current_time()
 
         self.logger_instance.info(u"Processing finished at '%s'" % current_time)
-
-        if self.schedule_mode == 'foreground':
-
-            self.schedule_msg()
+        self.schedule_msg()
 
 
 # required to prevent separate process from trying to load parent process
@@ -336,7 +347,7 @@ if __name__ == '__main__':
     commandline_parser.add_argument(u"--logs", metavar=u"<path>", help=u"specify path for log files e.g. --logs /opt/siphonator/logs/")
     commandline_parser.add_argument(u"--db", metavar=u"<path>", help=u"specify path for sqlite database e.g. --db /opt/siphonator/db/")
     commandline_parser.add_argument(u"--pidfile", metavar=u"<path>", help=u"specify path to pidfile e.g. --pid /var/run/siphonator/siphonator.pid")
-    commandline_parser.add_argument(u"--daemon", action=u"store_true", help=u"run as daemonized process")
+    commandline_parser.add_argument(u"--daemon", action=u"store_true", help=u"run as background daemonized process")
     commandline_parser.add_argument(u"--version", action=u"version", version=current_version)
 
     # save arguments in dictionary
@@ -347,7 +358,20 @@ if __name__ == '__main__':
         return_code = pytest.main(["--verbose"])
         exit(return_code)
 
+    config_daemon_mode = 'foreground'
+    config_daemon_mode = config_daemon_mode.lower()
+    if args['daemon']:
+
+        config_daemon_mode = 'background'
+
+    pid_filepath = os.path.join('/tmp', u"process.pid")
+    if args['pdifile']:
+
+        pid_filepath = args['pdifile']
+
     config_schedule_mode = 'foreground'
+    config_schedule_mode = config_schedule_mode.lower()
+
     config_schedule_time_key = 'minutes'
     config_schedule_time_mins = 30
 
@@ -357,7 +381,6 @@ if __name__ == '__main__':
     configs_path, configs_filepath = set_paths('configs', 'config.ini')
     logs_path, logs_filepath = set_paths('logs', 'siphonator.log')
     db_path, db_filepath = set_paths('db', 'siphonator.db')
-
     configspec_filepath = os.path.join(configs_path, u"configspec.ini")
 
     # create configobj instance, set config.ini file, set encoding and set configspec.ini file
@@ -373,6 +396,8 @@ if __name__ == '__main__':
     logger = siphonator_tools_logging.app_logging(config_obj, logs_filepath)
     logger_create_instance = logger.get('logger')
     logger_handler = logger.get('handler')
+
+    keep_fds = [logger_handler.stream.fileno()]
 
     # send schedule details
     run_dict = ({
@@ -391,11 +416,25 @@ if __name__ == '__main__':
     })
 
     logger_create_instance.info(u"Welcome to Siphonator - Coded by binhex.")
+    logger_create_instance.info(f"Starting daemon in '{config_daemon_mode}' mode...")
 
     siphonator_instance = Siphonator(logger_create_instance, **run_dict)
-    # TODO work out how to run daemonize, need check for os win, as cannot run daemonize
-    if config_schedule_mode == 'foreground':
-        # run on schedule foreground blocking, note ext run is now
-        schedule = BlockingScheduler()
-        schedule.add_job(siphonator_instance.run, 'interval', minutes=config_schedule_time_mins, next_run_time=datetime.datetime.now())
-        schedule.start()
+    if config_daemon_mode == 'background':
+
+        # note when calling method in class for 'action' drop '()'
+        # 'keep_fds' prevents daemonize of file descriptors, such as logger, otherwise logging stops
+        daemon = Daemonize(app="siphonator", pid=pid_filepath, keep_fds=keep_fds, action=siphonator_instance.schedule_run)
+        daemon.start()
+
+    else:
+
+        # note when calling method in class for 'action' drop '()'
+        daemon = Daemonize(app="siphonator", pid=pid_filepath, foreground=True, action=siphonator_instance.schedule_run)
+        try:
+
+            daemon.start()
+
+        except (KeyboardInterrupt, SystemExit):
+
+            # cleanup pid file
+            daemon.exit()

@@ -2,6 +2,7 @@ apscheduler             # Adds in scheduling to run the main process at set time
 backoff                 # Function decorator for backoff and retry for requests
 colorama                # Colour support for consoloe output for all platforms
 diskcache               # Required by imdbpie, need to ensure we install latest due to Collections error
+daemonize               # Run application in foreground/background
 ffmpeg-python           # Used to identify resolution of existing media
 googlesearch-python     # Fallback mechanism to get IMDb ID for movies
 imdbpie                 # Python IMDB client using the IMDB JSON web service made available for their iOS application
