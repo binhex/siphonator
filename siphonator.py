@@ -5,9 +5,9 @@ import validate
 import argparse
 import datetime
 import pytest
+import pathlib
 import xml.etree.ElementTree as elementTree
 from imdbpie import ImdbAPIError
-from pathlib import Path
 from daemonize import Daemonize
 from apscheduler.schedulers.background import BlockingScheduler
 
@@ -31,23 +31,6 @@ import lib.siphonator.tools_logging as siphonator_tools_logging
 import lib.siphonator.tools_various as siphonator_tools_various
 import lib.siphonator.tools_downloader as siphonator_tools_downloader
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
-
-
-def set_paths(config_arg, config_filename):
-    if args[config_arg]:
-
-        pathname = args[config_arg]
-        pathname = os.path.normpath(pathname)
-
-    else:
-
-        pathname = os.path.join(app_root_path, config_arg)
-        pathname = os.path.normpath(pathname)
-
-    Path(pathname).mkdir(parents=True, exist_ok=True)
-    config_filepath = os.path.join(pathname, config_filename)
-
-    return pathname, config_filepath
 
 
 class Siphonator(object):
@@ -338,6 +321,8 @@ if __name__ == '__main__':
             self.print_help()
             sys.exit(2)
 
+    app_root_path = os.path.dirname(os.path.realpath(__file__))
+
     # setup argparse description and usage, also increase spacing for help to 50
     commandline_parser = ArgparseCustom(prog="Siphonator", description="Welcome to %(prog)s - Coded by binhex." + current_version, usage="%(prog)s [--help] [--config <path>] [--logs <path>] [--pidfile <path>] [--daemon] [--version]", formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=50))
 
@@ -346,7 +331,7 @@ if __name__ == '__main__':
     commandline_parser.add_argument(u"--configs", metavar=u"<path>", help=u"specify path for config file e.g. --configs /opt/siphonator/config/")
     commandline_parser.add_argument(u"--logs", metavar=u"<path>", help=u"specify path for log files e.g. --logs /opt/siphonator/logs/")
     commandline_parser.add_argument(u"--db", metavar=u"<path>", help=u"specify path for sqlite database e.g. --db /opt/siphonator/db/")
-    commandline_parser.add_argument(u"--pidfile", metavar=u"<path>", help=u"specify path to pidfile e.g. --pid /var/run/siphonator/siphonator.pid")
+    commandline_parser.add_argument(u"--pid", metavar=u"<path>", help=u"specify path to pidfile e.g. --pid /var/run/siphonator/")
     commandline_parser.add_argument(u"--daemon", action=u"store_true", help=u"run as background daemonized process")
     commandline_parser.add_argument(u"--version", action=u"version", version=current_version)
 
@@ -358,30 +343,54 @@ if __name__ == '__main__':
         return_code = pytest.main(["--verbose"])
         exit(return_code)
 
+    configs_path = os.path.join(app_root_path, 'configs')
+    if args['configs']:
+
+        check_path = pathlib.Path(args['configs'])
+        if check_path.exists():
+            configs_path = args['configs']
+
+    configs_filepath = os.path.join(configs_path, 'config.ini')
+    configspec_filepath = os.path.join(configs_path, u"configspec.ini")
+
+    logs_path = os.path.join(app_root_path, 'logs')
+    if args['logs']:
+
+        check_path = pathlib.Path(args['logs'])
+        if check_path.exists():
+            logs_path = args['logs']
+
+    logs_filepath = os.path.join(logs_path, 'siphonator.log')
+
+    db_path = os.path.join(app_root_path, 'db')
+    if args['db']:
+
+        check_path = pathlib.Path(args['db'])
+        if check_path.exists():
+            db_path = args['db']
+
+    db_filepath = os.path.join(db_path, 'siphonator.db')
+
+    pid_path = app_root_path
+    if args['pid']:
+
+        check_path = pathlib.Path(args['pid'])
+        if check_path.exists():
+            pid_path = args['pid']
+
+    pid_filepath = os.path.join(pid_path, 'process.pid')
+
     config_daemon_mode = 'foreground'
     config_daemon_mode = config_daemon_mode.lower()
     if args['daemon']:
 
         config_daemon_mode = 'background'
 
-    pid_filepath = os.path.join('/tmp', u"process.pid")
-    if args['pdifile']:
-
-        pid_filepath = args['pdifile']
-
     config_schedule_mode = 'foreground'
     config_schedule_mode = config_schedule_mode.lower()
 
     config_schedule_time_key = 'minutes'
     config_schedule_time_mins = 30
-
-    app_root_path = os.path.dirname(os.path.realpath(__file__))
-
-    # set folder paths and filepaths
-    configs_path, configs_filepath = set_paths('configs', 'config.ini')
-    logs_path, logs_filepath = set_paths('logs', 'siphonator.log')
-    db_path, db_filepath = set_paths('db', 'siphonator.db')
-    configspec_filepath = os.path.join(configs_path, u"configspec.ini")
 
     # create configobj instance, set config.ini file, set encoding and set configspec.ini file
     config_obj = configobj.ConfigObj(configs_filepath, list_values=False, write_empty_values=True, encoding='UTF-8',
