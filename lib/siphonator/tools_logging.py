@@ -2,10 +2,7 @@ import logging
 import logging.handlers
 
 
-def app_logging(config_obj, app_log_file):
-
-    # read log levels
-    log_level = config_obj["general"]["log_level"]
+def app_logging(log_level, logs_filepath):
 
     # setup log formatting
     app_formatter = logging.Formatter("%(asctime)s :: [%(levelname)s] %(message)s")
@@ -19,7 +16,7 @@ def app_logging(config_obj, app_log_file):
     app_logger = logging.getLogger("app")
 
     # add rotating log handler
-    app_rotatingfilehandler = logging.handlers.RotatingFileHandler(app_log_file, "a", maxBytes=10485760, backupCount=3, encoding="utf-8")
+    app_rotatingfilehandler = logging.handlers.RotatingFileHandler(logs_filepath, "a", maxBytes=10485760, backupCount=3, encoding="utf-8")
 
     # set formatter for app
     app_rotatingfilehandler.setFormatter(app_formatter)

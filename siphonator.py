@@ -1,11 +1,11 @@
 import os
+import platform
 import sys
 import configobj
 import validate
 import argparse
 import datetime
 import pytest
-import pathlib
 import xml.etree.ElementTree as elementTree
 from imdbpie import ImdbAPIError
 from daemonize import Daemonize
@@ -31,6 +31,28 @@ import lib.siphonator.tools_logging as siphonator_tools_logging
 import lib.siphonator.tools_various as siphonator_tools_various
 import lib.siphonator.tools_downloader as siphonator_tools_downloader
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
+
+
+def set_paths(config_param):
+
+    full_path = os.path.join(app_root_path, config_param)
+
+    if args[config_param]:
+
+        if not os.path.exists(args[config_param]):
+
+            try:
+                os.makedirs(args[config_param])
+            except OSError as e:
+                print(f"Error setting '--{config_param}' path to '{args[config_param]}', error is '{e}', using default location '{full_path}'")
+            else:
+                full_path = args[config_param]
+
+        else:
+
+            full_path = args[config_param]
+
+    return full_path
 
 
 class Siphonator(object):
@@ -124,7 +146,7 @@ class Siphonator(object):
             'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
             'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'nlsubs', 'xvid', 'chi'
             'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
-            'dvdscr', 'screener', 'dual', 'protected', 'www', 'tam', 'hin'
+            'dvdscr', 'screener', 'dual', 'protected', 'www', 'tam', 'hin', 'hindi', 'tamil'
         ]
         filter_good_country_list = ['gb', 'us', 'ca', 'au', 'ie', 'nz']
         filter_good_language_list = ['en']
@@ -328,8 +350,8 @@ if __name__ == '__main__':
 
     # add argparse command line flags
     commandline_parser.add_argument(u"--test", action=u"store_true", help=u"run tests")
-    commandline_parser.add_argument(u"--configs", metavar=u"<path>", help=u"specify path for config file e.g. --configs /opt/siphonator/config/")
     commandline_parser.add_argument(u"--logs", metavar=u"<path>", help=u"specify path for log files e.g. --logs /opt/siphonator/logs/")
+    commandline_parser.add_argument(u"--configs", metavar=u"<path>", help=u"specify path for config file e.g. --configs /opt/siphonator/config/")
     commandline_parser.add_argument(u"--db", metavar=u"<path>", help=u"specify path for sqlite database e.g. --db /opt/siphonator/db/")
     commandline_parser.add_argument(u"--pid", metavar=u"<path>", help=u"specify path to pidfile e.g. --pid /var/run/siphonator/")
     commandline_parser.add_argument(u"--daemon", action=u"store_true", help=u"run as background daemonized process")
@@ -343,52 +365,43 @@ if __name__ == '__main__':
         return_code = pytest.main(["--verbose"])
         exit(return_code)
 
-    configs_path = os.path.join(app_root_path, 'configs')
-    if args['configs']:
-
-        check_path = pathlib.Path(args['configs'])
-        if check_path.exists():
-            configs_path = args['configs']
-
-    configs_filepath = os.path.join(configs_path, 'config.ini')
-    configspec_filepath = os.path.join(configs_path, u"configspec.ini")
-
-    logs_path = os.path.join(app_root_path, 'logs')
-    if args['logs']:
-
-        check_path = pathlib.Path(args['logs'])
-        if check_path.exists():
-            logs_path = args['logs']
-
+    # set path using app location or if specified use argument path
+    logs_path = set_paths('logs')
     logs_filepath = os.path.join(logs_path, 'siphonator.log')
 
-    db_path = os.path.join(app_root_path, 'db')
-    if args['db']:
+    # set path using app location or if specified use argument path
+    configs_path = set_paths('configs')
+    configs_filepath = os.path.join(configs_path, 'config.ini')
 
-        check_path = pathlib.Path(args['db'])
-        if check_path.exists():
-            db_path = args['db']
+    # we do not want the configspec.ini moving, so we hard set this to app location
+    app_configs_path = os.path.join(app_root_path, 'configs')
+    configspec_filepath = os.path.join(app_configs_path, u"configspec.ini")
 
+    # set path using app location or if specified use argument path
+    db_path = set_paths('db')
     db_filepath = os.path.join(db_path, 'siphonator.db')
 
-    pid_path = app_root_path
-    if args['pid']:
-
-        check_path = pathlib.Path(args['pid'])
-        if check_path.exists():
-            pid_path = args['pid']
-
+    # set path using app location or if specified use argument path
+    pid_path = set_paths('pid')
     pid_filepath = os.path.join(pid_path, 'process.pid')
 
+    # setup logging
+    log_level = 'debug'
+    logger = siphonator_tools_logging.app_logging(log_level, logs_filepath)
+    logger_create_instance = logger.get('logger')
+    logger_handler = logger.get('handler')
+
+    # setup daemon mode
     config_daemon_mode = 'foreground'
     config_daemon_mode = config_daemon_mode.lower()
-    if args['daemon']:
+
+    if args['daemon'] and platform.system() != 'Windows':
 
         config_daemon_mode = 'background'
 
+    # setup scheduler
     config_schedule_mode = 'foreground'
     config_schedule_mode = config_schedule_mode.lower()
-
     config_schedule_time_key = 'minutes'
     config_schedule_time_mins = 30
 
@@ -402,13 +415,7 @@ if __name__ == '__main__':
     config_obj.filename = configs_filepath
     config_obj.write()
 
-    logger = siphonator_tools_logging.app_logging(config_obj, logs_filepath)
-    logger_create_instance = logger.get('logger')
-    logger_handler = logger.get('handler')
-
-    keep_fds = [logger_handler.stream.fileno()]
-
-    # send schedule details
+    # define initial settings in dict
     run_dict = ({
         'schedule_mode': config_schedule_mode,
         'schedule_time_key': config_schedule_time_key,
@@ -432,6 +439,7 @@ if __name__ == '__main__':
 
         # note when calling method in class for 'action' drop '()'
         # 'keep_fds' prevents daemonize of file descriptors, such as logger, otherwise logging stops
+        keep_fds = [logger_handler.stream.fileno()]
         daemon = Daemonize(app="siphonator", pid=pid_filepath, keep_fds=keep_fds, action=siphonator_instance.schedule_run)
         daemon.start()
 
