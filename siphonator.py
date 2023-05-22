@@ -146,7 +146,8 @@ class Siphonator(object):
             'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
             'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'nlsubs', 'xvid', 'chi'
             'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
-            'dvdscr', 'screener', 'dual', 'protected', 'www', 'tam', 'hin', 'hindi', 'tamil'
+            'dvdscr', 'screener', 'dual', 'protected', 'www', 'tam', 'hin', 'hindi', 'tamil',
+            'dvdrip'
         ]
         filter_good_country_list = ['gb', 'us', 'ca', 'au', 'ie', 'nz']
         filter_good_language_list = ['en']
