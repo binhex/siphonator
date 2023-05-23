@@ -28,7 +28,7 @@ class ToolsVarious(object):
         self.index_title_regex_search = r'\.|_'
         self.index_title_regex_sqlite = r'\.|_|-|\s|&'
         self.index_title_regex_word_match = r'\.|_|\[|\]|\(|\)'
-        self.index_title_regex_strip = r'\s|,|:|<|>|\?|\*|\.|_|-|\'|\!|[\(\)]|[\[\]]'
+        self.index_title_regex_strip = r'\s|,|:|<|>|\?|\*|\.|_|-|\'|\!|/|[\(\)]|[\[\]]'
         self.index_title_resolution_regex = r'\d{3,4}p'
         self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s?).*$'
         self.index_title_year_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s)'

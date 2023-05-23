@@ -23,8 +23,15 @@ class SearchGoogle(object):
             self.index_dict.update({'result': 'failed', 'result_details': u"Failed to search Google for index title compare '%s'" % self.index_title_compare})
             return self.index_dict
 
-        # get first item from generator object
-        google_find_id_dict = next(google_find_id_gen)
+        try:
+
+            # get first item from generator object
+            google_find_id_dict = next(google_find_id_gen)
+
+        except StopIteration:
+
+            self.index_dict.update({'result': 'failed', 'result_details': u"Failed to return results from Google for index title compare '%s'" % self.index_title_compare})
+            return self.index_dict
 
         imdb_title = google_find_id_dict.title
         imdb_url = google_find_id_dict.url
@@ -32,7 +39,7 @@ class SearchGoogle(object):
         # if title or url is none then return
         if not imdb_title or not imdb_url:
 
-            self.index_dict.update({'result': 'failed', 'result_details': u"Failed to return results from Google for index title compare '%s'" % self.index_title_compare})
+            self.index_dict.update({'result': 'failed', 'result_details': u"Failed to return IMDb title or URL from Google for index title compare '%s'" % self.index_title_compare})
             return self.index_dict
 
         # find imdb title
