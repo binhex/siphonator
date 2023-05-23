@@ -32,6 +32,7 @@ class ToolsVarious(object):
         self.index_title_resolution_regex = r'\d{3,4}p'
         self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s?).*$'
         self.index_title_year_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s)'
+        self.index_title_group_regex = r'([a-zA-Z0-9]+)(\.[a-z]+)?(\[[a-zA-Z0-9]+\])?$'
 
     def resolution_from_filename(self, custom_title):
 
@@ -130,6 +131,20 @@ class ToolsVarious(object):
 
         custom_title_remove_year_to_end_compare = re.sub(self.index_title_remove_year_to_end_regex, '', custom_title).lower()
         return custom_title_remove_year_to_end_compare
+
+    def custom_title_group_compare(self, custom_title):
+
+        if custom_title is None:
+            self.logger_instance.warning(u'No custom_title sent to function')
+            return None
+
+        custom_title_group_compare = re.search(self.index_title_group_regex, custom_title)
+
+        if custom_title_group_compare:
+
+            custom_title_group_compare = custom_title_group_compare.group(1).lower()
+
+        return custom_title_group_compare
 
     # TODO break this up into separate methods and then call each and append to dict
     def index_title_compare_search(self, **index_dict):

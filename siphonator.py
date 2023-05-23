@@ -144,7 +144,7 @@ class Siphonator(object):
             '3d', 'cam', 'camrip', 'hdcam', 'hdcamrip', 'iptv', 'hqcam', 'hqcamrip', 'hdts',
             'hdtc', 'hc', 'ts', 'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german',
             'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
-            'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'nlsubs', 'xvid', 'chi'
+            'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'nlsubs', 'xvid', 'chi', 'rus',
             'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
             'dvdscr', 'screener', 'dual', 'protected', 'www', 'tam', 'hin', 'hindi', 'tamil',
             'dvdrip'
@@ -153,6 +153,11 @@ class Siphonator(object):
         filter_good_language_list = ['en']
         filter_bad_movie_title_list = []
         filter_bad_genre_list = ['Musical', 'Music', 'Documentary']
+        filter_preferred_index_group_list = [
+            'fgt', 'ctrlhd', 'amiable', 'sinners', 'chd', 'wiki', 'cinefile', 'septic', 'don',
+            'esir', 'refined', 'reveille', 'metis', 'timelords', 'eureka', 'hv', '7sins',
+            'sector7', 'sparks', 'barc0de', 'ebp', 'cytsunee', 'grym', 'cmrg',
+        ]
         filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow', 'Superman']
         filter_override_cast_list = ['Jason Statham']
         filter_override_writer_list = []
@@ -236,6 +241,7 @@ class Siphonator(object):
             'filter_override_movie_title_list': filter_override_movie_title_list,
             'filter_bad_movie_title_list': filter_bad_movie_title_list,
             'filter_good_country_list': filter_good_country_list,
+            'filter_preferred_index_group_list': filter_preferred_index_group_list,
             'search_tmdb_api_key': search_tmdb_api_key,
             'search_omdb_api_key': search_omdb_api_key
         })
