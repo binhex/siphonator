@@ -32,7 +32,8 @@ class ToolsVarious(object):
         self.index_title_resolution_regex = r'\d{3,4}p'
         self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s?).*$'
         self.index_title_year_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s)'
-        self.index_title_group_regex = r'([a-zA-Z0-9]+)(\.[a-z]+)?(\[[a-zA-Z0-9]+\])?$'
+        self.index_title_group_regex = r'([a-zA-Z0-9]+)(\)?)(\[[a-zA-Z0-9]+\])?(\.[a-z0-9]{3})?(\[[a-zA-Z0-9]+\])?$'
+        self.index_title_group_regex_old = r'([a-zA-Z0-9]+)(\.[a-z]+)?(\[[a-zA-Z0-9]+\])?$'
 
     def resolution_from_filename(self, custom_title):
 

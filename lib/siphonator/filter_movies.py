@@ -409,7 +409,6 @@ class FilterMovies(object):
     def filter_downloaded_file(self):
 
         filter_library_path_walk = self.index_dict.get('filter_library_path_walk')
-        filter_preferred_index_group_list = self.index_dict.get('filter_preferred_index_group_list')
         library_path = self.index_dict.get('library_path')
         index_title = self.index_dict.get('index_title')
         index_title_compare = self.index_dict.get('index_title_compare')
@@ -445,24 +444,10 @@ class FilterMovies(object):
 
                         if index_site_search_bool:
 
-                            if filter_preferred_index_group_list is not None:
+                            # if filter_preferred_index_group return true then we need to download
+                            if self.filter_preferred_index_group(library_filename, index_title):
 
-                                library_filename_group = self.tools_various_instance.custom_title_group_compare(library_filename)
-                                index_title_group = self.tools_various_instance.custom_title_group_compare(index_title)
-
-                                self.logger_instance.debug(f"Filter preferred index group list is '{filter_preferred_index_group_list}'")
-                                self.logger_instance.debug(f"Library filename group is '{library_filename_group}'")
-                                self.logger_instance.debug(f"Index title group is '{index_title_group}'")
-
-                                # if filter_preferred_index_group return False then we already have a matching preferred group
-                                if not self.filter_preferred_index_group(filter_preferred_index_group_list, library_filename_group, index_title_group):
-
-                                    self.logger_instance.warning(u"Index title '%s' already exists in library file '%s', skipping movie" % (index_title, library_filename))
-                                    return False
-
-                                else:
-
-                                    return True
+                                return True
 
                             self.logger_instance.warning(u"Index title '%s' already exists in library file '%s', skipping movie" % (index_title, library_filename))
                             return False
@@ -673,21 +658,37 @@ class FilterMovies(object):
         self.logger_instance.debug(u"IMDb %s list '%s' is not in good %s list '%s'" % (filter_type, imdb_lower_list, filter_type, filter_lower_list))
         return False
 
-    def filter_preferred_index_group(self, filter_preferred_index_group_list, library_filename_group, index_title_group):
+    def filter_preferred_index_group(self, library_filename, index_title):
+
+        filter_preferred_index_group_list = self.index_dict.get('filter_preferred_index_group_list')
+
+        if filter_preferred_index_group_list is None:
+
+            self.logger_instance.info(u"No preferred index groups defined, skipping preferred index group check")
+            return False
+
+        filter_preferred_index_group_lower_list = [x.lower() for x in filter_preferred_index_group_list]
+
+        library_filename_group = self.tools_various_instance.custom_title_group_compare(library_filename)
+        index_title_group = self.tools_various_instance.custom_title_group_compare(index_title)
+
+        self.logger_instance.debug(f"Filter preferred index group list is '{filter_preferred_index_group_lower_list}'")
+        self.logger_instance.debug(f"Library filename group is '{library_filename_group}'")
+        self.logger_instance.debug(f"Index title group is '{index_title_group}'")
 
         # if library filename already matches one of the preferred index groups then return False (no need to dl again)
-        if library_filename_group in filter_preferred_index_group_list:
+        if library_filename_group in filter_preferred_index_group_lower_list:
 
-            self.logger_instance.info(f"Library filename group '{library_filename_group}' is in preferred index group list '{filter_preferred_index_group_list}'")
+            self.logger_instance.info(f"Library filename group '{library_filename_group}' is in preferred index group list '{filter_preferred_index_group_lower_list}'")
             return False
 
         # if index title group is not in preferred index group list then return False (not preferred group)
-        if index_title_group not in filter_preferred_index_group_list:
+        if index_title_group not in filter_preferred_index_group_lower_list:
 
-            self.logger_instance.info(f"Index title group '{index_title_group}' is not in preferred index group list '{filter_preferred_index_group_list}'")
+            self.logger_instance.info(f"Index title group '{index_title_group}' is not in preferred index group list '{filter_preferred_index_group_lower_list}'")
             return False
 
-        self.logger_instance.info(f"Index title group '{index_title_group}' is in preferred index group list '{filter_preferred_index_group_list}' and library filename group '{library_filename_group}' is not preferred, ignoring existing library file, continue processing...")
+        self.logger_instance.info(f"Index title group '{index_title_group}' is in preferred index group list '{filter_preferred_index_group_lower_list}' and library filename group '{library_filename_group}' is not preferred, ignoring existing library file,")
         return True
 
     def filter_override_person(self, filter_type):

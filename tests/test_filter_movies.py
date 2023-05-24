@@ -43,7 +43,8 @@ def create_logger():
     config_obj.filename = configs_filepath
     config_obj.write()
 
-    logger_instance = siphonator_tools_logging.app_logging(config_obj, logs_filepath)
+    log_level = 'debug'
+    logger_instance = siphonator_tools_logging.app_logging(log_level, logs_filepath)
     logger = logger_instance.get('logger')
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -64,6 +65,24 @@ def filter_bad_genre(create_logger, imdb_genres_list):
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
     response = siphonator_filter_movies_instance.filter_bad_genre()
+
+    # yield used instead of return to allow us to do cleanup afterward
+    yield response
+
+
+@pytest.fixture
+def filter_preferred_index_group(create_logger, filter_preferred_index_group_list, library_filename, index_title):
+
+    logger = create_logger
+
+    # Arrange
+    test_data = {
+        'filter_preferred_index_group_list': filter_preferred_index_group_list,
+    }
+
+    # Act
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    response = siphonator_filter_movies_instance.filter_preferred_index_group(library_filename, index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -180,6 +199,25 @@ def test_filter_rating(filter_rating, imdb_rating, exp_assert):
 def test_filter_bad_genre(filter_bad_genre, imdb_genres_list, exp_assert):
 
     response = filter_bad_genre
+
+    # Assert
+    assert response == exp_assert
+
+
+@pytest.mark.parametrize('filter_preferred_index_group_list, library_filename, index_title, exp_assert', [
+    ([], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP', False),                                    # check that no defined preferred group list does not result in true
+    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP1', True),             # check that a match for preferred group list and no existing library filename does result in true
+    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP1[RARBG]', True),      # check that a match for preferred group list and no existing library filename does result in true for tagged index group
+    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP1[RARBG].mkv', True),  # check that a match for preferred group list and no existing library filename does result in true for file ext index group
+    (['GrOuP1', 'GrOuP1'], 'Library.Filename.2023.1080p.WEBRip.x264-oThErGrOuP', 'Index.title.2023.1080p.WEBRip.x264-GrOuP1', True),             # check that case for preferred group list does result in true
+    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP1', 'Index.title.2023.1080p.WEBRip.x264-OTHERGROUP', False),            # check that existing preferred group in library filename does not result in true
+    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-ANOTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-OTHERGROUP', False),      # check that library and index title groups that do not match does not result in true
+    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-OTHERGROUP', False),        # check library and index title groups matches does not result in true
+    (['group11', 'group22'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP1', False),          # check no partial matches for preferred groups does not result in true
+])
+def test_filter_preferred_index_group(filter_preferred_index_group, filter_preferred_index_group_list, library_filename, index_title, exp_assert):
+
+    response = filter_preferred_index_group
 
     # Assert
     assert response == exp_assert
