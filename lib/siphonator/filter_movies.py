@@ -615,20 +615,19 @@ class FilterMovies(object):
 
     def filter_bad_index_type(self):
 
-        index_title_year_to_end_compare = self.index_dict.get('index_title_year_to_end_compare')
-        identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
+        index_title = self.index_dict.get('index_title')
+        index_title_year_to_end = self.tools_various_instance.custom_title_year_to_end(index_title)
+        index_title_tv_season_episode = self.tools_various_instance.custom_title_tv_season_episode(index_title_year_to_end)
 
-        if index_title_year_to_end_compare is None:
+        if index_title_tv_season_episode:
 
             self.logger_instance.info(u"No year to end identified for index title, skipping bad index type check")
             return True
 
-        if re.search(identify_tv_season_or_episode_regex, index_title_year_to_end_compare):
+        else:
 
-            self.logger_instance.warning(u"Index title year to end '%s' contains tv series string match for regex '%s', skipping movie" % (index_title_year_to_end_compare, identify_tv_season_or_episode_regex))
+            self.logger_instance.warning(u"Index title year to end '%s' contains tv season or episode string match for regex, skipping movie" % index_title_year_to_end)
             return False
-
-        return True
 
     def filter_good_language_country(self, filter_type):
 

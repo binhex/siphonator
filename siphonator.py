@@ -136,7 +136,7 @@ class Siphonator(object):
         library_path = "/media"
         filter_minimum_year = '1960'
         filter_minimum_runtime_mins = '60'
-        filter_genre_minimum_rating_dict = ({'sci-fi': 6.5, 'animation': 5.0})
+        filter_genre_minimum_rating_dict = ({'sci-fi': 6.8, 'animation': 5.0})
         filter_minimum_rating = '7.0'
         filter_minimum_votes = int(5000)
         filter_minimum_seeders = int(1)
@@ -159,7 +159,7 @@ class Siphonator(object):
             'sector7', 'sparks', 'barc0de', 'ebp', 'cytsunee', 'grym', 'cmrg',
         ]
         filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow', 'Superman']
-        filter_override_cast_list = ['Jason Statham']
+        filter_override_cast_list = ['Jason Statham', 'Christian Bale']
         filter_override_writer_list = []
         filter_override_director_list = ['Steven Spielberg', 'Stanley Kubrick', 'James Cameron', 'Quentin Tarantino', 'Guy Ritchie']
         filter_override_movie_title_list = ['Star Trek']

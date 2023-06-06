@@ -33,7 +33,14 @@ class ToolsVarious(object):
         self.index_title_remove_year_to_end_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s?).*$'
         self.index_title_year_regex = r'(\_|\.|\s|\s\()\d{4}(\_|\.|\s|\)\s)'
         self.index_title_group_regex = r'([a-zA-Z0-9]+)(\)?)(\[[a-zA-Z0-9]+\])?(\.[a-z0-9]{3})?(\[[a-zA-Z0-9]+\])?$'
-        self.index_title_group_regex_old = r'([a-zA-Z0-9]+)(\.[a-z]+)?(\[[a-zA-Z0-9]+\])?$'
+        self.index_title_identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
+
+    def library_path_walk(self, library_path):
+
+        filter_library_path_walk = os.walk(library_path, topdown=False)
+
+        self.logger_instance.debug(u"Filter library path '%s' walked" % library_path)
+        return filter_library_path_walk
 
     def resolution_from_filename(self, custom_title):
 
@@ -127,6 +134,7 @@ class ToolsVarious(object):
     def custom_title_remove_year_to_end_compare(self, custom_title):
 
         if custom_title is None:
+
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -136,16 +144,58 @@ class ToolsVarious(object):
     def custom_title_group_compare(self, custom_title):
 
         if custom_title is None:
+
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
-        custom_title_group_compare = re.search(self.index_title_group_regex, custom_title)
+        custom_title_group_compare_search = re.search(self.index_title_group_regex, custom_title)
 
-        if custom_title_group_compare:
+        if custom_title_group_compare_search:
 
-            custom_title_group_compare = custom_title_group_compare.group(1).lower()
+            custom_title_group_compare = custom_title_group_compare_search.group(1).lower()
+
+        else:
+
+            return None
 
         return custom_title_group_compare
+
+    def custom_title_year_to_end(self, custom_title):
+
+        if custom_title is None:
+
+            self.logger_instance.warning(u'No custom_title sent to function')
+            return None
+
+        custom_title_year_to_end_search = re.search(self.index_title_remove_year_to_end_regex, custom_title)
+
+        if custom_title_year_to_end_search:
+
+            custom_title_year_to_end = custom_title_year_to_end_search.group(0)
+
+        else:
+
+            return None
+
+        return custom_title_year_to_end
+
+    def custom_title_tv_season_episode(self, custom_title):
+
+        if custom_title is None:
+
+            self.logger_instance.warning(u'No custom_title sent to function')
+            return None
+
+        custom_title_tv_season_episode_search = re.search(self.index_title_identify_tv_season_or_episode_regex, custom_title)
+
+        # if search matches regex then return False, we do not care about the match only that it did match
+        if custom_title_tv_season_episode_search:
+
+            return False
+
+        else:
+
+            return True
 
     # TODO break this up into separate methods and then call each and append to dict
     def index_title_compare_search(self, **index_dict):
@@ -230,10 +280,3 @@ class ToolsVarious(object):
         })
 
         return index_dict
-
-    def library_path_walk(self, library_path):
-
-        filter_library_path_walk = os.walk(library_path, topdown=False)
-
-        self.logger_instance.debug(u"Filter library path '%s' walked" % library_path)
-        return filter_library_path_walk
