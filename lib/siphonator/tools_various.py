@@ -171,7 +171,7 @@ class ToolsVarious(object):
 
         if custom_title_year_to_end_search:
 
-            custom_title_year_to_end = custom_title_year_to_end_search.group(0)
+            custom_title_year_to_end = custom_title_year_to_end_search.group(0).lower()
 
         else:
 
