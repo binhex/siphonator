@@ -156,7 +156,7 @@ class Siphonator(object):
         filter_preferred_index_group_list = [
             'fgt', 'ctrlhd', 'amiable', 'sinners', 'chd', 'wiki', 'cinefile', 'septic', 'don',
             'esir', 'refined', 'reveille', 'metis', 'timelords', 'eureka', 'hv', '7sins',
-            'sector7', 'sparks', 'barc0de', 'ebp', 'cytsunee', 'grym', 'cmrg',
+            'sector7', 'sparks', 'barc0de', 'ebp', 'cytsunee', 'grym', 'cmrg', 'framestor',
         ]
         filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow', 'Superman']
         filter_override_cast_list = ['Jason Statham', 'Christian Bale']
