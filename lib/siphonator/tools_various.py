@@ -42,19 +42,19 @@ class ToolsVarious(object):
         self.logger_instance.debug(u"Filter library path '%s' walked" % library_path)
         return filter_library_path_walk
 
-    def resolution_from_filename(self, custom_title):
+    def resolution_from_string(self, custom_title):
 
-        filename_resolution_search = re.search(self.index_title_resolution_regex, custom_title)
-        if filename_resolution_search:
+        resolution_string_search = re.search(self.index_title_resolution_regex, custom_title)
+        if resolution_string_search:
 
-            filename_resolution = filename_resolution_search.group(0)
+            resolution = resolution_string_search.group(0)
 
         else:
 
-            filename_resolution = None
+            resolution = None
 
-        self.logger_instance.debug(u"Resolution from library file '%s' is '%s'" % (custom_title, filename_resolution))
-        return filename_resolution
+        self.logger_instance.debug(u"Resolution from string '%s' is '%s'" % (custom_title, resolution))
+        return resolution
 
     def resolution_from_ffprobe(self, media_filepath):
 
@@ -188,7 +188,7 @@ class ToolsVarious(object):
 
         custom_title_tv_season_episode_search = re.search(self.index_title_identify_tv_season_or_episode_regex, custom_title)
 
-        # if search matches regex then return False, we do not care about the match only that it did match
+        # if search matches regex then return boolean, we do not care about the match only that it did match
         if custom_title_tv_season_episode_search:
 
             return False
@@ -216,10 +216,10 @@ class ToolsVarious(object):
         self.logger_instance.debug(u"Index title is '%s'" % index_title)
 
         index_title_strip = re.sub(self.index_title_remove_year_to_end_regex, '', index_title)
+        index_title_search = re.sub(self.index_title_regex_search, ' ', index_title_strip)
         index_title_compare = re.sub(self.index_title_regex_strip, '', index_title_strip).lower()
         index_title_full_compare = re.sub(self.index_title_regex_strip, '', index_title).lower()
         index_title_year_to_end = re.search(self.index_title_remove_year_to_end_regex, index_title)
-        index_title_search = re.sub(self.index_title_regex_search, ' ', index_title_strip)
 
         # remove duplicate whitespaces
         index_title_search = " ".join(index_title_search.split())
