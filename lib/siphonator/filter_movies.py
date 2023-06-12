@@ -1,3 +1,4 @@
+import os
 from decimal import Decimal
 import lib.siphonator.tools_various as siphonator_tools_various
 
@@ -62,12 +63,12 @@ class FilterMovies(object):
             self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_file'"})
             return self.index_dict
         # if library file not found (return True) then check directory names and resolution to match search criteria
-        else:
-            filter_downloaded_dir_result = self.filter_downloaded_dir()
-            if not filter_downloaded_dir_result:
-                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.index_dict.get('index_title'))
-                self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_dir'"})
-                return self.index_dict
+        # else:
+        #     filter_downloaded_dir_result = self.filter_downloaded_dir()
+        #     if not filter_downloaded_dir_result:
+        #         self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.index_dict.get('index_title'))
+        #         self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_dir'"})
+        #         return self.index_dict
 
         self.logger_instance.debug(u"Index title '%s' passed all index filters" % self.index_dict.get('index_title'))
         self.index_dict.update({'result': 'index passed'})
@@ -404,6 +405,57 @@ class FilterMovies(object):
             self.logger_instance.warning(u"Index seeders '%s' below minimum seeders threshold '%s'" % (index_seeders_int, filter_minimum_seeders))
             return False
 
+    def filter_downloaded_file_resolution(self, library_filename):
+
+        index_title = self.index_dict.get('index_title')
+        index_site_search = self.index_dict.get('index_site_search')
+        index_site_search_list = index_site_search.split()
+        library_path = self.index_dict.get('library_path')
+
+        # get resolution of index title using regex
+        index_title_height_resolution, index_title_height_resolution_numeric = self.tools_various_instance.resolution_from_string(index_title)
+
+        # if index title does contain resolution then continue checks
+        if index_title_height_resolution is not None:
+
+            # if resolution from index title is in search criteria then continue checks
+            if index_title_height_resolution in index_site_search_list:
+
+                # get resolution of library filename using regex
+                library_filepath_height_resolution, library_filepath_height_resolution_numeric = self.tools_various_instance.resolution_from_string(library_filename)
+
+                # TODO need to figure out how to get parent path as ffprobe needs abs path to file
+                # # if we cannot determine resolution from filename then use ffmpeg to analyze file
+                # if library_filepath_height_resolution is None:
+                #
+                #     self.logger_instance.debug(f"Unable to determine resolution from filename '{library_filename}', trying ffprobe...")
+                #
+                #     # get resolution of library file by analysing file using ffprobe
+                #     library_filepath_height_resolution = self.tools_various_instance.resolution_from_ffprobe(library_parent_dirs_abs_filepath)
+                #
+                #     if library_filepath_height_resolution is None:
+                #
+                #         self.logger_instance.debug(f"Unable to determine resolution from filename or ffprobe, skipping movie")
+                #         return False
+                #
+                #     else:
+                #
+                #         # append identified resolution from ffprobe to library_filename_compare, so we can use this to check all index_site_search_list are present
+                #         library_filename_compare = f"{library_filename_compare}{library_filepath_height_resolution}"
+
+                self.logger_instance.debug(u"Library file resolution identified as '%s' for library file '%s'" % (library_filepath_height_resolution, library_filename))
+
+                # if integer of filename resolution numeric is greater than integer of index title resolution then skip
+                if int(library_filepath_height_resolution_numeric) > int(index_title_height_resolution_numeric):
+
+                    self.logger_instance.debug(f"Library file resolution '{library_filepath_height_resolution_numeric}' is greater than resolution for index title '{index_title_height_resolution_numeric}', skipping movie")
+                    return False
+
+        self.logger_instance.debug(u"Library file resolution title '%s' not found in library filenames for library path '%s', continue processing..." % (index_title, library_path))
+        return True
+
+    # True = download
+    # False = skip, already n library
     def filter_downloaded_file(self):
 
         filter_library_path_walk = self.index_dict.get('filter_library_path_walk')
@@ -424,8 +476,6 @@ class FilterMovies(object):
 
         for root, dirs, files in filter_library_path_walk:
 
-            # check index title against existing library filename, including search criteria, if it does match ALL the
-            # search criteria then return false (movie file already downloaded)
             for library_filename in files:
 
                 # get library filename compare using tools various
@@ -437,48 +487,8 @@ class FilterMovies(object):
                     # if index year in library filename then continue towards false (already downloaded)
                     if index_year_compare in library_filename_compare:
 
-                        # get resolution of index title using regex
-                        index_title_height_resolution = self.tools_various_instance.resolution_from_string(index_title)
-
-                        # if index title does contain resolution then continue
-                        if index_title_height_resolution is not None:
-
-                            # if resolution from index title is in search criteria then continue
-                            if index_title_height_resolution in index_site_search_list:
-
-                                # get resolution of library filename using regex
-                                library_filepath_height_resolution = self.tools_various_instance.resolution_from_string(library_filename)
-
-                                # if we cannot determine resolution from filename then use ffmpeg to analyze file
-                                if library_filepath_height_resolution is None:
-
-                                    self.logger_instance.debug(f"Unable to determine resolution from filename '{library_filename}', trying ffprobe...")
-
-                                    # get resolution of library file by analysing file using ffprobe
-                                    library_filepath_height_resolution = self.tools_various_instance.resolution_from_ffprobe(library_parent_dirs_abs_filepath)
-
-                                    if library_filepath_height_resolution is None:
-
-                                        self.logger_instance.debug(f"Unable to determine resolution from filename or ffprobe, skipping movie")
-                                        return False
-
-                                    else:
-
-                                        # append identified resolution from ffprobe to library_filename_compare, so we can use this to check all index_site_search_list are present
-                                        library_filename_compare = f"{library_filename_compare}{library_filepath_height_resolution}"
-
-                                self.logger_instance.debug(u"Library file resolution identified as '%s' for library file '%s'" % (library_filepath_height_resolution, library_filename))
-
-                                # if integer of filename resolution is greater than integer of index title resolution then skip
-                                if int(library_filepath_height_resolution) > int(index_title_height_resolution):
-
-                                    self.logger_instance.debug(f"Library file resolution '{library_filepath_height_resolution}' is greater than resolution for index title '{index_title_height_resolution}', skipping movie")
-                                    return False
-
                         # if all index site search items are in the library filename then continue towards false (already downloaded)
-                        index_site_search_bool = all(index_site_search_item in library_filename_compare for index_site_search_item in index_site_search_list)
-
-                        if index_site_search_bool:
+                        if all(index_site_search_item in library_filename_compare for index_site_search_item in index_site_search_list):
 
                             # if preferred group is not present in index title or library file already exists with preferred group then continue towards false (already downloaded)
                             if not self.filter_preferred_index_group(library_filename, index_title):
@@ -491,8 +501,11 @@ class FilterMovies(object):
 
     def filter_downloaded_dir(self):
 
+        # check index title against existing library directories, if match found then analyze library file to
+        # determine the resolution to see if it matches the search criteria, if it does match ANY of the search
+        # criteria then return false (movies already downloaded)
+
         filter_library_path_walk = self.index_dict.get('filter_library_path_walk')
-        library_path = self.index_dict.get('library_path')
         index_title = self.index_dict.get('index_title')
         index_title_compare = self.index_dict.get('index_title_compare')
         index_year_compare = self.index_dict.get('index_year_compare')
@@ -515,11 +528,29 @@ class FilterMovies(object):
 
                     if index_year_compare in library_parent_dirs_compare:
 
-                        self.logger_instance.debug(u"Index title '%s' already exists in library directory '%s', skipping movie" % (index_title, library_parent_dirs))
-                        return False
+                        # construct absolute library path
+                        library_parent_dirs_abs_path = os.path.join(root, library_parent_dirs)
 
-        self.logger_instance.debug(u"Index title '%s' not found in library directories for library path '%s', continue processing..." % (index_title, library_path))
-        return True
+                        # walk absolute path
+                        filter_library_parent_path_walk = self.tools_various_instance.library_path_walk(library_parent_dirs_abs_path)
+
+                        # loop over generator absolute path
+                        for child_root, child_dirs, child_files in library_parent_dirs_abs_path_gen:
+
+                            for child_file in child_files:
+
+                                # only check video container formats
+                                if child_file.lower().endswith(('.mkv', '.mp4', '.avi')):
+
+                                    # get filename and join to absolute path
+                                    library_dirs_abs_filepath = os.path.join(library_parent_dirs_abs_path, child_file)
+
+                                    # if library file resolution is greater than index title resolution then do not download
+                                    if not self.filter_downloaded_file_resolution(child_file):
+
+                                        self.logger_instance.debug(u"Index title '%s' already exists in library directory '%s', skipping movie" % (index_title, library_parent_dirs))
+                                        return False
+
 
     def filter_bad_genre(self):
 
