@@ -277,10 +277,10 @@ def test_custom_title_group_compare(custom_title_group_compare, index_title, exp
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) 1080p bluray dts-group', '2020'),     # get year
-    ('movie title (1900) 1080p bluray dts-GROUP', '1900'),     # get old year
-    ('movie.title.2020.1080p.bluray.dts-group', '2020'),       # periods no brackets for year
-    ('2100 movie title 2020 1080p bluray dts_group', '2020'),  # match year not in title
+    ('movie title (2020) 1080p bluray dts-group', '2020'),       # get year
+    ('movie.title.2020.1080p.bluray.dts-group', '2020'),         # periods no brackets for year
+    ('2100 movie title 2020 1080p bluray dts_group', '2020'),    # year at start of title, no brackets
+    ('movie (2300) title 2020 1080p bluray dts-group', '2020'),  # year in the middle of the title, with brackets
 ])
 def test_custom_title_year_compare(custom_title_year_compare, index_title, exp_assert):
 
