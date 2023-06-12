@@ -175,10 +175,10 @@ def custom_title_year_to_end_compare(create_logger, index_title):
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) 48p BluRay DTS-GROUP', (None, None)),           # no matching resolution in index title
-    ('movie title (2020) 480p BluRay DTS-GROUP', ('480p', '480')),       # index title with spaces
-    ('movie.title.(2020).1080p.BluRay.DTS-GROUP', ('1080p', '1080')),    # index title with periods
-    ('Movie_Title_(2020)_2160pp_BluRay_DTS-GROUP', ('2160p', '2160')),   # index title with underscores
+    ('movie title (2020) 48p BluRay DTS-GROUP', (None, None)),          # no matching resolution in index title
+    ('movie title (2020) 480p BluRay DTS-GROUP', ('480p', '480')),      # index title with spaces
+    ('movie.title.(2020).1080p.BluRay.DTS-GROUP', ('1080p', '1080')),   # index title with periods
+    ('Movie_Title_(2020)_2160pp_BluRay_DTS-GROUP', ('2160p', '2160')),  # index title with underscores
 ])
 def test_resolution_from_string(resolution_from_string, index_title, exp_assert):
 
@@ -291,10 +291,10 @@ def test_custom_title_year_compare(custom_title_year_compare, index_title, exp_a
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) 1080p bluray dts-group', '(2020) 1080p bluray dts-group'),          # brackets on year
-    ('movie (2300) title 2020 1080p bluray dts-group', '2020 1080p bluray dts-group'),       # year in the middle of the title, with brackets
-    ('movie.title.2020.1080p.bluray.dts-group', '2020.1080p.bluray.dts-group'),              # no brackets on year
-    ('2100 movie title 2020 1080p bluray dts-group', '2020 1080p bluray dts-group'),         # year at start of title, no brackets
+    ('movie title (2020) 1080p bluray dts-group', '(2020) 1080p bluray dts-group'),     # brackets on year
+    ('movie (2300) title 2020 1080p bluray dts-group', '2020 1080p bluray dts-group'),  # year in the middle of the title, with brackets
+    ('movie.title.2020.1080p.bluray.dts-group', '2020.1080p.bluray.dts-group'),         # no brackets on year
+    ('2100 movie title 2020 1080p bluray dts-group', '2020 1080p bluray dts-group'),    # year at start of title, no brackets
 ])
 def test_custom_title_year_to_end_compare(custom_title_year_to_end_compare, index_title, exp_assert):
 
