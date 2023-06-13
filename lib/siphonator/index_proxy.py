@@ -259,7 +259,7 @@ class IndexProxy(object):
             })
 
             tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-            self.index_dict = tools_various_instance.index_title_compare_search(**self.index_dict)
+            self.index_dict = tools_various_instance.index_title_process(**self.index_dict)
 
             if self.index_dict.get('result') != 'failed':
 

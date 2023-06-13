@@ -1,9 +1,12 @@
 import os
+import shutil
 import configobj
 import validate
 import pytest
+import pathlib
 import lib.siphonator.filter_movies as siphonator_filter_movies
 import lib.siphonator.tools_logging as siphonator_tools_logging
+import lib.siphonator.tools_various as siphonator_tools_various
 
 # to run tests from command line use 'python -m pytest --verbose'
 
@@ -145,6 +148,49 @@ def filter_genre_rating(create_logger, filter_genre_minimum_rating_dict):
     # yield used instead of return to allow us to do cleanup afterward
     yield response
 
+
+@pytest.fixture
+def filter_downloaded_file(create_logger, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list):
+
+    logger = create_logger
+
+    tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
+    index_title_compare = tools_various_instance.custom_title_compare(index_title)
+    index_year_compare = tools_various_instance.custom_title_year_compare(index_title)
+
+    # create test directory structure
+    pathlib.Path(library_path).mkdir(parents=True, exist_ok=True)
+
+    # create filepath
+    filepath = os.path.join(library_path, filename)
+
+    # create test movie file from filepath
+    open(filepath, mode='a').close()
+
+    # walk path to get test directory and filename
+    filter_library_path_walk = os.walk(library_path, topdown=False)
+
+    # Arrange
+    test_data = {
+        'library_path': library_path,
+        'filter_library_path_walk': filter_library_path_walk,
+        'index_title': index_title,
+        'index_title_compare': index_title_compare,
+        'index_year_compare': index_year_compare,
+        'index_site_search': index_site_search,
+        'filter_preferred_index_group_list': filter_preferred_index_group_list,
+    }
+
+    # Act
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    response = siphonator_filter_movies_instance.filter_downloaded_file()
+
+    # yield used instead of return to allow us to do cleanup afterward
+    yield response
+
+    # cleanup test area
+    shutil.rmtree(library_path)
+
 # tests
 ###
 
@@ -222,3 +268,19 @@ def test_filter_preferred_index_group(filter_preferred_index_group, filter_prefe
 
     # Assert
     assert response == exp_assert
+
+
+@pytest.mark.parametrize('index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, exp_assert', [
+    ('movie title (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], False),          # movie does exist in library
+    ('movie title (2030) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),           # movie does not exist in library, library year different
+    ('movie title2 (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),          # movie does not exist in library, library title different
+    ('movie title (2020) 1080p bluray dts-preferredgroup', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),  # movie does exist in library, but preferred index group found
+])
+def test_filter_downloaded_file(filter_downloaded_file, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, exp_assert):
+
+    response = filter_downloaded_file
+
+    # Assert
+    assert response == exp_assert
+
+# TODO need to ensure we havent broken filter_movies functions for tool 'tools_various_instance.custom_title_compare'

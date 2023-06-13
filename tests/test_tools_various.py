@@ -171,6 +171,19 @@ def custom_title_year_to_end_compare(create_logger, index_title):
     yield response
 
 
+@pytest.fixture
+def custom_title_tv_season_episode(create_logger, index_title):
+
+    logger = create_logger
+
+    # Act
+    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
+    response = siphonator_tools_various_instance.custom_title_tv_season_episode(index_title)
+
+    # yield used instead of return to allow us to do cleanup afterward
+    yield response
+
+
 # test data
 
 
@@ -302,3 +315,18 @@ def test_custom_title_year_to_end_compare(custom_title_year_to_end_compare, inde
 
     # Assert
     assert response == exp_assert
+
+
+@pytest.mark.parametrize('index_title, exp_assert', [
+    ('movie title (2020) S01 1080p bluray dts-group', False),       # shorthand season
+    ('movie title (2020) Season01 1080p bluray dts-group', False),  # longhand season
+    ('movie title (2020) S01E01 1080p bluray dts-group', False),    # shorthand season and episode
+    ('movie (2300) title 2020 1080p bluray dts-group', True),       # no season or episode
+])
+def test_custom_title_tv_season_episode(custom_title_tv_season_episode, index_title, exp_assert):
+
+    response = custom_title_tv_season_episode
+
+    # Assert
+    assert response == exp_assert
+

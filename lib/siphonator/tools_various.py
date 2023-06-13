@@ -262,7 +262,7 @@ class ToolsVarious(object):
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
-        custom_title_tv_season_episode_search = re.search(self.index_title_identify_tv_season_or_episode_regex, custom_title)
+        custom_title_tv_season_episode_search = bool(re.search(self.index_title_identify_tv_season_or_episode_regex, custom_title.lower()))
 
         # if search matches regex then return boolean, we do not care about the match only that it did match
         if custom_title_tv_season_episode_search:
@@ -273,7 +273,7 @@ class ToolsVarious(object):
 
             return True
 
-    def index_title_compare_search(self, **index_dict):
+    def index_title_process(self, **index_dict):
 
         if index_dict is None:
 

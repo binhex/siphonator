@@ -4,6 +4,7 @@ import lib.siphonator.tools_various as siphonator_tools_various
 
 # TODO if remastered or extended or directors cut then check for on disk, if on disk then check size, if larger then download
 # TODO filter_override_downloaded - if repack or proper then check for on disk, if there then possible override
+# TODO bad group list, start with SLOT?
 # TODO if in completed then do not download, or in qbittorrent queue, or in qbittorrent history (possible?)
 # TODO if size of movie is larger on disk compared to index title then ignore, UNLESS its remastered, proper etc.
 
@@ -479,16 +480,18 @@ class FilterMovies(object):
             for library_filename in files:
 
                 # get library filename compare using tools various
-                library_filename_compare = self.tools_various_instance.custom_title_compare(library_filename)
+                library_filename_title_compare = self.tools_various_instance.custom_title_compare(library_filename)
+                library_filename_title_full_compare = self.tools_various_instance.custom_title_full_compare(library_filename)
+                library_filename_year_compare = self.tools_various_instance.custom_title_year_compare(library_filename)
 
                 # if index title in library filename then continue towards false (already downloaded)
-                if index_title_compare in library_filename_compare:
+                if index_title_compare in library_filename_title_compare:
 
                     # if index year in library filename then continue towards false (already downloaded)
-                    if index_year_compare in library_filename_compare:
+                    if index_year_compare in library_filename_year_compare:
 
                         # if all index site search items are in the library filename then continue towards false (already downloaded)
-                        if all(index_site_search_item in library_filename_compare for index_site_search_item in index_site_search_list):
+                        if all(index_site_search_item in library_filename_title_full_compare for index_site_search_item in index_site_search_list):
 
                             # if preferred group is not present in index title or library file already exists with preferred group then continue towards false (already downloaded)
                             if not self.filter_preferred_index_group(library_filename, index_title):
@@ -532,7 +535,7 @@ class FilterMovies(object):
                         library_parent_dirs_abs_path = os.path.join(root, library_parent_dirs)
 
                         # walk absolute path
-                        filter_library_parent_path_walk = self.tools_various_instance.library_path_walk(library_parent_dirs_abs_path)
+                        library_parent_dirs_abs_path_gen = self.tools_various_instance.library_path_walk(library_parent_dirs_abs_path)
 
                         # loop over generator absolute path
                         for child_root, child_dirs, child_files in library_parent_dirs_abs_path_gen:
@@ -550,7 +553,6 @@ class FilterMovies(object):
 
                                         self.logger_instance.debug(u"Index title '%s' already exists in library directory '%s', skipping movie" % (index_title, library_parent_dirs))
                                         return False
-
 
     def filter_bad_genre(self):
 
@@ -637,18 +639,14 @@ class FilterMovies(object):
     def filter_bad_index_type(self):
 
         index_title = self.index_dict.get('index_title')
-        index_title_year_to_end = self.tools_various_instance.custom_title_year_to_end(index_title)
-        index_title_tv_season_episode = self.tools_various_instance.custom_title_tv_season_episode(index_title_year_to_end)
+        index_title_tv_season_episode = self.tools_various_instance.custom_title_tv_season_episode(index_title)
 
-        if index_title_tv_season_episode:
+        if not index_title_tv_season_episode:
 
-            self.logger_instance.info(u"No year to end identified for index title, skipping bad index type check")
-            return True
-
-        else:
-
-            self.logger_instance.warning(u"Index title year to end '%s' contains tv season or episode string match for regex, skipping movie" % index_title_year_to_end)
+            self.logger_instance.warning(u"Index title '%s' contains tv season or episode string match for regex, skipping movie" % index_title)
             return False
+
+        return True
 
     def filter_good_language_country(self, filter_type):
 
