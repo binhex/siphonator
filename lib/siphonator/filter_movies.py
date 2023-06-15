@@ -57,19 +57,19 @@ class FilterMovies(object):
             self.index_dict.update({'result_details': u"Failed index filter 'filter_seeders'"})
             return self.index_dict
 
-        # if library file filter returns false then file exists in library
+        # if library file returns false then file exists in library
         filter_downloaded_file_result = self.filter_downloaded_file()
         if not filter_downloaded_file_result:
             self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_file'" % self.index_dict.get('index_title'))
             self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_file'"})
             return self.index_dict
-        # if library file not found (return True) then check directory names and resolution to match search criteria
-        # else:
-        #     filter_downloaded_dir_result = self.filter_downloaded_dir()
-        #     if not filter_downloaded_dir_result:
-        #         self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.index_dict.get('index_title'))
-        #         self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_dir'"})
-        #         return self.index_dict
+        # if library file looks to be missing then get movie title from directory name and get resolution using ffprobe (if resolution missing from filename)
+        else:
+            filter_downloaded_dir_result = self.filter_downloaded_dir()
+            if not filter_downloaded_dir_result:
+                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.index_dict.get('index_title'))
+                self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_dir'"})
+                return self.index_dict
 
         self.logger_instance.debug(u"Index title '%s' passed all index filters" % self.index_dict.get('index_title'))
         self.index_dict.update({'result': 'index passed'})
@@ -462,10 +462,9 @@ class FilterMovies(object):
 
             if index_site_search_item not in library_filename_title_full_compare:
 
-                # check if missing index site search item from library filename is resolution e.g. '1080p'
                 index_site_search_item_resolution, index_site_search_item_resolution_numeric = self.tools_various_instance.resolution_from_string(index_site_search_item)
 
-                # if missing index site search item from library filename is resolution then identify
+                # check if missing index site search item from library filename is resolution e.g. '1080p' (only item we can calculate, else assume file is missing from library)
                 if index_site_search_item_resolution is not None:
 
                     # get resolution of library file by analysing file using ffprobe
