@@ -203,6 +203,7 @@ class Siphonator(object):
         # add in additional info to pass around as dict
         index_dict.update({
             'user_agent': user_agent,
+            'ffprobe_filepath': ffprobe_filepath,
             'library_path': library_path,
             'filter_library_path_walk': filter_library_path_walk,
             'index_proxy_jackett_host': index_proxy_jackett_host,
@@ -371,6 +372,9 @@ if __name__ == '__main__':
 
         return_code = pytest.main(["--verbose"])
         exit(return_code)
+
+    # set path to ffprobe bin
+    ffprobe_filepath = os.path.join(app_root_path, 'tools/ffprobe/static/x64/ffprobe')
 
     # set path using app location or if specified use argument path
     logs_path = set_paths('logs')

@@ -162,10 +162,10 @@ def filter_downloaded_file(create_logger, index_title, index_site_search, librar
     pathlib.Path(library_path).mkdir(parents=True, exist_ok=True)
 
     # create filepath
-    filepath = os.path.join(library_path, filename)
+    library_filepath = os.path.join(library_path, filename)
 
     # create test movie file from filepath
-    open(filepath, mode='a').close()
+    open(library_filepath, mode='a').close()
 
     # walk path to get test directory and filename
     filter_library_path_walk = os.walk(library_path, topdown=False)
@@ -190,6 +190,66 @@ def filter_downloaded_file(create_logger, index_title, index_site_search, librar
 
     # cleanup test area
     shutil.rmtree(library_path)
+
+
+@pytest.fixture
+def filter_downloaded_dir(create_logger, library_path, src_filename, dst_filename, dst_directory, index_title, index_site_search):
+
+    logger = create_logger
+
+    tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
+    index_title_compare = tools_various_instance.custom_title_compare(index_title)
+    index_year_compare = tools_various_instance.custom_title_year_compare(index_title)
+
+    tests_root_path = os.path.dirname(os.path.realpath(__file__))
+
+    # set path to ffprobe bin
+    ffprobe_filepath = os.path.join(tests_root_path, '../tools/ffprobe/static/x64/ffprobe')
+
+    # set src test media filepath
+    src_test_media_filepath = os.path.join(tests_root_path, 'media', src_filename)
+
+    # construct dir path
+    dst_test_media_library_filepath = os.path.join(library_path, dst_directory, dst_filename)
+
+    # copy test media to test library
+    os.makedirs(os.path.dirname(dst_test_media_library_filepath), exist_ok=True)
+    shutil.copy(src_test_media_filepath, dst_test_media_library_filepath)
+
+    # walk path to get test directory and filename
+    filter_library_path_walk = os.walk(library_path, topdown=False)
+
+    # Arrange
+    test_data = {
+        'library_path': library_path,
+        'ffprobe_filepath': ffprobe_filepath,
+        'filter_library_path_walk': filter_library_path_walk,
+        'index_title': index_title,
+        'index_title_compare': index_title_compare,
+        'index_year_compare': index_year_compare,
+        'index_site_search': index_site_search,
+    }
+
+    # Act
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    response = siphonator_filter_movies_instance.filter_downloaded_dir()
+
+    # yield used instead of return to allow us to do cleanup afterward
+    yield response
+
+    # cleanup test area
+    from pathlib import Path
+
+    def rmdir(pathname):
+        pathname = Path(pathname)
+        for item in pathname.iterdir():
+            if item.is_dir():
+                rmdir(item)
+            else:
+                item.unlink()
+        pathname.rmdir()
+
+    rmdir(Path(library_path))
 
 # tests
 ###
@@ -283,5 +343,21 @@ def test_filter_downloaded_file(filter_downloaded_file, index_title, index_site_
 
     # Assert
     assert response == exp_assert
+
+
+@pytest.mark.parametrize('library_path, src_filename, dst_filename, dst_directory, index_title, index_site_search, exp_assert', [
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group', '1080p bluray', False),  # index title resolution matches existing library file resolution, skip
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-720p.mkv', 'movie title (2020) 720p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group', '1080p bluray', True),     # index title resolution does not match existing library file resolution, continue
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 720p bluray dts-group', '720p bluray', False),    # index title resolution less than existing library file resolution, skip
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-720p.mkv', 'movie title (2020) 720p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group', '1080p bluray', True),     # index title resolution more than existing library file resolution, continue
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'test-1080p.mkv', 'movie title (2020)', 'movie title (2020) 720p bluray dts-group', '1080p bluray', True),                                   # index site search criteria 'bluray' cannot be found in library filename, continue
+])
+def test_filter_downloaded_dir(filter_downloaded_dir, library_path, src_filename, dst_filename, dst_directory, index_title, index_site_search, exp_assert):
+
+    response = filter_downloaded_dir
+
+    # Assert
+    assert response == exp_assert
+
 
 # TODO need to ensure we havent broken filter_movies functions for tool 'tools_various_instance.custom_title_compare'

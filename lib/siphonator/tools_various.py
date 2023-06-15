@@ -42,12 +42,15 @@ class ToolsVarious(object):
         self.logger_instance.debug(u"Filter library path '%s' walked" % library_path)
         return filter_library_path_walk
 
-    def resolution_from_ffprobe(self, media_filepath):
+    def resolution_from_ffprobe(self, library_filepath, ffprobe_filepath):
 
         try:
 
             # get resolution of media
-            video_streams = ffmpeg.probe(media_filepath, select_streams="v")
+            video_streams = (
+                ffmpeg
+                .probe(library_filepath, cmd=ffprobe_filepath, select_streams="v")
+            )
 
         except FileNotFoundError:
 
@@ -72,7 +75,7 @@ class ToolsVarious(object):
             # hard set as video height may not be consistent but width should be
             stream_height = '720'
 
-        self.logger_instance.debug(u"Resolution from ffmpeg for filepath '%s' is '%s'" % (media_filepath, stream_height))
+        self.logger_instance.debug(u"Resolution from ffmpeg for filepath '%s' is '%s'" % (library_filepath, stream_height))
         return stream_height
 
     def resolution_from_string(self, custom_title):
@@ -97,6 +100,7 @@ class ToolsVarious(object):
             resolution_numeric = None
 
         self.logger_instance.debug(u"Resolution from string '%s' is '%s'" % (custom_title, resolution))
+        self.logger_instance.debug(u"Numeric resolution from string '%s' is '%s'" % (custom_title, resolution_numeric))
         return resolution, resolution_numeric
 
     def custom_title_sqlite(self, custom_title):
