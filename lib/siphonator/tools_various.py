@@ -29,7 +29,6 @@ class ToolsVarious(object):
         self.index_title_sqlite_regex = r'\.|_|-|\s|&'
         self.index_title_word_match_regex = r'-|\.|_|\[|\]|\(|\)'
         self.index_title_remove_non_ascii_regex = r'[^a-zA-Z0-9]+'
-        self.index_title_remove_square_brackets_and_content_regex_old = r'\[.*\]+'
         self.index_title_remove_square_brackets_and_content_regex = r'\[[^\]]+\]'
         self.index_title_remove_website_regex = r'www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,4}|[a-zA-Z0-9]+\.com'
         self.index_title_remove_bad_words_regex = r'and|&'
@@ -152,7 +151,6 @@ class ToolsVarious(object):
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
-
         custom_title_strip = re.sub(self.index_title_remove_website_regex, '', custom_title).lower()
         custom_title_strip = re.sub(self.index_title_remove_square_brackets_and_content_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_non_ascii_regex, '', custom_title_strip).lower()
@@ -262,7 +260,6 @@ class ToolsVarious(object):
 
         return custom_title_year_compare
 
-    # TODO BROKEN!
     def custom_title_and_year_compare(self, custom_title):
 
         if custom_title is None:
@@ -271,8 +268,7 @@ class ToolsVarious(object):
             return None
 
         custom_title_compare = self.custom_title_compare(custom_title)
-        custom_title_year_to_end_compare = self.custom_title_year_to_end_compare(custom_title)
-        custom_title_year_compare = self.custom_title_year_compare(custom_title_year_to_end_compare)
+        custom_title_year_compare = self.custom_title_year_compare(custom_title)
 
         custom_title_and_year_compare = f"{custom_title_compare}{custom_title_year_compare}"
         return custom_title_and_year_compare
@@ -310,15 +306,6 @@ class ToolsVarious(object):
             return index_dict
 
         self.logger_instance.debug(u"Index title is '%s'" % index_title)
-
-        index_title_strip = self.custom_title_strip(index_title)
-        if index_title_strip is None:
-
-            self.logger_instance.debug(u"Cannot identify index title strip from index title '%s' using regex '%s'" % (index_title, self.index_title_year_to_end_regex))
-            index_dict.update({'result': 'failed', 'result_details': 'Cannot identify index title strip from index title'})
-            return index_dict
-
-        self.logger_instance.info(u"Index title strip is '%s'" % index_title_strip)
 
         index_title_full_compare = self.custom_title_full_compare(index_title)
         if index_title_full_compare is None:

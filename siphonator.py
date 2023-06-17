@@ -172,7 +172,7 @@ class Siphonator(object):
             'index_site_category': '2000',
             'filter_minimum_size_mb': int(3000),
             'filter_maximum_size_mb': int(20000),
-            'filter_minimum_bitrate_mb': int(42)
+            'filter_minimum_bitrate_mb': int(42),
         }
 
         index_site_search_2160p_remux_dict = {
@@ -180,7 +180,7 @@ class Siphonator(object):
             'index_site_category': '2000',
             'filter_minimum_size_mb': int(30000),
             'filter_maximum_size_mb': int(170000),
-            'filter_minimum_bitrate_mb': int(415)
+            'filter_minimum_bitrate_mb': int(360),  # was 415
         }
 
         search_tmdb_api_key = "1d93addd6def495cec493845cd3b2788"
