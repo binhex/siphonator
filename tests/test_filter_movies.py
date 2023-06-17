@@ -118,13 +118,32 @@ def filter_bad_index_title(create_logger, filter_bad_index_title_list):
 
     # Arrange
     test_data = {
-        'index_title': 'my bad movie title',
+        'index_title': 'movie title (2020) 1080p bluray bad dts-group',
         'filter_bad_index_title_list': filter_bad_index_title_list
     }
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
     response = siphonator_filter_movies_instance.filter_bad_index_title()
+
+    # yield used instead of return to allow us to do cleanup afterward
+    yield response
+
+
+@pytest.fixture
+def filter_bad_movie_title(create_logger, filter_bad_movie_title_list):
+
+    logger = create_logger
+
+    # Arrange
+    test_data = {
+        'index_title_and_year_compare': 'badmovie2020',
+        'filter_bad_movie_title_list': filter_bad_movie_title_list
+    }
+
+    # Act
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    response = siphonator_filter_movies_instance.filter_bad_movie_title()
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -256,12 +275,28 @@ def filter_downloaded_dir(create_logger, library_path, src_filename, dst_filenam
 
 
 @pytest.mark.parametrize('filter_bad_index_title_list, exp_assert', [
-    (['bad'], False),   # keyword found in index title
-    (['good'], True),   # keyword good not found in index title
+    (['bad'], False),          # bad keyword found in index title, skip
+    (['good'], True),          # bad keyword not found in index title, continue
+    (['good', 'bad'], False),  # bad keyword found in index title, second bad keyword not found in index title, skip
 ])
 def test_filter_bad_index_title(filter_bad_index_title, filter_bad_index_title_list, exp_assert):
 
     response = filter_bad_index_title
+
+    # Assert
+    assert response == exp_assert
+
+
+@pytest.mark.parametrize('filter_bad_movie_title_list, exp_assert', [
+    (['bad movie (2020)'], False),  # bad movie title found in index title, skip
+    (['bad movie'], False),         # bad movie title found in index title, no year, skip
+    (['bad.movie.(2020)'], False),  # bad movie title found in index title, period separators, skip
+    (['bad_movie_(2020)'], False),  # bad movie title found in index title, underscores separators, skip
+    (['good movie (2020)'], True),  # bad movie title not found in index title, continue
+])
+def test_filter_bad_movie_title(filter_bad_movie_title, filter_bad_movie_title_list, exp_assert):
+
+    response = filter_bad_movie_title
 
     # Assert
     assert response == exp_assert

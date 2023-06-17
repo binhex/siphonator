@@ -428,10 +428,18 @@ class FilterMovies(object):
 
             for library_filename in files:
 
-                # get library filename compare using tools various
+                # if the file format is not video then go to next iter
+                if not library_filename.lower().endswith(('.mkv', '.mp4', '.avi')):
+                    continue
+
+                # get library filename compare strings using tools various
                 library_filename_title_compare = self.tools_various_instance.custom_title_compare(library_filename)
                 library_filename_title_full_compare = self.tools_various_instance.custom_title_full_compare(library_filename)
                 library_filename_year_compare = self.tools_various_instance.custom_title_year_compare(library_filename)
+
+                # if we cannot determine the year then go to next iter
+                if library_filename_year_compare is None:
+                    continue
 
                 # if index title in library filename then continue towards false (already downloaded)
                 if index_title_compare in library_filename_title_compare:
@@ -546,7 +554,7 @@ class FilterMovies(object):
                                         self.logger_instance.debug(u"Index title '%s' already exists in library directory '%s', skipping movie" % (index_title, library_dirs))
                                         return False
 
-        self.logger_instance.debug(u"Index title '%s' does not exist in library '%s' for directory or resolution" % (index_title, library_path))
+        self.logger_instance.debug(f"Index title '{index_title}' not found in library directories for library path '{library_path}'")
         return True
 
     def filter_bad_genre(self):
@@ -588,9 +596,9 @@ class FilterMovies(object):
             return True
 
         # get bad index title compare using tools various
-        index_title_strip_lower = self.tools_various_instance.custom_title_word_match_compare(index_title)
+        index_title_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(index_title)
 
-        self.logger_instance.debug(u"Index title for bad keyword comparison is '%s'" % index_title_strip_lower)
+        self.logger_instance.debug(u"Index title for bad keyword comparison is '%s'" % index_title_year_to_end_compare)
 
         for filter_bad_title in filter_bad_title_list:
 
@@ -600,12 +608,12 @@ class FilterMovies(object):
             # use spaces to ensure exact match
             filter_bad_title_word_match_lower = " %s " % filter_bad_title_lower
 
-            if filter_bad_title_word_match_lower in index_title_strip_lower:
+            if filter_bad_title_word_match_lower in index_title_year_to_end_compare:
 
-                self.logger_instance.warning(u"Index title '%s' contains bad title keyword '%s', skipping movie" % (index_title_strip_lower, filter_bad_title))
+                self.logger_instance.warning(u"Index title '%s' contains bad title keyword '%s', skipping movie" % (index_title_year_to_end_compare, filter_bad_title))
                 return False
 
-        self.logger_instance.info(u"Index title '%s' does NOT contain bad title keyword(s) '%s'" % (index_title_strip_lower, filter_bad_title_list))
+        self.logger_instance.info(u"Index title '%s' does NOT contain bad title keyword(s) '%s'" % (index_title_year_to_end_compare, filter_bad_title_list))
         return True
 
     def filter_bad_movie_title(self):
@@ -621,11 +629,11 @@ class FilterMovies(object):
         for filter_bad_movie_title in filter_bad_movie_title_list:
 
             # get bad movie title compare using tools various
-            filter_bad_movie_title_compare = self.tools_various_instance.custom_title_compare(filter_bad_movie_title)
+            filter_bad_movie_title_full_compare = self.tools_various_instance.custom_title_full_compare(filter_bad_movie_title)
 
-            if filter_bad_movie_title_compare in index_title_and_year_compare:
+            if filter_bad_movie_title_full_compare in index_title_and_year_compare:
 
-                self.logger_instance.warning(u"Index title '%s' contains bad movie title '%s', skipping movie" % (index_title_and_year_compare, filter_bad_movie_title_compare))
+                self.logger_instance.warning(u"Index title '%s' contains bad movie title '%s', skipping movie" % (index_title_and_year_compare, filter_bad_movie_title_full_compare))
                 return False
 
         self.logger_instance.info(u"Index title '%s' does NOT match any bad movie titles in list" % index_title_and_year_compare)
