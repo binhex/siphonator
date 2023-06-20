@@ -13,7 +13,7 @@ def imdb_json_api(logger_instance, **kwargs):
     country_origins_list = []
     genres_list = []
 
-    imdb_id = index_dict.get('imdb_id', None)
+    imdb_id = index_dict.get('imdb_id')
     logger_instance.info(u"Getting title attributes for movie with IMDb ID '%s'..." % imdb_id)
 
     try:
@@ -24,7 +24,14 @@ def imdb_json_api(logger_instance, **kwargs):
         index_dict.update({'result': 'failed', 'result_details': u"Cannot connect to IMDb"})
         return index_dict
 
-    imdb_get_title_dict = imdb_instance.get_title(str(imdb_id))
+    try:
+        imdb_get_title_dict = imdb_instance.get_title(str(imdb_id))
+
+    except ValueError:
+        logger_instance.warning(f"Invalid IMDb id '{imdb_id}'")
+        index_dict.update({'result': 'failed', 'result_details': f"Invalid IMDb id '{imdb_id}'"})
+        return index_dict
+
     imdb_get_title_genres_dict = imdb_instance.get_title_genres(str(imdb_id))
     imdb_get_title_credits_dict = imdb_instance.get_title_credits(str(imdb_id))
     imdb_get_title_auxiliary_dict = imdb_instance.get_title_auxiliary(str(imdb_id))

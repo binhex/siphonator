@@ -29,11 +29,13 @@ class ToolsVarious(object):
         self.index_title_sqlite_regex = r'\.|_|-|\s|&'
         self.index_title_word_match_regex = r'-|\.|_|\[|\]|\(|\)'
         self.index_title_remove_non_ascii_regex = r'[^a-zA-Z0-9]+'
+        self.index_title_remove_separators_regex = r'[\.\-_\s\(\)]+'
         self.index_title_remove_square_brackets_and_content_regex = r'\[[^\]]+\]'
         self.index_title_remove_website_regex = r'www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,4}|[a-zA-Z0-9]+\.com'
         self.index_title_remove_bad_words_regex = r'and|&'
         self.index_title_resolution_regex = r'\d{3,4}p'
-        self.index_title_year_to_end_regex = r'([\s\.\-_\(])(\(?\d{4}\)?)([\s\.\-_])?([a-zA-Z]+)?([\s\.\-_])(\d{3,4}[pi])(.*)+$'
+        self.index_title_year_to_end_regex_old = r'([\s\.\-_\(])(\(?\d{4}\)?)([\s\.\-_])?([a-zA-Z]+)?([\s\.\-_])(\d{3,4}[pi])(.*)+$'
+        self.index_title_year_to_end_regex = r'([\s\.\-_])(\(?\d{4}\)?).*$'
         self.index_title_year_regex = r'^(\(?)(\d{4})(\)?)'
         self.index_title_group_regex = r'([a-zA-Z0-9]+)(\)?)(\[[a-zA-Z0-9]+\])?(\.[a-z0-9]{3})?(\[[a-zA-Z0-9]+\])?$'
         self.index_title_identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
@@ -153,7 +155,7 @@ class ToolsVarious(object):
 
         custom_title_strip = re.sub(self.index_title_remove_website_regex, '', custom_title).lower()
         custom_title_strip = re.sub(self.index_title_remove_square_brackets_and_content_regex, '', custom_title_strip).lower()
-        custom_title_strip = re.sub(self.index_title_remove_non_ascii_regex, '', custom_title_strip).lower()
+        custom_title_strip = re.sub(self.index_title_remove_separators_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_bad_words_regex, '', custom_title_strip).lower()
 
         return custom_title_strip

@@ -202,10 +202,11 @@ def test_resolution_from_string(resolution_from_string, index_title, exp_assert)
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) 1080p bluRay dts-group', '%movie%title%'),  # index title lower case and has spaces
-    ('Movie Title (2020) 1080p BluRay DTS-GROUP', '%Movie%Title%'),  # index title mixed case and has spaces
-    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', '%Movie%Title%'),  # index title mixed case and has periods
-    ('Movie_Title_(2020)_1080p_BluRay_DTS-GROUP', '%Movie%Title%'),  # index title mixed case and has underscores
+    ('movie title (2020) 1080p bluRay dts-group', '%movie%title%'),         # index title lower case and has spaces
+    ('Movie Title (2020) 1080p BluRay DTS-GROUP', '%Movie%Title%'),         # index title mixed case and has spaces
+    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', '%Movie%Title%'),         # index title mixed case and has periods
+    ('Movie_Title_(2020)_1080p_BluRay_DTS-GROUP', '%Movie%Title%'),         # index title mixed case and has underscores
+    ('Movie_Title_(2020)_1080p_BluRay_DTS-GROUP[RARBG]', '%Movie%Title%'),  # index title has junk at the end
 ])
 def test_custom_title_sqlite(custom_title_sqlite, index_title, exp_assert):
 
@@ -216,16 +217,20 @@ def test_custom_title_sqlite(custom_title_sqlite, index_title, exp_assert):
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) 1080p BluRay DTS-GROUP', 'movietitle'),                                                     # index title lower case and  has spaces
-    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                                     # index title has periods
-    ('Movie.&.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                                   # index title has ampersand symbol - remove
-    ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                                 # index title has word 'and' - remove
-    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has junk square brackets at start
-    ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movietitle'),                                    # index title has junk square brackets at end
-    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movietitle'),                     # index title has junk square brackets at start and end
-    ('【高清影视之家首发 www.BBQDDQ.com】逃离岁[简繁英字幕].Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),             # index title has junk before title
-    ('【高清剧集网 www.BTHDTV.com】亿万 第四季[全12集][中文字幕].Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),        # index title has junk before title
-    ('www.Torrenting.com   -    Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                       # index title has junk before title
+    ('movie title (2020) DTS', 'movietitle'),                                                     # index title is missing media and resolution
+    ('movie title (2020) DTS 1080p', 'movietitle'),                                               # index title audio encode before resolution
+    ('movie title (2020) BD 1080p', 'movietitle'),                                                # index title source and resolution reversed
+    ('movie title (2020) 1080p BluRay DTS', 'movietitle'),                                        # index title has no group
+    ('movie title (2020) 1080p BluRay DTS-GROUP', 'movietitle'),                                  # index title lower case and  has spaces
+    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has periods
+    ('Movie.&.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                # index title has ampersand symbol - remove
+    ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                              # index title has word 'and' - remove
+    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),               # index title has junk square brackets at start
+    ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movietitle'),                 # index title has junk square brackets at end
+    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movietitle'),  # index title has junk square brackets at start and end
+    ('www.Torrenting.com   -    Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),    # index title has junk before title
+    ('【高清影视之家首发 www.BBQDDQ.com】逃离岁[简繁英字幕]', '【高清影视之家首发】逃离岁'),                                     # index title is non ascii chinese
+    ('Æon Flux (2005) 1080p BluRay DTS-GROUP', 'æonflux'),                                        # index title is non ascii english
 ])
 def test_custom_title_compare(custom_title_compare, index_title, exp_assert):
 

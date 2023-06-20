@@ -147,7 +147,7 @@ class Siphonator(object):
             'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'nlsubs', 'xvid', 'chi', 'rus',
             'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
             'dvdscr', 'screener', 'dual', 'protected', 'www', 'tam', 'hin', 'hindi', 'tamil',
-            'dvdrip'
+            'dvdrip', 'dvd9', 'dvd',
         ]
         filter_good_country_list = ['gb', 'us', 'ca', 'au', 'ie', 'nz']
         filter_good_language_list = ['en']
@@ -157,6 +157,7 @@ class Siphonator(object):
             'fgt', 'ctrlhd', 'amiable', 'sinners', 'chd', 'wiki', 'cinefile', 'septic', 'don',
             'esir', 'refined', 'reveille', 'metis', 'timelords', 'eureka', 'hv', '7sins',
             'sector7', 'sparks', 'barc0de', 'ebp', 'cytsunee', 'grym', 'cmrg', 'framestor',
+            'epsilon', 'flux', 'ntb',
         ]
         filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow', 'Superman']
         filter_override_cast_list = ['Jason Statham', 'Christian Bale']

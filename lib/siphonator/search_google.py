@@ -10,6 +10,7 @@ class SearchGoogle(object):
         self.index_dict = kwargs
         self.index_title_search = kwargs.get('index_title_search', None)
         self.index_title_compare = kwargs.get('index_title_compare', None)
+        self.index_title_full_compare = kwargs.get('index_title_full_compare', None)
         self.index_year_compare = kwargs.get('index_year_compare', None)
         self.logger_instance = logger_instance
 
