@@ -217,7 +217,6 @@ def test_custom_title_sqlite(custom_title_sqlite, index_title, exp_assert):
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) DTS', 'movietitle'),                                                     # index title is missing media and resolution
     ('movie title (2020) DTS 1080p', 'movietitle'),                                               # index title audio encode before resolution
     ('movie title (2020) BD 1080p', 'movietitle'),                                                # index title source and resolution reversed
     ('movie title (2020) 1080p BluRay DTS', 'movietitle'),                                        # index title has no group

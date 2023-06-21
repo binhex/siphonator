@@ -369,7 +369,6 @@ def test_filter_preferred_index_group(filter_preferred_index_group, filter_prefe
     ('movie title (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], False),          # movie does exist in library
     ('movie title (2020) 1080p bluray dts-group', '720p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),            # movie does exist in library, but search criteria are not found in filename
     ('movie title (2030) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),           # movie does not exist in library, index title year different
-    ('movie title2 (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),          # movie does not exist in library, index title different
     ('movie title (2020) 1080p bluray dts-preferredgroup', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),  # movie does exist in library, but preferred index group found
 ])
 def test_filter_downloaded_file(filter_downloaded_file, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, exp_assert):

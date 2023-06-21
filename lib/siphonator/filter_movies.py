@@ -441,11 +441,11 @@ class FilterMovies(object):
                 if library_filename_year_compare is None:
                     continue
 
-                # if index title in library filename then continue towards false (already downloaded)
-                if index_title_compare in library_filename_title_compare:
+                # if library filename title compare in index title compare then continue towards false (already downloaded)
+                if library_filename_title_compare in index_title_compare:
 
-                    # if index year in library filename then continue towards false (already downloaded)
-                    if index_year_compare in library_filename_year_compare:
+                    # if library filename title compare in index title year compare then continue towards false (already downloaded)
+                    if library_filename_year_compare in index_year_compare:
 
                         # if all index site search items are in the library filename then continue towards false (already downloaded)
                         if all(index_site_search_item in library_filename_title_full_compare for index_site_search_item in index_site_search_list):
@@ -525,9 +525,11 @@ class FilterMovies(object):
 
                 library_dirs_compare = self.tools_various_instance.custom_title_compare(library_dirs)
 
-                if index_title_compare in library_dirs_compare:
+                # if library directory title compare in index title compare then continue towards false (already downloaded)
+                if library_dirs_compare in index_title_compare:
 
-                    if index_year_compare in library_dirs_compare:
+                    # if library directory title compare in index title year compare then continue towards false (already downloaded)
+                    if library_dirs_compare in index_year_compare:
 
                         # if index title and index year in directory name then look at filename for search criteria
 
