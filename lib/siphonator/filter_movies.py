@@ -523,13 +523,19 @@ class FilterMovies(object):
 
             for library_dirs in dirs:
 
-                library_dirs_compare = self.tools_various_instance.custom_title_compare(library_dirs)
+                # get library directory compare strings using tools various
+                library_dirs_title_compare = self.tools_various_instance.custom_title_compare(library_dirs)
+                library_dir_year_compare = self.tools_various_instance.custom_title_year_compare(library_dirs)
+
+                # if we cannot determine the year then go to next iter
+                if library_dir_year_compare is None:
+                    continue
 
                 # if library directory title compare in index title compare then continue towards false (already downloaded)
-                if library_dirs_compare in index_title_compare:
+                if library_dirs_title_compare in index_title_compare:
 
-                    # if library directory title compare in index title year compare then continue towards false (already downloaded)
-                    if library_dirs_compare in index_year_compare:
+                    # if library directory year compare in index title year compare then continue towards false (already downloaded)
+                    if library_dir_year_compare in index_year_compare:
 
                         # if index title and index year in directory name then look at filename for search criteria
 
@@ -550,7 +556,7 @@ class FilterMovies(object):
                                     # get full path to filename
                                     library_dirs_abs_filepath = os.path.join(library_dirs_abs_path, library_sub_file)
 
-                                    # if library file contains all search criteria then mark as downloaded
+                                    # if library file contains all search criteria then mark as already in library
                                     if not self.filter_downloaded_file_search_criteria(library_sub_file, library_dirs_abs_filepath):
 
                                         self.logger_instance.debug(u"Index title '%s' already exists in library directory '%s', skipping movie" % (index_title, library_dirs))
