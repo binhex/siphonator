@@ -145,7 +145,7 @@ class Siphonator(object):
             'hdtc', 'hc', 'ts', 'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german',
             'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
             'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'nlsubs', 'xvid', 'chi', 'rus',
-            'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'sub', 'dub',
+            'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'dub',
             'dvdscr', 'screener', 'dual', 'protected', 'www', 'tam', 'hin', 'hindi', 'tamil',
             'dvdrip', 'dvd9', 'dvd',
         ]

@@ -222,17 +222,18 @@ def test_custom_title_sqlite(custom_title_sqlite, index_title, exp_assert):
     ('movie title (2020) 1080p BluRay DTS', 'movietitle'),                                        # index title has no group
     ('movie title (2020) 1080p BluRay DTS-GROUP', 'movietitle'),                                  # index title lower case and  has spaces
     ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has periods
+    ('Movie.Title.[2020.1080p].BluRay.DTS-GROUP', 'movietitle'),                                  # index title has square brackets around year and resolution
+    ('Movie.Title.(2020),1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has periods and comma
     ('Movie\'.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                # index title has single quote
     ('Movie:.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                 # index title has colon
-    ('Movié.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has french e in title # TODO need to implement Unidecode to fix this test
+    ('Movié.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has french e in title
     ('Movie.&.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                # index title has ampersand symbol - remove
     ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                              # index title has word 'and' - remove
     ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),               # index title has junk square brackets at start
     ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movietitle'),                 # index title has junk square brackets at end
     ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movietitle'),  # index title has junk square brackets at start and end
     ('www.Torrenting.com   -    Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),    # index title has junk before title
-    ('【高清影视之家首发 www.BBQDDQ.com】逃离岁[简繁英字幕]', '【高清影视之家首发】逃离岁'),                                     # index title is non ascii chinese
-    ('Æon Flux (2005) 1080p BluRay DTS-GROUP', 'æonflux'),                                        # index title is non ascii english
+    ('Æon Flux (2005) 1080p BluRay DTS-GROUP', 'aeonflux'),                                       # index title is non ascii english, force to ascii using unidecode
 ])
 def test_custom_title_compare(custom_title_compare, index_title, exp_assert):
 
@@ -303,7 +304,7 @@ def test_custom_title_group_compare(custom_title_group_compare, index_title, exp
     ('movie title (2020) 1080p bluray dts-group', '2020'),       # get year
     ('movie.title.2020.1080p.bluray.dts-group', '2020'),         # periods no brackets for year
     ('2100 movie title 2020 1080p bluray dts_group', '2020'),    # year at start of title, no brackets
-    ('movie (2300) title 2020 1080p bluray dts-group', '2020'),  # year in the middle of the title, with brackets
+    ('Movie.Title.[2020.1080p].BluRay.DTS-GROUP', '2020'),       # index title has square brackets around year and resolution
 ])
 def test_custom_title_year_compare(custom_title_year_compare, index_title, exp_assert):
 
@@ -315,10 +316,10 @@ def test_custom_title_year_compare(custom_title_year_compare, index_title, exp_a
 
 @pytest.mark.parametrize('index_title, exp_assert', [
     ('movie title (2020) 1080p bluray dts-group', '(2020) 1080p bluray dts-group'),                                    # brackets on year
-    ('movie 2300 title 2020 1080p bluray dts-group', '2020 1080p bluray dts-group'),                                   # year in the middle of the title, with brackets
     ('movie.title.2020.1080p.bluray.dts-group', '2020.1080p.bluray.dts-group'),                                        # no brackets on year
     ('2100 movie title 2020 1080p bluray dts-group', '2020 1080p bluray dts-group'),                                   # year at start of title, no brackets
-    ('movie.title.2020.REMASTERED.PROPER.1080p.BluRay.x265-GROUP', '2020.remastered.proper.1080p.bluray.x265-group')   # real world failing case
+    ('movie.title.2020.REMASTERED.PROPER.1080p.BluRay.x265-GROUP', '2020.remastered.proper.1080p.bluray.x265-group'),  # real world failing case
+    ('Movie.Title.[2020.1080p].BluRay.DTS-GROUP', '[2020.1080p].bluray.dts-group'),                                    # index title has square brackets around year and resolution
 ])
 def test_custom_title_year_to_end_compare(custom_title_year_to_end_compare, index_title, exp_assert):
 

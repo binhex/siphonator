@@ -3,6 +3,7 @@ import os
 import datetime
 import ffmpeg
 import yaml
+from unidecode import unidecode
 
 
 def current_time():
@@ -29,13 +30,13 @@ class ToolsVarious(object):
         self.index_title_sqlite_regex = r'\.|_|-|\s|&'
         self.index_title_word_match_regex = r'-|\.|_|\[|\]|\(|\)'
         self.index_title_remove_non_ascii_regex = r'[^a-zA-Z0-9]+'
-        self.index_title_remove_separators_regex = r'[\.\-_\s\(\):\']+'
+        self.index_title_remove_separators_regex = r'[\.\-_\s\(\):\'\,]+'
         self.index_title_remove_square_brackets_and_content_regex = r'\[[^\]]+\]'
         self.index_title_remove_website_regex = r'www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,4}|[a-zA-Z0-9]+\.com'
         self.index_title_remove_bad_words_regex = r'and|&'
         self.index_title_resolution_regex = r'\d{3,4}p'
-        self.index_title_year_to_end_regex = r'([\s\.\-_])(\(?\d{4}\)?).*'
-        self.index_title_year_regex = r'^(\(?)(\d{4})(\)?)'
+        self.index_title_year_to_end_regex = r'([\s\.\-_\[])(\(?\d{4}\)?)([^pi]).*'
+        self.index_title_year_regex = r'^([\.\-_\s\(\):\'\,\[])?(\()?(\d{4})(\))?'
         self.index_title_group_regex = r'([a-zA-Z0-9]+)(\)?)(\[[a-zA-Z0-9]+\])?(\.[a-z0-9]{3})?(\[[a-zA-Z0-9]+\])?$'
         self.index_title_identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
 
@@ -127,7 +128,8 @@ class ToolsVarious(object):
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
-        custom_title_compare = self.custom_title_remove_year_to_end_compare(custom_title)
+        custom_title_compare = unidecode(custom_title)
+        custom_title_compare = self.custom_title_remove_year_to_end_compare(custom_title_compare)
         custom_title_compare = self.custom_title_strip(custom_title_compare)
 
         return custom_title_compare
@@ -249,7 +251,7 @@ class ToolsVarious(object):
 
             if custom_title_year_compare_search:
 
-                custom_title_year_compare = custom_title_year_compare_search.group(2).lower()
+                custom_title_year_compare = custom_title_year_compare_search.group(3).lower()
 
             else:
 
