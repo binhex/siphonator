@@ -145,9 +145,9 @@ class Siphonator(object):
             'hdtc', 'hc', 'ts', 'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german',
             'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
             'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'nlsubs', 'xvid', 'chi', 'rus',
-            'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'dub',
-            'dvdscr', 'screener', 'dual', 'protected', 'www', 'tam', 'hin', 'hindi', 'tamil',
-            'dvdrip', 'dvd9', 'dvd',
+            'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'dub', 'protected',
+            'dvdscr', 'screener', 'dual', 'www', 'tam', 'hin', 'hindi', 'tamil', 'dvdrip',
+            'dvd9', 'dvd', 'email'
         ]
         filter_good_country_list = ['gb', 'us', 'ca', 'au', 'ie', 'nz']
         filter_good_language_list = ['en']
@@ -159,10 +159,15 @@ class Siphonator(object):
             'sector7', 'sparks', 'barc0de', 'ebp', 'cytsunee', 'grym', 'cmrg', 'framestor',
             'epsilon', 'flux', 'ntb',
         ]
-        filter_override_character_list = ['Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow', 'Superman']
+        filter_override_character_list = [
+            'Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow', 'Superman',
+        ]
         filter_override_cast_list = ['Jason Statham', 'Christian Bale']
         filter_override_writer_list = []
-        filter_override_director_list = ['Steven Spielberg', 'Stanley Kubrick', 'James Cameron', 'Quentin Tarantino', 'Guy Ritchie']
+        filter_override_director_list = [
+            'Steven Spielberg', 'Stanley Kubrick', 'James Cameron', 'Quentin Tarantino',
+            'Guy Ritchie',
+        ]
         filter_override_movie_title_list = ['Star Trek']
 
         index_site_ignore_list = ['showrss']
