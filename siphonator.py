@@ -173,21 +173,29 @@ class Siphonator(object):
         index_site_ignore_list = ['showrss']
         index_site_ignore_list_lower = [x.lower() for x in index_site_ignore_list]
 
-        index_site_search_1080p_dict = {
-            'index_site_search': '1080p',
-            'index_site_category': '2000',
-            'filter_minimum_size_mb': int(3000),
-            'filter_maximum_size_mb': int(20000),
-            'filter_minimum_bitrate_mb': int(42),
-        }
-
-        index_site_search_2160p_remux_dict = {
-            'index_site_search': '2160p remux',
-            'index_site_category': '2000',
-            'filter_minimum_size_mb': int(30000),
-            'filter_maximum_size_mb': int(170000),
-            'filter_minimum_bitrate_mb': int(360),  # was 415
-        }
+        index_site_search_1080p_dict_list = [
+            {
+                'index_site_search': '1080p',
+                'index_site_category': '2000',
+                'filter_minimum_size_mb': int(3000),
+                'filter_maximum_size_mb': int(20000),
+                'filter_minimum_bitrate_mb': int(42),
+            },
+            # {
+            #     'index_site_search': '2160p web-dl',
+            #     'index_site_category': '2000',
+            #     'filter_minimum_size_mb': int(15000),
+            #     'filter_maximum_size_mb': int(30000),
+            #     'filter_minimum_bitrate_mb': int(170),
+            # },
+            {
+                'index_site_search': '2160p remux',
+                'index_site_category': '2000',
+                'filter_minimum_size_mb': int(30000),
+                'filter_maximum_size_mb': int(170000),
+                'filter_minimum_bitrate_mb': int(360),
+            },
+        ]
 
         search_tmdb_api_key = "1d93addd6def495cec493845cd3b2788"
         search_omdb_api_key = "bc61f97e"
@@ -281,7 +289,8 @@ class Siphonator(object):
             index_site_name = index_site_dict['id']
 
             if index_site_configured == 'true':
-                index_sites_configured_dict.update({index_site_name: [index_site_search_1080p_dict, index_site_search_2160p_remux_dict]})
+                # TODO find a way of selecting all dicts for search criteria without editing this line
+                index_sites_configured_dict.update({index_site_name: index_site_search_1080p_dict_list})
 
         # loop over top level dict of index sites
         for index_site in index_sites_configured_dict:

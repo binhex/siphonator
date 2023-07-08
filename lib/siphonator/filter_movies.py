@@ -51,11 +51,12 @@ class FilterMovies(object):
             self.index_dict.update({'result_details': u"Failed index filter 'filter_bad_movie_title'"})
             return self.index_dict
 
-        filter_seeders_result = self.filter_seeders()
-        if not filter_seeders_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_seeders'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed index filter 'filter_seeders'"})
-            return self.index_dict
+        # TODO need to fix this!, it should NOT write the index title to the database otherwise it wont re-check, but it should not download the title until seeders is above 0
+        # filter_seeders_result = self.filter_seeders()
+        # if not filter_seeders_result:
+        #     self.logger_instance.debug(u"Index title '%s' failed filter 'filter_seeders'" % self.index_dict.get('index_title'))
+        #     self.index_dict.update({'result_details': u"Failed index filter 'filter_seeders'"})
+        #     return self.index_dict
 
         # if library file returns false then file exists in library
         filter_downloaded_file_result = self.filter_downloaded_file()
