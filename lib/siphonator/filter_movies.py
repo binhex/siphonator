@@ -51,13 +51,6 @@ class FilterMovies(object):
             self.index_dict.update({'result_details': u"Failed index filter 'filter_bad_movie_title'"})
             return self.index_dict
 
-        # TODO need to fix this!, it should NOT write the index title to the database otherwise it wont re-check, but it should not download the title until seeders is above 0
-        # filter_seeders_result = self.filter_seeders()
-        # if not filter_seeders_result:
-        #     self.logger_instance.debug(u"Index title '%s' failed filter 'filter_seeders'" % self.index_dict.get('index_title'))
-        #     self.index_dict.update({'result_details': u"Failed index filter 'filter_seeders'"})
-        #     return self.index_dict
-
         # if library file returns false then file exists in library
         filter_downloaded_file_result = self.filter_downloaded_file()
         if not filter_downloaded_file_result:
@@ -378,33 +371,6 @@ class FilterMovies(object):
         else:
 
             self.logger_instance.warning(u"Movie runtime '%s' (mins) below minimum runtime threshold '%s' (mins)" % (imdb_runtime_int_mins, filter_minimum_runtime_mins_int))
-            return False
-
-    def filter_seeders(self):
-
-        index_seeders = self.index_dict.get('index_seeders')
-        filter_minimum_seeders = self.index_dict.get('filter_minimum_seeders')
-
-        if filter_minimum_seeders is None:
-
-            self.logger_instance.warning(u"No minimum seeders defined, assuming equal to/above threshold")
-            return True
-
-        if index_seeders is None:
-
-            self.logger_instance.warning(u"No Index seeders available to filter on, assuming equal to/above threshold")
-            return True
-
-        index_seeders_int = int(index_seeders)
-
-        if index_seeders_int >= filter_minimum_seeders:
-
-            self.logger_instance.info(u"Index seeders '%s' equal to/above minimum seeders threshold '%s'" % (index_seeders_int, filter_minimum_seeders))
-            return True
-
-        else:
-
-            self.logger_instance.warning(u"Index seeders '%s' below minimum seeders threshold '%s'" % (index_seeders_int, filter_minimum_seeders))
             return False
 
     def filter_downloaded_file(self):

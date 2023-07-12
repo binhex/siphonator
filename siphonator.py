@@ -289,7 +289,7 @@ class Siphonator(object):
             index_site_name = index_site_dict['id']
 
             if index_site_configured == 'true':
-                # TODO find a way of selecting all dicts for search criteria without editing this line
+
                 index_sites_configured_dict.update({index_site_name: index_site_search_1080p_dict_list})
 
         # loop over top level dict of index sites
