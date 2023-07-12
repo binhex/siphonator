@@ -226,7 +226,7 @@ def test_custom_title_sqlite(custom_title_sqlite, index_title, exp_assert):
     ('Movie.Title.(2020),1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has periods and comma
     ('Movie\'.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                # index title has single quote
     ('Movie:.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                 # index title has colon
-    ('Movie?.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                 # index title has question mark
+    ('Movie?<>:"/|*.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                          # index title contains all invalid windows filename characters
     ('Movié.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has french e in title
     ('Movie.&.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                # index title has ampersand symbol - remove
     ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                              # index title has word 'and' - remove

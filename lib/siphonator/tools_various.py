@@ -34,7 +34,7 @@ class ToolsVarious(object):
         self.index_title_remove_square_brackets_and_content_regex = r'\[[^\]]+\]'
         self.index_title_remove_website_regex = r'www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,4}|[a-zA-Z0-9]+\.com'
         self.index_title_remove_bad_words_regex = r'and|&'
-        self.index_title_remove_invalid_chars_regex = r'\?'
+        self.index_title_remove_invalid_windows_filename_chars_regex = r'\?|<|>|:|\"|\/|\\|\||\*'
         self.index_title_resolution_regex = r'\d{3,4}p'
         self.index_title_year_to_end_regex = r'([\s\.\-_\[])(\(?\d{4}\)?)([^pi]).*'
         self.index_title_year_regex = r'^([\.\-_\s\(\):\'\,\[])?(\()?(\d{4})(\))?'
@@ -159,7 +159,7 @@ class ToolsVarious(object):
         custom_title_strip = re.sub(self.index_title_remove_square_brackets_and_content_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_separators_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_bad_words_regex, '', custom_title_strip).lower()
-        custom_title_strip = re.sub(self.index_title_remove_invalid_chars_regex, '', custom_title_strip).lower()
+        custom_title_strip = re.sub(self.index_title_remove_invalid_windows_filename_chars_regex, '', custom_title_strip).lower()
         return custom_title_strip
 
     def custom_title_word_match_compare(self, custom_title):
