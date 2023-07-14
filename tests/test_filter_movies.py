@@ -287,6 +287,7 @@ def test_filter_bad_index_title(filter_bad_index_title, index_title, filter_bad_
     assert response == exp_assert
 
 
+# TODO rework so it looks more like the bad_index_title test above
 @pytest.mark.parametrize('filter_bad_movie_title_list, exp_assert', [
     (['bad movie (2020)'], False),  # bad movie title found in index title, skip
     (['bad movie'], False),         # bad movie title found in index title, no year, skip
@@ -394,6 +395,3 @@ def test_filter_downloaded_dir(filter_downloaded_dir, library_path, src_filename
 
     # Assert
     assert response == exp_assert
-
-
-# TODO need to ensure we havent broken filter_movies functions for tool 'tools_various_instance.custom_title_compare'
