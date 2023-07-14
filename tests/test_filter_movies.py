@@ -112,13 +112,13 @@ def filter_rating(create_logger, imdb_rating):
 
 
 @pytest.fixture
-def filter_bad_index_title(create_logger, filter_bad_index_title_list):
+def filter_bad_index_title(create_logger, index_title, filter_bad_index_title_list):
 
     logger = create_logger
 
     # Arrange
     test_data = {
-        'index_title': 'movie title (2020) 1080p bluray bad dts-group',
+        'index_title': index_title,
         'filter_bad_index_title_list': filter_bad_index_title_list
     }
 
@@ -274,12 +274,12 @@ def filter_downloaded_dir(create_logger, library_path, src_filename, dst_filenam
 ###
 
 
-@pytest.mark.parametrize('filter_bad_index_title_list, exp_assert', [
-    (['bad'], False),          # bad keyword found in index title, skip
-    (['good'], True),          # bad keyword not found in index title, continue
-    (['good', 'bad'], False),  # bad keyword found in index title, second bad keyword not found in index title, skip
+@pytest.mark.parametrize('index_title, filter_bad_index_title_list, exp_assert', [
+    ('Movie.Title.(2020).1080p.BluRay.ITA.DTS-GROUP', ['ita', 'ts'], False),  # check that index title with ITA does match bad keyword ITA
+    ('Movie.Title.(2020).1080p.BluRay TS-GROUP', ['ita', 'ts'], False),       # check that mix of separators still matches bad keyword TS
+    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', ['ita', 'ts'], True),       # check that partial matches for DTS and TS are not happening
 ])
-def test_filter_bad_index_title(filter_bad_index_title, filter_bad_index_title_list, exp_assert):
+def test_filter_bad_index_title(filter_bad_index_title, index_title, filter_bad_index_title_list, exp_assert):
 
     response = filter_bad_index_title
 

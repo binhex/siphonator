@@ -1,4 +1,5 @@
 import os
+import re
 from decimal import Decimal
 import lib.siphonator.tools_various as siphonator_tools_various
 
@@ -577,13 +578,10 @@ class FilterMovies(object):
 
         for filter_bad_title in filter_bad_title_list:
 
-            # get bad keyword for index title compare using tools various
-            filter_bad_title_lower = self.tools_various_instance.custom_title_compare(filter_bad_title)
+            filter_bad_title_lower = filter_bad_title.lower()
+            filter_bad_title_lower_search = re.search(rf'[\s._-]{filter_bad_title_lower}[\s._-]', index_title_year_to_end_compare)
 
-            # use spaces to ensure exact match
-            filter_bad_title_word_match_lower = " %s " % filter_bad_title_lower
-
-            if filter_bad_title_word_match_lower in index_title_year_to_end_compare:
+            if filter_bad_title_lower_search:
 
                 self.logger_instance.warning(u"Index title '%s' contains bad title keyword '%s', skipping movie" % (index_title_year_to_end_compare, filter_bad_title))
                 return False
