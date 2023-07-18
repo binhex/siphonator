@@ -395,6 +395,7 @@ class FilterMovies(object):
 
             for library_filename in files:
 
+                # TODO this is a kludge, can we do better?
                 # if the file format is not video then go to next iter
                 if not library_filename.lower().endswith(('.mkv', '.mp4', '.avi')):
                     continue
@@ -420,8 +421,11 @@ class FilterMovies(object):
                             # if preferred group is not present in index title or library file already exists with preferred group then continue towards false (already downloaded)
                             if not self.filter_preferred_index_group(library_filename, index_title):
 
-                                self.logger_instance.info(u"Index title '%s' already exists in library file '%s', skipping movie" % (index_title, library_filename))
-                                return False
+                                # if preferred index quality is not present in index title or library file already exists with preferred index quality then continue towards false (already downloaded)
+                                if not self.filter_preferred_index_quality(library_filename, index_title):
+
+                                    self.logger_instance.info(u"Index title '%s' already exists in library file '%s', skipping movie" % (index_title, library_filename))
+                                    return False
 
         self.logger_instance.debug(u"Index title '%s' not found in library filenames for library path '%s', continue processing..." % (index_title, library_path))
         return True
@@ -517,6 +521,7 @@ class FilterMovies(object):
 
                             for library_sub_file in sub_files:
 
+                                # TODO this is a kludge, can we do better?
                                 # only check video container formats
                                 if library_sub_file.lower().endswith(('.mkv', '.mp4', '.avi')):
 
@@ -683,6 +688,48 @@ class FilterMovies(object):
 
         self.logger_instance.info(f"Index title group '{index_title_group}' is in preferred index group list '{filter_preferred_index_group_lower_list}' and library filename group '{library_filename_group}' is not preferred, ignoring existing library file,")
         return True
+
+    def filter_preferred_index_quality(self, library_filename, index_title):
+
+        filter_preferred_index_quality_list = self.index_dict.get('filter_preferred_index_quality_list')
+
+        if not filter_preferred_index_quality_list:
+
+            self.logger_instance.info(u"No preferred index quality defined, skipping preferred index quality check")
+            return False
+
+        library_filename_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(library_filename)
+        library_filename_year_to_end_compare_convert_separators_to_spaces = self.tools_various_instance.custom_title_search(library_filename_year_to_end_compare)
+
+        index_title_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(index_title)
+        index_title_year_to_end_compare_convert_separators_to_spaces = self.tools_various_instance.custom_title_search(index_title_year_to_end_compare)
+
+        self.logger_instance.debug(f"Filter preferred index quality list is '{filter_preferred_index_quality_list}'")
+
+        for filter_preferred_index_quality in filter_preferred_index_quality_list:
+
+            filter_preferred_index_quality_lower = filter_preferred_index_quality.lower()
+            filter_preferred_index_quality_lower_convert_separators_to_spaces = self.tools_various_instance.custom_title_search(filter_preferred_index_quality_lower)
+            filter_preferred_index_quality_lower_convert_separators_to_spaces_search = re.search(rf'[\s._-]{filter_preferred_index_quality_lower_convert_separators_to_spaces}[\s._-]', index_title_year_to_end_compare_convert_separators_to_spaces)
+
+            if filter_preferred_index_quality_lower_convert_separators_to_spaces_search:
+
+                self.logger_instance.info(u"Index title '%s' does contain preferred quality keyword '%s'" % (index_title, filter_preferred_index_quality))
+
+                filter_preferred_index_quality_lower_search = re.search(rf'[\s._-]{filter_preferred_index_quality_lower_convert_separators_to_spaces}[\s._-]', library_filename_year_to_end_compare_convert_separators_to_spaces)
+
+                if filter_preferred_index_quality_lower_search:
+
+                    self.logger_instance.info(u"Library filename '%s' contains preferred quality keyword '%s'" % (library_filename, filter_preferred_index_quality))
+                    return False
+
+                else:
+
+                    self.logger_instance.info(f"Index title '{index_title}' does include keyword from preferred index quality list '{filter_preferred_index_quality_list}' and library filename '{library_filename}' does not contain keyword from preferred quality list, ignoring existing library file,")
+                    return True
+
+        self.logger_instance.info(u"Index title '%s' does not contain any keywords from the preferred quality list '%s'" % (index_title, filter_preferred_index_quality_list))
+        return False
 
     def filter_override_person(self, filter_type):
 

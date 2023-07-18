@@ -168,8 +168,8 @@ class Siphonator(object):
             'Steven Spielberg', 'Stanley Kubrick', 'James Cameron', 'Quentin Tarantino',
             'Guy Ritchie',
         ]
-        filter_override_movie_title_list = ['Star Trek']
-
+        filter_override_movie_title_list = ['Star Trek', 'Transformers']
+        filter_preferred_index_quality_list = ['remastered', 'directors cut', 'repack', 'proper']
         index_site_ignore_list = ['showrss']
         index_site_ignore_list_lower = [x.lower() for x in index_site_ignore_list]
 
@@ -257,6 +257,7 @@ class Siphonator(object):
             'filter_bad_movie_title_list': filter_bad_movie_title_list,
             'filter_good_country_list': filter_good_country_list,
             'filter_preferred_index_group_list': filter_preferred_index_group_list,
+            'filter_preferred_index_quality_list': filter_preferred_index_quality_list,
             'search_tmdb_api_key': search_tmdb_api_key,
             'search_omdb_api_key': search_omdb_api_key
         })

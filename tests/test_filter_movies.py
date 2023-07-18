@@ -92,6 +92,24 @@ def filter_preferred_index_group(create_logger, filter_preferred_index_group_lis
 
 
 @pytest.fixture
+def filter_preferred_index_quality(create_logger, filter_preferred_index_quality_list, library_filename, index_title):
+
+    logger = create_logger
+
+    # Arrange
+    test_data = {
+        'filter_preferred_index_quality_list': filter_preferred_index_quality_list,
+    }
+
+    # Act
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    response = siphonator_filter_movies_instance.filter_preferred_index_quality(library_filename, index_title)
+
+    # yield used instead of return to allow us to do cleanup afterward
+    yield response
+
+
+@pytest.fixture
 def filter_rating(create_logger, imdb_rating):
 
     logger = create_logger
@@ -366,6 +384,23 @@ def test_filter_preferred_index_group(filter_preferred_index_group, filter_prefe
     assert response == exp_assert
 
 
+@pytest.mark.parametrize('filter_preferred_index_quality_list, library_filename, index_title, exp_assert', [
+    ([], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP', False),                                         # no defined preferred quality list does not result in true
+    (['remastered'], 'Library.Filename.2023.1080p.remastered.WEBRip.x264-GROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP', False),                  # library filename already contains keyword remastered, do not re-download (False)
+    (['directors.cut'], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP', 'Index title 2023 1080p directors WEBRip x264-GROUP', False),                # partial match for quality keyword in index title, do not re-download (False)
+    (['remastered'], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP', 'Index.title.2023.1080p.remastered.WEBRip.x264-GROUP', True),                   # index title contains keyword remastered and library filename does not, force download (True)
+    (['directors cut'], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP', 'Index.title.2023.1080p.directors.cut.WEBRip.x264-GROUP', True),             # quality keyword contains space, check that index title quality keyword matches, force download (True)
+    (['directors.cut'], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP', 'Index title 2023 1080p directors cut.WEBRip x264-GROUP', True),             # use dot for quality keyword and spaces for index title, library filename does not contain quality keyword, force download (True)
+    (['directors.cut', 'remastered'], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP', 'Index title 2023 1080p remastered WEBRip x264-GROUP', True),  # more than 1 quality keywords defined, match on second keyword, force download (True)
+])
+def test_filter_preferred_index_quality(filter_preferred_index_quality, filter_preferred_index_quality_list, library_filename, index_title, exp_assert):
+
+    response = filter_preferred_index_quality
+
+    # Assert
+    assert response == exp_assert
+
+
 @pytest.mark.parametrize('index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, exp_assert', [
     ('movie title (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], False),          # movie does exist in library
     ('movie title (2020) 1080p bluray dts-group', '720p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),            # movie does exist in library, but search criteria are not found in filename
@@ -381,13 +416,15 @@ def test_filter_downloaded_file(filter_downloaded_file, index_title, index_site_
 
 
 @pytest.mark.parametrize('library_path, src_filename, dst_filename, dst_directory, index_title, index_site_search, exp_assert', [
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group', '1080p bluray', False),  # index title resolution matches existing library file resolution, skip
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 720p bluray dts-group', '720p bluray', False),    # index title resolution less than existing library file resolution, skip
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-720p.mkv', 'movie title (2020) 720p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group', '1080p bluray', True),     # index title resolution more than existing library file resolution, continue
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group.mkv', '1080p bluray', True),      # index site search criteria 'bluray' cannot be found in library filename, continue
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group.mkv', '1080p bluray', False),    # index site search criteria '1080p' not in library filename, but we identify it from ffprobe as 1080p (matches index site search criteria), skip
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-720p.mkv', 'movie title (2020) bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group.mkv', '1080p bluray', True),      # index site search criteria '1080p' not in library filename, but we identify it from ffprobe as 720p (does not match index site search criteria), continue
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title2 (2022)', 'movie title (2020) 720p bluray dts-group', '1080p bluray', True),   # index title name does not match directory name, continue
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group', '1080p bluray', False),    # index title resolution matches existing library file resolution, skip
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 720p bluray dts-group', '720p bluray', False),      # index title resolution less than existing library file resolution, skip
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-720p.mkv', 'movie title (2020) 720p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group', '1080p bluray', True),       # index title resolution more than existing library file resolution, continue
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group.mkv', '1080p bluray', True),        # index site search criteria 'bluray' cannot be found in library filename, continue
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group.mkv', '1080p bluray', False),      # index site search criteria '1080p' not in library filename, but we identify it from ffprobe as 1080p (matches index site search criteria), skip
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-720p.mkv', 'movie title (2020) bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group.mkv', '1080p bluray', True),        # index site search criteria '1080p' not in library filename, but we identify it from ffprobe as 720p (does not match index site search criteria), continue
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title2 (2022)', 'movie title (2020) 720p bluray dts-group', '1080p bluray', True),     # index title name does not match directory name, continue
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2022) 1080p bluray dts-group.mkv', "movie title's (2022)", 'movie titles (2022) 720p bluray dts-group', '1080p bluray', False),  # directory name contains apostrophe but should match index title, skip
+    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2022) 1080p bluray dts-group.mkv', 'movie titles (2022)', "movie title's (2022) 720p bluray dts-group", '1080p bluray', False),  # index name contains apostrophe but should match directory name, skip
 ])
 def test_filter_downloaded_dir(filter_downloaded_dir, library_path, src_filename, dst_filename, dst_directory, index_title, index_site_search, exp_assert):
 
