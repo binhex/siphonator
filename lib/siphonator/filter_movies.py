@@ -3,10 +3,7 @@ import re
 from decimal import Decimal
 import lib.siphonator.tools_various as siphonator_tools_various
 
-# TODO if remastered or extended or directors cut then check for on disk, if on disk then check size, if larger then download
-# TODO filter_override_downloaded - if repack or proper then check for on disk, if there then possible override
 # TODO bad group list, start with SLOT?
-# TODO if size of movie is larger on disk compared to index title then ignore, UNLESS its remastered, proper etc.
 
 
 class FilterMovies(object):

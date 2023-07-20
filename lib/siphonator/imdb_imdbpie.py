@@ -1,6 +1,8 @@
 import imdbpie
 import re
 
+# TODO once we have all imdb details in the database then any index title that matches an existing processed title can use the same imdb details without the need to contact imdb
+
 
 def imdb_json_api(logger_instance, **kwargs):
 

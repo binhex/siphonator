@@ -2,8 +2,6 @@ import sqlite3
 import sqlite_utils
 import lib.siphonator.tools_various as siphonator_tools_various
 
-# TODO once we have all imdb details in the database then any index title that matches an existing processed title can use the same imdb details without the need to contact imdb
-
 
 class DbSqlite(object):
 

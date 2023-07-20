@@ -181,13 +181,13 @@ class Siphonator(object):
                 'filter_maximum_size_mb': int(20000),
                 'filter_minimum_bitrate_mb': int(42),
             },
-            # {
-            #     'index_site_search': '2160p web-dl',
-            #     'index_site_category': '2000',
-            #     'filter_minimum_size_mb': int(15000),
-            #     'filter_maximum_size_mb': int(30000),
-            #     'filter_minimum_bitrate_mb': int(170),
-            # },
+            {
+                'index_site_search': '2160p',
+                'index_site_category': '2000',
+                'filter_minimum_size_mb': int(15000),
+                'filter_maximum_size_mb': int(30000),
+                'filter_minimum_bitrate_mb': int(170),
+            },
             {
                 'index_site_search': '2160p remux',
                 'index_site_category': '2000',

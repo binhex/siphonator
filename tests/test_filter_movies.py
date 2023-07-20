@@ -187,7 +187,7 @@ def filter_genre_rating(create_logger, filter_genre_minimum_rating_dict):
 
 
 @pytest.fixture
-def filter_downloaded_file(create_logger, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list):
+def filter_downloaded_file(create_logger, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list):
 
     logger = create_logger
 
@@ -216,6 +216,7 @@ def filter_downloaded_file(create_logger, index_title, index_site_search, librar
         'index_year_compare': index_year_compare,
         'index_site_search': index_site_search,
         'filter_preferred_index_group_list': filter_preferred_index_group_list,
+        'filter_preferred_index_quality_list': filter_preferred_index_quality_list,
     }
 
     # Act
@@ -401,13 +402,14 @@ def test_filter_preferred_index_quality(filter_preferred_index_quality, filter_p
     assert response == exp_assert
 
 
-@pytest.mark.parametrize('index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, exp_assert', [
-    ('movie title (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], False),          # movie does exist in library
-    ('movie title (2020) 1080p bluray dts-group', '720p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),            # movie does exist in library, but search criteria are not found in filename
-    ('movie title (2030) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),           # movie does not exist in library, index title year different
-    ('movie title (2020) 1080p bluray dts-preferredgroup', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], True),  # movie does exist in library, but preferred index group found
+@pytest.mark.parametrize('index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list, exp_assert', [
+    ('movie title (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], False),            # movie does exist in library
+    ('movie title (2020) 1080p bluray dts-group', '720p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),              # movie does exist in library, but search criteria are not found in filename
+    ('movie title (2030) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),             # movie does not exist in library, index title year different
+    ('movie title (2020) 1080p bluray dts-preferredgroup', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),    # movie does exist in library, but preferred index group found
+    ('movie title (2020) 1080p bluray remastered dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),  # movie does exist in library, but preferred index quality found
 ])
-def test_filter_downloaded_file(filter_downloaded_file, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, exp_assert):
+def test_filter_downloaded_file(filter_downloaded_file, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list, exp_assert):
 
     response = filter_downloaded_file
 
