@@ -297,6 +297,8 @@ def filter_downloaded_dir(create_logger, library_path, src_filename, dst_filenam
     ('Movie.Title.(2020).1080p.BluRay.ITA.DTS-GROUP', ['ita', 'ts'], False),  # check that index title with ITA does match bad keyword ITA
     ('Movie.Title.(2020).1080p.BluRay TS-GROUP', ['ita', 'ts'], False),       # check that mix of separators still matches bad keyword TS
     ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', ['ita', 'ts'], True),       # check that partial matches for DTS and TS are not happening
+    ('Movie.Title.(2020).1080p.(BluRay)HDTS.DTS-GROUP', ['hdts'], False),     # movie title has round brackets near bad keyword, skip
+    ('Movie.Title.(2020).1080p.[BluRay]HDTS.DTS-GROUP', ['hdts'], False),     # movie title has square brackets near bad keyword, skip
 ])
 def test_filter_bad_index_title(filter_bad_index_title, index_title, filter_bad_index_title_list, exp_assert):
 
