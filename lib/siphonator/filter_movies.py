@@ -580,7 +580,7 @@ class FilterMovies(object):
         for filter_bad_title in filter_bad_title_list:
 
             filter_bad_title_lower = filter_bad_title.lower()
-            filter_bad_title_lower_search = re.search(rf'[\s._\-()\[\]]{filter_bad_title_lower}[\s._\-()\[\]]', index_title_year_to_end_compare)
+            filter_bad_title_lower_search = re.search(rf'[\s._\-()\[\]]{filter_bad_title_lower}[\s._\-()\[\]]|[\s._\-()\[\]]{filter_bad_title_lower}$', index_title_year_to_end_compare)
 
             if filter_bad_title_lower_search:
 
