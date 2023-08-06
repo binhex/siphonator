@@ -40,6 +40,7 @@ class ToolsVarious(object):
         self.index_title_year_regex = r'^([\.\-_\s\(\):\'\,\[])?(\()?(\d{4})(\))?'
         self.index_title_group_regex = r'([a-zA-Z0-9]+)(\)?)(\[[a-zA-Z0-9]+\])?(\.[a-z0-9]{3})?(\[[a-zA-Z0-9]+\])?$'
         self.index_title_identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
+        self.index_title_bad_keyword_regex = r'[\s._\-()\[\]]'
 
     def library_path_walk(self, library_path):
 
@@ -148,6 +149,23 @@ class ToolsVarious(object):
         custom_title_search = " ".join(custom_title_search.split()).lower()
 
         return custom_title_search
+
+    def custom_bad_keyword_search(self, custom_title, filter_bad_title):
+
+        if custom_title is None:
+
+            self.logger_instance.warning(u'No custom_title sent to function')
+            return None
+
+        if filter_bad_title is None:
+
+            self.logger_instance.warning(u'No filter_bad_title sent to function')
+            return None
+
+        filter_bad_title_lower = filter_bad_title.lower()
+        filter_bad_title_lower_search = re.search(rf'{self.index_title_bad_keyword_regex}{filter_bad_title_lower}{self.index_title_bad_keyword_regex}|{self.index_title_bad_keyword_regex}{filter_bad_title_lower}$', custom_title)
+
+        return filter_bad_title_lower_search
 
     def custom_title_strip(self, custom_title):
 
