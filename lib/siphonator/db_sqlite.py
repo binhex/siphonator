@@ -176,7 +176,7 @@ class DbSqlite(object):
             custom_title_full_compare_sqlite = tools_various_instance.custom_title_full_compare(index_title_sqlite_result)
 
             # compare index title against sqlite query index title
-            if custom_title_full_compare == custom_title_full_compare_sqlite:
+            if custom_title_full_compare in custom_title_full_compare_sqlite:
 
                 return True
 
