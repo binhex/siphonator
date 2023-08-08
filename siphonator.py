@@ -1,11 +1,10 @@
 import os
 import platform
 import sys
-import configobj
-import validate
 import argparse
 import datetime
 import pytest
+import yaml
 import xml.etree.ElementTree as elementTree
 from imdbpie import ImdbAPIError
 from daemonize import Daemonize
@@ -61,17 +60,15 @@ class Siphonator(object):
 
         self.logger_instance = logger_instance
         self.config_dict = kwargs
-        self.config_ini = self.config_dict['config_ini']
-        self.configs_path = self.config_dict['configs_path']
         self.logs_path = self.config_dict['logs_path']
         self.app_root_path = self.config_dict['app_root_path']
         self.schedule_mode = self.config_dict['schedule_mode']
         self.schedule_time_key = self.config_dict['schedule_time_key']
         self.schedule_time_value = self.config_dict['schedule_time_value']
-        self.configspec_ini = self.config_dict['configspec_ini']
         self.log_file = self.config_dict['log_file']
         self.db_path = self.config_dict['db_path']
         self.db_filepath = self.config_dict['db_filepath']
+        self.config_yaml = self.config_dict['config_yaml']
 
     def schedule_run(self):
 
@@ -108,94 +105,55 @@ class Siphonator(object):
 
         user_agent = u"Siphonator/%s; https://sourceforge.net/projects/moviegrabber" % current_version
 
-        # TODO all the below needs to be put in config.ini
-        torrent_client = 'qbittorrent'
-        torrent_client_qbittorrent_host = '192.168.1.10'
-        torrent_client_qbittorrent_port = 2100
-        torrent_client_qbittorrent_username = 'admin'
-        torrent_client_qbittorrent_password = 'adminadmin'
-        torrent_client_qbittorrent_add_paused = bool(True)
+        # TODO put the rest in yaml file just like this
+        torrent_client = config_yaml['torrent_client']['qbittorrent']['name']
+        torrent_client_qbittorrent_host = config_yaml['torrent_client']['qbittorrent']['host']
+        torrent_client_qbittorrent_port = config_yaml['torrent_client']['qbittorrent']['port']
+        torrent_client_qbittorrent_username = config_yaml['torrent_client']['qbittorrent']['username']
+        torrent_client_qbittorrent_password = config_yaml['torrent_client']['qbittorrent']['password']
+        torrent_client_qbittorrent_add_paused = config_yaml['torrent_client']['qbittorrent']['add_paused']
 
-        notification_email_enabled = True
-        notification_email_host = 'smtp.gmail.com'
-        notification_email_port = 587
-        notification_email_enable_tls = True
-        notification_email_enable_ssl = False
-        notification_email_username = 'paul.eccleston1@gmail.com'
-        notification_email_password = 'quzpugkhxvimjwwv'
-        notification_email_from_address = 'paul.eccleston1@gmail.com'
-        notification_email_to_address = 'paul.eccleston1@gmail.com'
+        notification_email_enabled = config_yaml['notification']['email']['enabled']
+        notification_email_host = config_yaml['notification']['email']['host']
+        notification_email_port = config_yaml['notification']['email']['port']
+        notification_email_enable_tls = config_yaml['notification']['email']['enable_tls']
+        notification_email_enable_ssl = config_yaml['notification']['email']['enable_ssl']
+        notification_email_username = config_yaml['notification']['email']['username']
+        notification_email_password = config_yaml['notification']['email']['password']
+        notification_email_from_address = config_yaml['notification']['email']['from_address']
+        notification_email_to_address = config_yaml['notification']['email']['to_address']
 
-        index_proxy = 'jackett'
-        index_proxy_jackett_host = "192.168.1.10"
-        index_proxy_jackett_port = "1900"
-        index_proxy_jackett_api_key = "o4xte43ftp56m64aknxch4pe7cp3lhaj"
-        index_proxy_jackett_read_timeout = 60.0
-        index_proxy_jackett_limit = "2000"
+        index_proxy = config_yaml['index_proxy']['jackett']['name']
+        index_proxy_jackett_host = config_yaml['index_proxy']['jackett']['host']
+        index_proxy_jackett_port = config_yaml['index_proxy']['jackett']['port']
+        index_proxy_jackett_api_key = config_yaml['index_proxy']['jackett']['api_key']
+        index_proxy_jackett_read_timeout = config_yaml['index_proxy']['jackett']['read_timeout']
+        index_proxy_jackett_limit = config_yaml['index_proxy']['jackett']['limit']
 
-        library_path = "/media"
-        filter_minimum_year = '1960'
-        filter_minimum_runtime_mins = '60'
-        filter_genre_minimum_rating_dict = ({'sci-fi': 6.8, 'animation': 5.0})
-        filter_minimum_rating = '7.0'
-        filter_minimum_votes = int(5000)
-        filter_minimum_seeders = int(1)
-        filter_bad_index_title_list = [
-            '3d', 'cam', 'camrip', 'hdcam', 'hdcamrip', 'iptv', 'hqcam', 'hqcamrip', 'hdts',
-            'hdtc', 'hc', 'ts', 'telesync', 'screener', 'mostbet', 'xxx', 'subbed', 'german',
-            'foreign', 'danish', 'french', 'spanish', 'italian', 'dutch', 'portuguese',
-            'portugues', 'ger', 'fre', 'ita', 'spa', 'lpcm', 'nlsubs', 'xvid', 'chi', 'rus',
-            'divx', 'japanese', 'chinese', 'ads included', 'multi', 'pl', 'dub', 'protected',
-            'dvdscr', 'screener', 'dual', 'www', 'tam', 'hin', 'hindi', 'tamil', 'dvdrip',
-            'dvd9', 'dvd', 'email', 'es', 'lat',
-        ]
-        filter_good_country_list = ['gb', 'us', 'ca', 'au', 'ie', 'nz']
-        filter_good_language_list = ['en']
-        filter_bad_movie_title_list = []
-        filter_bad_genre_list = ['Musical', 'Music', 'Documentary']
-        filter_preferred_index_group_list = [
-            'fgt', 'ctrlhd', 'amiable', 'sinners', 'chd', 'wiki', 'cinefile', 'septic', 'don',
-            'esir', 'refined', 'reveille', 'metis', 'timelords', 'eureka', 'hv', '7sins',
-            'sector7', 'sparks', 'barc0de', 'ebp', 'cytsunee', 'grym', 'cmrg', 'framestor',
-            'epsilon', 'flux', 'ntb',
-        ]
-        filter_override_character_list = [
-            'Bridget Jones', 'Shazam', 'James Bond', 'Jack Sparrow', 'Superman',
-        ]
-        filter_override_cast_list = ['Jason Statham', 'Christian Bale']
-        filter_override_writer_list = []
-        filter_override_director_list = [
-            'Steven Spielberg', 'Stanley Kubrick', 'James Cameron', 'Quentin Tarantino',
-            'Guy Ritchie',
-        ]
-        filter_override_movie_title_list = ['Star Trek', 'Transformers']
-        filter_preferred_index_quality_list = ['remastered', 'directors cut', 'repack', 'proper']
-        index_site_ignore_list = ['showrss']
+        library_path = config_yaml['general']['library_path']
+        filter_minimum_year = config_yaml['filters']['minimum_year']
+        filter_minimum_runtime_mins = config_yaml['filters']['minimum_runtime_mins']
+        filter_genre_minimum_rating_dict = config_yaml['filters']['genre_minimum_rating_dict']
+        filter_minimum_rating = config_yaml['filters']['minimum_rating']
+        filter_minimum_votes = config_yaml['filters']['minimum_votes']
+        filter_minimum_seeders = config_yaml['filters']['minimum_seeders']
+        filter_bad_index_title_list = config_yaml["filters"]['bad_index_title_list']
+        filter_preferred_index_group_list = config_yaml["filters"]['preferred_index_group_list']
+        filter_override_character_list = config_yaml["filters"]['override_character_list']
+
+        filter_good_country_list = config_yaml["filters"]['good_country_list']
+        filter_good_language_list = config_yaml["filters"]['good_language_list']
+        filter_bad_movie_title_list = config_yaml["filters"]['bad_movie_title_list']
+        filter_bad_genre_list = config_yaml["filters"]['bad_genre_list']
+        filter_override_cast_list = config_yaml["filters"]['override_cast_list']
+        filter_override_writer_list = config_yaml["filters"]['override_writer_list']
+        filter_override_director_list = config_yaml["filters"]['override_director_list']
+        filter_override_movie_title_list = config_yaml["filters"]['override_movie_title_list']
+        filter_preferred_index_quality_list = config_yaml["filters"]['preferred_index_quality_list']
+
+        index_site_search_1080p_dict_list = config_yaml["index_site"]['search_dict_list']
+        index_site_ignore_list = config_yaml["index_site"]['ignore_list']
         index_site_ignore_list_lower = [x.lower() for x in index_site_ignore_list]
-
-        index_site_search_1080p_dict_list = [
-            {
-                'index_site_search': '1080p',
-                'index_site_category': '2000',
-                'filter_minimum_size_mb': int(3000),
-                'filter_maximum_size_mb': int(20000),
-                'filter_minimum_bitrate_mb': int(42),
-            },
-            {
-                'index_site_search': '2160p',
-                'index_site_category': '2000',
-                'filter_minimum_size_mb': int(15000),
-                'filter_maximum_size_mb': int(30000),
-                'filter_minimum_bitrate_mb': int(170),
-            },
-            {
-                'index_site_search': '2160p remux',
-                'index_site_category': '2000',
-                'filter_minimum_size_mb': int(30000),
-                'filter_maximum_size_mb': int(170000),
-                'filter_minimum_bitrate_mb': int(360),
-            },
-        ]
 
         search_tmdb_api_key = "1d93addd6def495cec493845cd3b2788"
         search_omdb_api_key = "bc61f97e"
@@ -205,7 +163,7 @@ class Siphonator(object):
         filter_library_path_walk = list(tools_various_instance.library_path_walk(library_path))
 
         # begin definition of dictionary to pass around
-        index_dict = ({'db_filepath': self.db_filepath, 'db_version': db_version, 'config_ini': self.config_ini})
+        index_dict = ({'db_filepath': self.db_filepath, 'db_version': db_version, 'config_yaml': self.config_yaml})
 
         # create sqlite database
         db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **index_dict)
@@ -352,6 +310,17 @@ class Siphonator(object):
         self.schedule_msg()
 
 
+def read_config():
+
+    config_path = os.path.join(app_root_path, 'configs')
+    config_filepath = os.path.join(config_path, 'config.yml')
+
+    with open(config_filepath, "r") as config_file:
+        config_yaml_load = yaml.safe_load(config_file)
+
+    return config_yaml_load
+
+
 # required to prevent separate process from trying to load parent process
 if __name__ == '__main__':
 
@@ -397,14 +366,6 @@ if __name__ == '__main__':
     logs_filepath = os.path.join(logs_path, 'siphonator.log')
 
     # set path using app location or if specified use argument path
-    configs_path = set_paths('configs')
-    configs_filepath = os.path.join(configs_path, 'config.ini')
-
-    # we do not want the configspec.ini moving, so we hard set this to app location
-    app_configs_path = os.path.join(app_root_path, 'configs')
-    configspec_filepath = os.path.join(app_configs_path, u"configspec.ini")
-
-    # set path using app location or if specified use argument path
     db_path = set_paths('db')
     db_filepath = os.path.join(db_path, 'siphonator.db')
 
@@ -432,15 +393,8 @@ if __name__ == '__main__':
     config_schedule_time_key = 'minutes'
     config_schedule_time_mins = 30
 
-    # create configobj instance, set config.ini file, set encoding and set configspec.ini file
-    config_obj = configobj.ConfigObj(configs_filepath, list_values=False, write_empty_values=True, encoding='UTF-8',
-                                     default_encoding='UTF-8', configspec=configspec_filepath, unrepr=True)
-
-    # create config.ini
-    validator = validate.Validator()
-    config_obj.validate(validator, copy=True)
-    config_obj.filename = configs_filepath
-    config_obj.write()
+    # read in config file
+    config_yaml = read_config()
 
     # define initial settings in dict
     run_dict = ({
@@ -448,14 +402,12 @@ if __name__ == '__main__':
         'schedule_time_key': config_schedule_time_key,
         'schedule_time_value': config_schedule_time_mins,
         'config_schedule_mode': config_schedule_mode,
-        'config_ini': configs_filepath,
-        'configs_path': configs_path,
         'app_root_path': app_root_path,
         'logs_path': logs_path,
-        'configspec_ini': configspec_filepath,
         'log_file': logs_filepath,
         'db_path': db_path,
-        'db_filepath': db_filepath
+        'db_filepath': db_filepath,
+        'config_yaml': config_yaml,
     })
 
     logger_create_instance.info(u"Welcome to Siphonator - Coded by binhex.")

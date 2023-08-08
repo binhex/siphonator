@@ -190,7 +190,7 @@ class DbSqlite(object):
         # get db version on disk
         disk_db_version = self.get_db_version()
 
-        # if database is up to date then do nothing
+        # if database is up-to-date then do nothing
         if self.db_version == disk_db_version:
 
             return
