@@ -32,18 +32,18 @@ import lib.siphonator.tools_downloader as siphonator_tools_downloader
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
 
-def set_paths(config_param):
+def set_paths(config_param, config_path):
 
-    full_path = os.path.join(app_root_path, config_param)
+    full_path = os.path.join(app_root_path, config_path)
 
     if args[config_param]:
 
-        if not os.path.exists(args[config_param]):
+        if not os.path.exists(args[config_path]):
 
             try:
-                os.makedirs(args[config_param])
+                os.makedirs(args[config_path])
             except OSError as e:
-                print(f"Error setting '--{config_param}' path to '{args[config_param]}', error is '{e}', using default location '{full_path}'")
+                print(f"Error setting '--{config_param}' path to '{args[config_path]}', error is '{e}', using default location '{full_path}'")
             else:
                 full_path = args[config_param]
 
@@ -77,7 +77,7 @@ class Siphonator(object):
 
         try:
 
-            schedule.add_job(siphonator_instance.run, 'interval', minutes=config_schedule_time_mins, next_run_time=datetime.datetime.now())
+            schedule.add_job(siphonator_instance.run, 'interval', minutes=config_schedule_time_value, next_run_time=datetime.datetime.now())
             schedule.start()
 
         except (KeyboardInterrupt, SystemExit):
@@ -101,11 +101,10 @@ class Siphonator(object):
     def run(self):
 
         current_time = siphonator_tools_various.current_time()
-        self.logger_instance.info(u"Processing started at '%s'" % current_time)
+        self.logger_instance.info(f"Processing started at '{current_time}'")
 
-        user_agent = u"Siphonator/%s; https://sourceforge.net/projects/moviegrabber" % current_version
+        user_agent = f"Siphonator/{current_version}; https://github.com/binhex/siphonator"
 
-        # TODO put the rest in yaml file just like this
         torrent_client = config_yaml['torrent_client']['qbittorrent']['name']
         torrent_client_qbittorrent_host = config_yaml['torrent_client']['qbittorrent']['host']
         torrent_client_qbittorrent_port = config_yaml['torrent_client']['qbittorrent']['port']
@@ -151,12 +150,12 @@ class Siphonator(object):
         filter_override_movie_title_list = config_yaml["filters"]['override_movie_title_list']
         filter_preferred_index_quality_list = config_yaml["filters"]['preferred_index_quality_list']
 
-        index_site_search_1080p_dict_list = config_yaml["index_site"]['search_dict_list']
+        search_tmdb_api_key = config_yaml["credentials"]['tmdb']
+        search_omdb_api_key = config_yaml["credentials"]['omdb']
+
+        index_site_search_dict_list = config_yaml["index_site"]['search_dict_list']
         index_site_ignore_list = config_yaml["index_site"]['ignore_list']
         index_site_ignore_list_lower = [x.lower() for x in index_site_ignore_list]
-
-        search_tmdb_api_key = "1d93addd6def495cec493845cd3b2788"
-        search_omdb_api_key = "bc61f97e"
 
         # walk library path and store in results dict, note we save it as a list so we can re-use it (costly)
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
@@ -233,7 +232,7 @@ class Siphonator(object):
 
         # ensure jackett is operational by checking for status code 200
         if index_sites_status_code != 200:
-            self.logger_instance.warning(f"Unable to access index site '{index_proxy}', retrying in {config_schedule_time_mins} minutes")
+            self.logger_instance.warning(f"Unable to access index site '{index_proxy}', retrying in {config_schedule_time_value} minutes")
             return index_sites_status_code
 
         # parse xml from jackett
@@ -249,7 +248,7 @@ class Siphonator(object):
 
             if index_site_configured == 'true':
 
-                index_sites_configured_dict.update({index_site_name: index_site_search_1080p_dict_list})
+                index_sites_configured_dict.update({index_site_name: index_site_search_dict_list})
 
         # loop over top level dict of index sites
         for index_site in index_sites_configured_dict:
@@ -310,10 +309,7 @@ class Siphonator(object):
         self.schedule_msg()
 
 
-def read_config():
-
-    config_path = os.path.join(app_root_path, 'configs')
-    config_filepath = os.path.join(config_path, 'config.yml')
+def read_config(config_filepath):
 
     with open(config_filepath, "r") as config_file:
         config_yaml_load = yaml.safe_load(config_file)
@@ -346,6 +342,7 @@ if __name__ == '__main__':
     commandline_parser.add_argument(u"--logs", metavar=u"<path>", help=u"specify path for log files e.g. --logs /opt/siphonator/logs/")
     commandline_parser.add_argument(u"--configs", metavar=u"<path>", help=u"specify path for config file e.g. --configs /opt/siphonator/config/")
     commandline_parser.add_argument(u"--db", metavar=u"<path>", help=u"specify path for sqlite database e.g. --db /opt/siphonator/db/")
+    commandline_parser.add_argument(u"--ffprobe", metavar=u"<path>", help=u"specify path for ffprobe binary e.g. --ffprobe /usr/lib/ffprobe/")
     commandline_parser.add_argument(u"--pid", metavar=u"<path>", help=u"specify path to pidfile e.g. --pid /var/run/siphonator/")
     commandline_parser.add_argument(u"--daemon", action=u"store_true", help=u"run as background daemonized process")
     commandline_parser.add_argument(u"--version", action=u"version", version=current_version)
@@ -353,54 +350,69 @@ if __name__ == '__main__':
     # save arguments in dictionary
     args = vars(commandline_parser.parse_args())
 
+    # run tests
     if args['test']:
 
         return_code = pytest.main(["--verbose"])
         exit(return_code)
 
-    # set path to ffprobe bin
-    ffprobe_filepath = os.path.join(app_root_path, 'tools/ffprobe/static/x64/ffprobe')
+    # set path using app location or if specified use argument path
+    ffprobe_path = set_paths('ffprobe', 'tools/ffprobe/static/x64')
+    ffprobe_filepath = os.path.join(ffprobe_path, 'ffprobe')
 
     # set path using app location or if specified use argument path
-    logs_path = set_paths('logs')
+    logs_path = set_paths('logs', 'logs')
     logs_filepath = os.path.join(logs_path, 'siphonator.log')
 
     # set path using app location or if specified use argument path
-    db_path = set_paths('db')
+    db_path = set_paths('db', 'db')
     db_filepath = os.path.join(db_path, 'siphonator.db')
 
     # set path using app location or if specified use argument path
-    pid_path = set_paths('pid')
+    pid_path = set_paths('pid', 'pid')
     pid_filepath = os.path.join(pid_path, 'process.pid')
 
+    # set path using app location or if specified use argument path
+    configs_path = set_paths('configs', 'configs')
+    configs_filepath = os.path.join(configs_path, 'config.yml')
+
+    # read in config file
+    config_yaml = read_config(configs_filepath)
+
     # setup logging
-    log_level = 'debug'
+    log_level = config_yaml['general']['log_level']
     logger = siphonator_tools_logging.app_logging(log_level, logs_filepath)
     logger_create_instance = logger.get('logger')
     logger_handler = logger.get('handler')
 
-    # setup daemon mode
-    config_daemon_mode = 'foreground'
-    config_daemon_mode = config_daemon_mode.lower()
+    # if daemon cli flag defined
+    if args['daemon']:
 
-    if args['daemon'] and platform.system() != 'Windows':
+        if platform.system() == 'Windows':
 
-        config_daemon_mode = 'background'
+            # force daemon mode to foreground as windows cannot run daemonized
+            config_daemon_mode = 'foreground'
+
+        else:
+
+            config_daemon_mode = 'background'
+
+    else:
+
+        # read daemon mode from config
+        config_daemon_mode = config_yaml['general']['daemon_mode']
+        config_daemon_mode = config_daemon_mode.lower()
 
     # setup scheduler
     config_schedule_mode = 'foreground'
-    config_schedule_mode = config_schedule_mode.lower()
-    config_schedule_time_key = 'minutes'
-    config_schedule_time_mins = 30
-
-    # read in config file
-    config_yaml = read_config()
+    config_schedule_time_key = config_yaml['general']['schedule_time_key']
+    config_schedule_time_value = config_yaml['general']['schedule_time_value']
 
     # define initial settings in dict
     run_dict = ({
         'schedule_mode': config_schedule_mode,
         'schedule_time_key': config_schedule_time_key,
-        'schedule_time_value': config_schedule_time_mins,
+        'schedule_time_value': config_schedule_time_value,
         'config_schedule_mode': config_schedule_mode,
         'app_root_path': app_root_path,
         'logs_path': logs_path,
