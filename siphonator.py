@@ -111,6 +111,7 @@ class Siphonator(object):
         torrent_client_qbittorrent_username = config_yaml['torrent_client']['qbittorrent']['username']
         torrent_client_qbittorrent_password = config_yaml['torrent_client']['qbittorrent']['password']
         torrent_client_qbittorrent_add_paused = config_yaml['torrent_client']['qbittorrent']['add_paused']
+        torrent_client_qbittorrent_category = config_yaml['torrent_client']['qbittorrent']['category']
 
         notification_email_enabled = config_yaml['notification']['email']['enabled']
         notification_email_host = config_yaml['notification']['email']['host']
@@ -188,6 +189,7 @@ class Siphonator(object):
             'torrent_client_qbittorrent_username': torrent_client_qbittorrent_username,
             'torrent_client_qbittorrent_password': torrent_client_qbittorrent_password,
             'torrent_client_qbittorrent_add_paused': torrent_client_qbittorrent_add_paused,
+            'torrent_client_qbittorrent_category': torrent_client_qbittorrent_category,
             'notification_email_enabled': notification_email_enabled,
             'notification_email_host': notification_email_host,
             'notification_email_port': notification_email_port,

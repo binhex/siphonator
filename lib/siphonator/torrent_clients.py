@@ -8,6 +8,7 @@ class TorrentClients(object):
         self.index_dict = kwargs
         self.logger_instance = logger_instance
         self.add_paused_bool = self.index_dict['torrent_client_qbittorrent_add_paused']
+        self.category = self.index_dict['torrent_client_qbittorrent_category']
 
         host = self.index_dict['torrent_client_qbittorrent_host']
         port = self.index_dict['torrent_client_qbittorrent_port']
@@ -67,5 +68,5 @@ class TorrentClients(object):
         self.logger_instance.debug(u"Magnet/Torrent link is '%s'" % download_url)
 
         # add torrent/magnet to queue
-        self.qbt_client.torrents_add(urls=download_url, category='movies-siphonator', is_paused=self.add_paused_bool)
+        self.qbt_client.torrents_add(urls=download_url, category=self.category, is_paused=self.add_paused_bool)
         self.qbt_client.torrents_reannounce(torrent_hashes='all')
