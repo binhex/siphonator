@@ -1,0 +1,181 @@
+general:
+  # description: absolute path to existing media e.g. '/media'
+  # value: string
+  library_path: ''
+  # description: daemon mode: 'foreground|background'
+  # value: string
+  daemon_mode: 'foreground'
+  # description: schedule time key: 'minutes|hours'
+  # value: string
+  schedule_time_key: 'minutes'
+  # description: schedule time to re-check
+  # value: integer
+  schedule_time_value: 30
+  # description: log level: 'debug|info|warning|error'
+  # value: string
+  log_level: 'info'
+
+filters:
+  # description: minimum imdb year to process e.g. '1960'
+  # value: string
+  minimum_year: '1000'
+  # description: minimum imdb runtime in minutes e.g. '60'
+  # value: string
+  minimum_runtime_mins: '60'
+  # description: minimum imdb rating e.g. '7.0'
+  # value: string
+  minimum_rating: '7.0'
+  # description: minimum imdb votes e.g. 5000
+  # value: integer
+  minimum_votes: 5000
+  # description: minimum torrent seeders e.g. 1
+  # value: integer
+  minimum_seeders: 1
+  # description: minimum imdb genre rating comma separated dict e.g. 'sci-fi': 6.8,
+  # value: dict
+  genre_minimum_rating_dict: {
+  }
+  # description: permitted imdb country list comma separated list e.g. 'us', 'au',
+  # value: list
+  good_country_list: [
+  ]
+  # description: permitted imdb language list comma separated list e.g. 'en', 'fr',
+  # value: list
+  good_language_list: [
+  ]
+  # description: bad index title keywords comma separated list e.g. 'hdcam', 'camrip',
+  # value: list
+  bad_index_title_list: [
+  ]
+  # description: bad imdb movie titles comma separated list e.g. 'star wars', 'star trek',
+  # value: list
+  bad_movie_title_list: [
+  ]
+  # description: bad imdb genres comma separated list e.g. 'musical', 'music',
+  # value: list
+  bad_genre_list: [
+  ]
+  # description: preferred imdb cast names comma separated list e.g. 'jason statham', 'christian bale',
+  # value: list
+  override_cast_list: [
+  ]
+  # description: preferred imdb writer names comma separated list e.g. ''
+  # value: list
+  override_writer_list: [
+  ]
+  # description: preferred imdb director names comma separated list e.g. 'steven spielberg', 'james cameron',
+  # value: list
+  override_director_list: [
+  ]
+  # description: preferred imdb movie titles comma separated list e.g. 'star trek', 'transformers',
+  # value: list
+  override_movie_title_list: [
+  ]
+  # description: preferred quality releases comma separated list e.g. 'remastered', 'directors cut',
+  preferred_index_quality_list: [
+  ]
+  # description: preferred index groups comma separated list e.g. 'fgt', 'wiki',
+  # value: list
+  preferred_index_group_list: [
+  ]
+  # description: preferred imdb characters comma separated list e.g. 'superman', 'jack sparrow',
+  # value: list
+  override_character_list: [
+  ]
+
+torrent_client:
+  qbittorrent:
+    # description: name of torrent client
+    # value: string
+    name: 'qbittorrent'
+    # description: ip address of torrent client e.g. '192.168.1.100'
+    # value: string
+    host: ''
+    # description: port for web ui of torrent client e.g. '8080'
+    # value: integer
+    port: 8080
+    # description: username of torrent client e.g. 'admin'
+    # value: string
+    username: 'admin'
+    # description: password of torrent client e.g. 'adminadmin'
+    # value: string
+    password: 'adminadmin'
+    # description: add torrents paused: 'True|False'
+    # value: boolean
+    add_paused: True
+    # description: category name e.g. 'movies-siphonator'
+    # value: string
+    category: 'movies-siphonator'
+
+notification:
+  email:
+    # description: enable email notification of matches
+    # value: boolean
+    enabled: True
+    # description: email server hostname e.g. 'smtp.gmail.com'
+    # value: string
+    host: ''
+    # description: email server port e.g. 587
+    # value: integer
+    port: 587
+    # description: enable email server tls
+    # value: boolean
+    enable_tls: True
+    # enable email server ssl
+    # value: boolean
+    enable_ssl: False
+    # description: email server username
+    # value: string
+    username: ''
+    # description: email server password
+    # value: string
+    password: ''
+    # description: email from address
+    # value: string
+    from_address: ''
+    # description: email to address
+    # value: string
+    to_address: ''
+
+index_proxy:
+  jackett:
+    name: 'jackett'
+    host: "192.168.1.10"
+    port: "1900"
+    api_key: "o4xte43ftp56m64aknxch4pe7cp3lhaj"
+    read_timeout: 60.0
+    limit: "2000"
+
+credentials:
+  tmdb:
+    api_key = "1d93addd6def495cec493845cd3b2788"
+  omdb:
+    api_key = "bc61f97e"
+
+index_site:
+  ignore_list: [
+    'showrss',
+  ]
+  search_dict_list: [
+    {
+      'index_site_search': '1080p',
+      'index_site_category': '2000',
+      'filter_minimum_size_mb': 3000,
+      'filter_maximum_size_mb': 20000,
+      'filter_minimum_bitrate_mb': 42,
+    },
+    {
+      'index_site_search': '2160p',
+      'index_site_category': '2000',
+      'filter_minimum_size_mb': 15000,
+      'filter_maximum_size_mb': 30000,
+      'filter_minimum_bitrate_mb': 170,
+    },
+    {
+      'index_site_search': '2160p remux',
+      'index_site_category': '2000',
+      'filter_minimum_size_mb': 30000,
+      'filter_maximum_size_mb': 170000,
+      'filter_minimum_bitrate_mb': 360,
+    },
+  ]
