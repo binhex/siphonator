@@ -1,63 +1,23 @@
-import os
-import configobj
-import validate
 import pytest
-import lib.siphonator.tools_logging as siphonator_tools_logging
+import test_init
 import lib.siphonator.tools_various as siphonator_tools_various
-
 # to run tests from command line use 'python -m pytest --verbose'
 
 
-@pytest.fixture
-def create_logger():
+def setup():
 
-    # get current path for this script, then split to move up directory to root
-    app_root_path = os.path.dirname(os.path.realpath(__file__))
-    app_root_path, current_directory = os.path.split(app_root_path)
-
-    # set folder path for config files
-    configs_path = os.path.join(app_root_path, u"configs")
-    configs_path = os.path.normpath(configs_path)
-    configs_filepath = os.path.join(configs_path, u"test_config.ini")
-
-    # set path for configspec.ini file
-    configspec_filepath = os.path.join(configs_path, u"configspec.ini")
-
-    # set folder path for log files
-    logs_path = os.path.join(app_root_path, u"logs")
-    logs_path = os.path.normpath(logs_path)
-    logs_filepath = os.path.join(logs_path, u"test_siphonator.log")
-
-    # set folder path for db files
-    db_path = os.path.join(app_root_path, u"db")
-    db_path = os.path.normpath(db_path)
-    db_filepath = os.path.join(db_path, u"test_siphonator.db")
-
-    # create configobj instance, set config.ini file, set encoding and set configspec.ini file
-    config_obj = configobj.ConfigObj(configs_filepath, list_values=False, write_empty_values=True, encoding='UTF-8',
-                                     default_encoding='UTF-8', configspec=configspec_filepath, unrepr=True)
-
-    # create config.ini
-    validator = validate.Validator()
-    config_obj.validate(validator, copy=True)
-    config_obj.filename = configs_filepath
-    config_obj.write()
-
-    log_level = 'debug'
-    logger_instance = siphonator_tools_logging.app_logging(log_level, logs_filepath)
-    logger = logger_instance.get('logger')
-
-    # yield used instead of return to allow us to do cleanup afterward
-    yield logger
-
+    test_init_instance = test_init.TestsInit()
+    logger = test_init_instance.create_logger()
+    return logger
 
 #
 # test functions
 
-@pytest.fixture
-def resolution_from_string(create_logger, index_title):
 
-    logger = create_logger
+@pytest.fixture
+def resolution_from_string(index_title):
+
+    logger = setup()
 
     # Act
     siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
@@ -68,9 +28,9 @@ def resolution_from_string(create_logger, index_title):
 
 
 @pytest.fixture
-def custom_title_sqlite(create_logger, index_title):
+def custom_title_sqlite(index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Act
     siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
@@ -81,9 +41,9 @@ def custom_title_sqlite(create_logger, index_title):
 
 
 @pytest.fixture
-def custom_title_compare(create_logger, index_title):
+def custom_title_compare(index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Act
     siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
@@ -94,9 +54,9 @@ def custom_title_compare(create_logger, index_title):
 
 
 @pytest.fixture
-def custom_title_search(create_logger, index_title):
+def custom_title_search(index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Act
     siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
@@ -107,9 +67,9 @@ def custom_title_search(create_logger, index_title):
 
 
 @pytest.fixture
-def custom_title_word_match_compare(create_logger, index_title):
+def custom_title_word_match_compare(index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Act
     siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
@@ -120,9 +80,9 @@ def custom_title_word_match_compare(create_logger, index_title):
 
 
 @pytest.fixture
-def custom_title_full_compare(create_logger, index_title):
+def custom_title_full_compare(index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Act
     siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
@@ -133,9 +93,9 @@ def custom_title_full_compare(create_logger, index_title):
 
 
 @pytest.fixture
-def custom_title_group_compare(create_logger, index_title):
+def custom_title_group_compare(index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Act
     siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
@@ -146,9 +106,9 @@ def custom_title_group_compare(create_logger, index_title):
 
 
 @pytest.fixture
-def custom_title_year_compare(create_logger, index_title):
+def custom_title_year_compare(index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Act
     siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
@@ -159,9 +119,9 @@ def custom_title_year_compare(create_logger, index_title):
 
 
 @pytest.fixture
-def custom_title_year_to_end_compare(create_logger, index_title):
+def custom_title_year_to_end_compare(index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Act
     siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
@@ -172,9 +132,9 @@ def custom_title_year_to_end_compare(create_logger, index_title):
 
 
 @pytest.fixture
-def custom_title_tv_season_episode(create_logger, index_title):
+def custom_title_tv_season_episode(index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Act
     siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)

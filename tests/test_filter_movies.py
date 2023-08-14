@@ -1,63 +1,24 @@
 import os
 import shutil
-import configobj
-import validate
 import pytest
 import pathlib
 import lib.siphonator.filter_movies as siphonator_filter_movies
-import lib.siphonator.tools_logging as siphonator_tools_logging
 import lib.siphonator.tools_various as siphonator_tools_various
-
+import test_init
 # to run tests from command line use 'python -m pytest --verbose'
 
 
-@pytest.fixture
-def create_logger():
+def setup():
 
-    # get current path for this script, then split to move up directory to root
-    app_root_path = os.path.dirname(os.path.realpath(__file__))
-    app_root_path, current_directory = os.path.split(app_root_path)
-
-    # set folder path for config files
-    configs_path = os.path.join(app_root_path, u"configs")
-    configs_path = os.path.normpath(configs_path)
-    configs_filepath = os.path.join(configs_path, u"test_config.ini")
-
-    # set path for configspec.ini file
-    configspec_filepath = os.path.join(configs_path, u"configspec.ini")
-
-    # set folder path for log files
-    logs_path = os.path.join(app_root_path, u"logs")
-    logs_path = os.path.normpath(logs_path)
-    logs_filepath = os.path.join(logs_path, u"test_siphonator.log")
-
-    # set folder path for db files
-    db_path = os.path.join(app_root_path, u"db")
-    db_path = os.path.normpath(db_path)
-    db_filepath = os.path.join(db_path, u"test_siphonator.db")
-
-    # create configobj instance, set config.ini file, set encoding and set configspec.ini file
-    config_obj = configobj.ConfigObj(configs_filepath, list_values=False, write_empty_values=True, encoding='UTF-8',
-                                     default_encoding='UTF-8', configspec=configspec_filepath, unrepr=True)
-
-    # create config.ini
-    validator = validate.Validator()
-    config_obj.validate(validator, copy=True)
-    config_obj.filename = configs_filepath
-    config_obj.write()
-
-    log_level = 'debug'
-    logger_instance = siphonator_tools_logging.app_logging(log_level, logs_filepath)
-    logger = logger_instance.get('logger')
-
-    # yield used instead of return to allow us to do cleanup afterward
-    yield logger
+    test_init_instance = test_init.TestsInit()
+    logger = test_init_instance.create_logger()
+    return logger
 
 
 @pytest.fixture
-def filter_bad_genre(create_logger, imdb_genres_list):
+def filter_bad_genre(imdb_genres_list):
 
-    logger = create_logger
+    logger = setup()
 
     # Arrange
     test_data = {
@@ -74,9 +35,9 @@ def filter_bad_genre(create_logger, imdb_genres_list):
 
 
 @pytest.fixture
-def filter_preferred_index_group(create_logger, filter_preferred_index_group_list, library_filename, index_title):
+def filter_preferred_index_group(filter_preferred_index_group_list, library_filename, index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Arrange
     test_data = {
@@ -92,9 +53,9 @@ def filter_preferred_index_group(create_logger, filter_preferred_index_group_lis
 
 
 @pytest.fixture
-def filter_preferred_index_quality(create_logger, filter_preferred_index_quality_list, library_filename, index_title):
+def filter_preferred_index_quality(filter_preferred_index_quality_list, library_filename, index_title):
 
-    logger = create_logger
+    logger = setup()
 
     # Arrange
     test_data = {
@@ -110,9 +71,9 @@ def filter_preferred_index_quality(create_logger, filter_preferred_index_quality
 
 
 @pytest.fixture
-def filter_rating(create_logger, imdb_rating):
+def filter_rating(imdb_rating):
 
-    logger = create_logger
+    logger = setup()
 
     # Arrange
     test_data = {
@@ -130,9 +91,9 @@ def filter_rating(create_logger, imdb_rating):
 
 
 @pytest.fixture
-def filter_bad_index_title(create_logger, index_title, filter_bad_index_title_list):
+def filter_bad_index_title(index_title, filter_bad_index_title_list):
 
-    logger = create_logger
+    logger = setup()
 
     # Arrange
     test_data = {
@@ -149,9 +110,9 @@ def filter_bad_index_title(create_logger, index_title, filter_bad_index_title_li
 
 
 @pytest.fixture
-def filter_bad_movie_title(create_logger, filter_bad_movie_title_list):
+def filter_bad_movie_title(filter_bad_movie_title_list):
 
-    logger = create_logger
+    logger = setup()
 
     # Arrange
     test_data = {
@@ -168,9 +129,9 @@ def filter_bad_movie_title(create_logger, filter_bad_movie_title_list):
 
 
 @pytest.fixture
-def filter_genre_rating(create_logger, filter_genre_minimum_rating_dict):
+def filter_genre_rating(filter_genre_minimum_rating_dict):
 
-    logger = create_logger
+    logger = setup()
 
     # Arrange
     test_data = {
@@ -187,9 +148,9 @@ def filter_genre_rating(create_logger, filter_genre_minimum_rating_dict):
 
 
 @pytest.fixture
-def filter_downloaded_file(create_logger, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list):
+def filter_downloaded_file(index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list):
 
-    logger = create_logger
+    logger = setup()
 
     tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
     index_title_compare = tools_various_instance.custom_title_compare(index_title)
@@ -231,9 +192,9 @@ def filter_downloaded_file(create_logger, index_title, index_site_search, librar
 
 
 @pytest.fixture
-def filter_downloaded_dir(create_logger, library_path, src_filename, dst_filename, dst_directory, index_title, index_site_search):
+def filter_downloaded_dir(library_path, src_filename, dst_filename, dst_directory, index_title, index_site_search):
 
-    logger = create_logger
+    logger = setup()
 
     tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
     index_title_compare = tools_various_instance.custom_title_compare(index_title)
@@ -294,13 +255,14 @@ def filter_downloaded_dir(create_logger, library_path, src_filename, dst_filenam
 
 
 @pytest.mark.parametrize('index_title, filter_bad_index_title_list, exp_assert', [
-    ('Movie.Title.(2020).1080p.BluRay.ITA.DTS-GROUP', ['ita', 'ts'], False),  # check that index title with ITA does match bad keyword ITA
-    ('Movie.Title.(2020).1080p.BluRay TS-GROUP', ['ita', 'ts'], False),       # check that mix of separators still matches bad keyword TS
-    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', ['ita', 'ts'], True),       # check that partial matches for DTS and TS are not happening
-    ('Movie.Title.(2020).1080p.(BluRay)HDTS.DTS-GROUP', ['hdts'], False),     # index title has round brackets near bad keyword, skip
-    ('Movie.Title.(2020).1080p.[BluRay]HDTS.DTS-GROUP', ['hdts'], False),     # index title has square brackets near bad keyword, skip
-    ('Movie-Title-(2020)-1080p-BluRay-DTS-es-lat', ['es'], False),            # index title contains bad language les, skip
-    ('Movie-Title-(2020)-1080p-BluRay-DTS-es-lat', ['lat'], False),           # index title contains bad language lat at the end of the index title, skip
+    ('Movie.Title.(2020).1080p.BluRay.ITA.DTS-GROUP', ['ita', 'ts'], False),        # check that index title with ITA does match bad keyword ITA
+    ('Movie.Title.(2020).1080p.BluRay TS-GROUP', ['ita', 'ts'], False),             # check that mix of separators still matches bad keyword TS
+    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', ['ita', 'ts'], True),             # check that partial matches for DTS and TS are not happening
+    ('Movie.Title.(2020).1080p.(BluRay)HDTS.DTS-GROUP', ['hdts'], False),           # index title has round brackets near bad keyword, skip
+    ('Movie.Title.(2020).1080p.[BluRay]HDTS.DTS-GROUP', ['hdts'], False),           # index title has square brackets near bad keyword, skip
+    ('Movie-Title-(2020)-1080p-BluRay-DTS-es-lat', ['es'], False),                  # index title contains bad language les, skip
+    ('Movie-Title-(2020)-1080p-BluRay-DTS-es-lat', ['lat'], False),                 # index title contains bad language lat at the end of the index title, skip
+    ('Movie Title [2023, WEB-DL 1080p] BluRay DTS Rus, Ukr, Eng', ['ukr'], False),  # index title contains bad language ukr with commas separating languages, skip
 ])
 def test_filter_bad_index_title(filter_bad_index_title, index_title, filter_bad_index_title_list, exp_assert):
 

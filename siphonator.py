@@ -105,13 +105,16 @@ class Siphonator(object):
 
         user_agent = f"Siphonator/{current_version}; https://github.com/binhex/siphonator"
 
-        torrent_client = config_yaml['torrent_client']['qbittorrent']['name']
-        torrent_client_qbittorrent_host = config_yaml['torrent_client']['qbittorrent']['host']
-        torrent_client_qbittorrent_port = config_yaml['torrent_client']['qbittorrent']['port']
-        torrent_client_qbittorrent_username = config_yaml['torrent_client']['qbittorrent']['username']
-        torrent_client_qbittorrent_password = config_yaml['torrent_client']['qbittorrent']['password']
-        torrent_client_qbittorrent_add_paused = config_yaml['torrent_client']['qbittorrent']['add_paused']
-        torrent_client_qbittorrent_category = config_yaml['torrent_client']['qbittorrent']['category']
+        torrent_client = config_yaml['torrent_client']['selected']
+
+        if torrent_client == 'qbittorrent':
+
+            torrent_client_qbittorrent_host = config_yaml['torrent_client']['qbittorrent']['host']
+            torrent_client_qbittorrent_port = config_yaml['torrent_client']['qbittorrent']['port']
+            torrent_client_qbittorrent_username = config_yaml['torrent_client']['qbittorrent']['username']
+            torrent_client_qbittorrent_password = config_yaml['torrent_client']['qbittorrent']['password']
+            torrent_client_qbittorrent_add_paused = config_yaml['torrent_client']['qbittorrent']['add_paused']
+            torrent_client_qbittorrent_category = config_yaml['torrent_client']['qbittorrent']['category']
 
         notification_email_enabled = config_yaml['notification']['email']['enabled']
         notification_email_host = config_yaml['notification']['email']['host']
@@ -151,8 +154,8 @@ class Siphonator(object):
         filter_override_movie_title_list = config_yaml["filters"]['override_movie_title_list']
         filter_preferred_index_quality_list = config_yaml["filters"]['preferred_index_quality_list']
 
-        search_tmdb_api_key = config_yaml["credentials"]['tmdb']
-        search_omdb_api_key = config_yaml["credentials"]['omdb']
+        search_tmdb_api_key = config_yaml["credentials"]['tmdb']['api_key']
+        search_omdb_api_key = config_yaml["credentials"]['omdb']['api_key']
 
         index_site_search_dict_list = config_yaml["index_site"]['search_dict_list']
         index_site_ignore_list = config_yaml["index_site"]['ignore_list']
