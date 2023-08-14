@@ -106,32 +106,63 @@ class Siphonator(object):
         user_agent = f"Siphonator/{current_version}; https://github.com/binhex/siphonator"
 
         torrent_client = config_yaml['torrent_client']['selected']
-
         if torrent_client == 'qbittorrent':
 
-            torrent_client_qbittorrent_host = config_yaml['torrent_client']['qbittorrent']['host']
-            torrent_client_qbittorrent_port = config_yaml['torrent_client']['qbittorrent']['port']
-            torrent_client_qbittorrent_username = config_yaml['torrent_client']['qbittorrent']['username']
-            torrent_client_qbittorrent_password = config_yaml['torrent_client']['qbittorrent']['password']
-            torrent_client_qbittorrent_add_paused = config_yaml['torrent_client']['qbittorrent']['add_paused']
-            torrent_client_qbittorrent_category = config_yaml['torrent_client']['qbittorrent']['category']
+            torrent_client_host = config_yaml['torrent_client']['qbittorrent']['host']
+            torrent_client_port = config_yaml['torrent_client']['qbittorrent']['port']
+            torrent_client_username = config_yaml['torrent_client']['qbittorrent']['username']
+            torrent_client_password = config_yaml['torrent_client']['qbittorrent']['password']
+            torrent_client_add_paused = config_yaml['torrent_client']['qbittorrent']['add_paused']
+            torrent_client_category = config_yaml['torrent_client']['qbittorrent']['category']
+
+        else:
+
+            torrent_client_host = None
+            torrent_client_port = None
+            torrent_client_username = None
+            torrent_client_password = None
+            torrent_client_add_paused = None
+            torrent_client_category = None
+
+        index_proxy = config_yaml['index_proxy']['selected']
+        if index_proxy == 'jackett':
+
+            index_proxy_host = config_yaml['index_proxy']['jackett']['host']
+            index_proxy_port = config_yaml['index_proxy']['jackett']['port']
+            index_proxy_api_key = config_yaml['index_proxy']['jackett']['api_key']
+            index_proxy_read_timeout = config_yaml['index_proxy']['jackett']['read_timeout']
+            index_proxy_limit = config_yaml['index_proxy']['jackett']['limit']
+
+        else:
+
+            index_proxy_host = None
+            index_proxy_port = None
+            index_proxy_api_key = None
+            index_proxy_read_timeout = None
+            index_proxy_limit = None
 
         notification_email_enabled = config_yaml['notification']['email']['enabled']
-        notification_email_host = config_yaml['notification']['email']['host']
-        notification_email_port = config_yaml['notification']['email']['port']
-        notification_email_enable_tls = config_yaml['notification']['email']['enable_tls']
-        notification_email_enable_ssl = config_yaml['notification']['email']['enable_ssl']
-        notification_email_username = config_yaml['notification']['email']['username']
-        notification_email_password = config_yaml['notification']['email']['password']
-        notification_email_from_address = config_yaml['notification']['email']['from_address']
-        notification_email_to_address = config_yaml['notification']['email']['to_address']
+        if notification_email_enabled:
 
-        index_proxy = config_yaml['index_proxy']['jackett']['name']
-        index_proxy_jackett_host = config_yaml['index_proxy']['jackett']['host']
-        index_proxy_jackett_port = config_yaml['index_proxy']['jackett']['port']
-        index_proxy_jackett_api_key = config_yaml['index_proxy']['jackett']['api_key']
-        index_proxy_jackett_read_timeout = config_yaml['index_proxy']['jackett']['read_timeout']
-        index_proxy_jackett_limit = config_yaml['index_proxy']['jackett']['limit']
+            notification_email_host = config_yaml['notification']['email']['host']
+            notification_email_port = config_yaml['notification']['email']['port']
+            notification_email_enable_tls = config_yaml['notification']['email']['enable_tls']
+            notification_email_enable_ssl = config_yaml['notification']['email']['enable_ssl']
+            notification_email_username = config_yaml['notification']['email']['username']
+            notification_email_password = config_yaml['notification']['email']['password']
+            notification_email_from_address = config_yaml['notification']['email']['from_address']
+            notification_email_to_address = config_yaml['notification']['email']['to_address']
+
+        else:
+
+            notification_email_host = None
+            notification_email_port = None
+            notification_email_enable_tls = None
+            notification_email_enable_ssl = None
+            notification_email_username = None
+            notification_email_password = None
+            notification_email_from_address = None
+            notification_email_to_address = None
 
         library_path = config_yaml['general']['library_path']
         filter_minimum_year = config_yaml['filters']['minimum_year']
@@ -181,18 +212,19 @@ class Siphonator(object):
             'ffprobe_filepath': ffprobe_filepath,
             'library_path': library_path,
             'filter_library_path_walk': filter_library_path_walk,
-            'index_proxy_jackett_host': index_proxy_jackett_host,
-            'index_proxy_jackett_port': index_proxy_jackett_port,
-            'index_proxy_jackett_api_key': index_proxy_jackett_api_key,
-            'index_proxy_jackett_limit': index_proxy_jackett_limit,
-            'index_proxy_jackett_read_timeout': index_proxy_jackett_read_timeout,
+            'index_proxy': index_proxy,
+            'index_proxy_host': index_proxy_host,
+            'index_proxy_port': index_proxy_port,
+            'index_proxy_api_key': index_proxy_api_key,
+            'index_proxy_limit': index_proxy_limit,
+            'index_proxy_read_timeout': index_proxy_read_timeout,
             'torrent_client': torrent_client,
-            'torrent_client_qbittorrent_host': torrent_client_qbittorrent_host,
-            'torrent_client_qbittorrent_port': torrent_client_qbittorrent_port,
-            'torrent_client_qbittorrent_username': torrent_client_qbittorrent_username,
-            'torrent_client_qbittorrent_password': torrent_client_qbittorrent_password,
-            'torrent_client_qbittorrent_add_paused': torrent_client_qbittorrent_add_paused,
-            'torrent_client_qbittorrent_category': torrent_client_qbittorrent_category,
+            'torrent_client_host': torrent_client_host,
+            'torrent_client_port': torrent_client_port,
+            'torrent_client_username': torrent_client_username,
+            'torrent_client_password': torrent_client_password,
+            'torrent_client_add_paused': torrent_client_add_paused,
+            'torrent_client_category': torrent_client_category,
             'notification_email_enabled': notification_email_enabled,
             'notification_email_host': notification_email_host,
             'notification_email_port': notification_email_port,
@@ -225,14 +257,14 @@ class Siphonator(object):
         })
 
         # construct url to jackett api to get list of enabled index sites
-        url = f'http://{index_proxy_jackett_host}:{index_proxy_jackett_port}/api/v2.0/indexers/all/results/torznab/api?configured=true&apikey={index_proxy_jackett_api_key}&t=indexers&q='
+        url = f'http://{index_proxy_host}:{index_proxy_port}/api/v2.0/indexers/all/results/torznab/api?configured=true&apikey={index_proxy_api_key}&t=indexers&q='
 
         # download list of enabled index sites from jackett
         index_sites_return_code, index_sites_status_code, index_sites_content = siphonator_tools_downloader.http_client(
             self.logger_instance, url=url,
             user_agent=user_agent,
             request_type="get",
-            read_timeout=index_proxy_jackett_read_timeout,
+            read_timeout=index_proxy_read_timeout,
         )
 
         # ensure jackett is operational by checking for status code 200

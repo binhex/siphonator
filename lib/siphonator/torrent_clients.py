@@ -7,13 +7,13 @@ class TorrentClients(object):
 
         self.index_dict = kwargs
         self.logger_instance = logger_instance
-        self.add_paused_bool = self.index_dict['torrent_client_qbittorrent_add_paused']
-        self.category = self.index_dict['torrent_client_qbittorrent_category']
+        self.add_paused_bool = self.index_dict['torrent_client_add_paused']
+        self.category = self.index_dict['torrent_client_category']
 
-        host = self.index_dict['torrent_client_qbittorrent_host']
-        port = self.index_dict['torrent_client_qbittorrent_port']
-        username = self.index_dict['torrent_client_qbittorrent_username']
-        password = self.index_dict['torrent_client_qbittorrent_password']
+        host = self.index_dict['torrent_client_host']
+        port = self.index_dict['torrent_client_port']
+        username = self.index_dict['torrent_client_username']
+        password = self.index_dict['torrent_client_password']
 
         # instantiate a Client using the appropriate WebUI configuration
         self.qbt_client = qbittorrentapi.Client(

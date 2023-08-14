@@ -31,20 +31,20 @@ class IndexProxy(object):
 
             self.index_dict.update({'search_site': self.search_site})
 
-            if "index_proxy_jackett_host" in self.index_dict:
-                host = self.index_dict['index_proxy_jackett_host']
+            if "index_proxy_host" in self.index_dict:
+                host = self.index_dict['index_proxy_host']
             else:
                 self.logger_instance.warning(u'No hostname sent to function, exiting function...')
                 return 1, None
 
-            if "index_proxy_jackett_port" in self.index_dict:
-                port = self.index_dict['index_proxy_jackett_port']
+            if "index_proxy_port" in self.index_dict:
+                port = self.index_dict['index_proxy_port']
             else:
                 self.logger_instance.warning(u'No port sent to function, exiting function...')
                 return 1, None
 
-            if "index_proxy_jackett_api_key" in self.index_dict:
-                api_key = self.index_dict['index_proxy_jackett_api_key']
+            if "index_proxy_api_key" in self.index_dict:
+                api_key = self.index_dict['index_proxy_api_key']
             else:
                 self.logger_instance.warning(u'No api_key sent to function, exiting function...')
                 return 1, None
@@ -70,8 +70,8 @@ class IndexProxy(object):
                 self.logger_instance.warning(u'No search sent to function, exiting function...')
                 return 1, None
 
-            if "index_proxy_jackett_limit" in self.index_dict:
-                limit = self.index_dict['index_proxy_jackett_limit']
+            if "index_proxy_limit" in self.index_dict:
+                limit = self.index_dict['index_proxy_limit']
             else:
                 self.logger_instance.warning(u'No limit sent to function, exiting function...')
                 return 1, None
@@ -82,8 +82,8 @@ class IndexProxy(object):
                 self.logger_instance.warning(u'No user_agent sent to function, exiting function...')
                 return 1, None
 
-            if "index_proxy_jackett_read_timeout" in self.index_dict:
-                read_timeout = self.index_dict['index_proxy_jackett_read_timeout']
+            if "index_proxy_read_timeout" in self.index_dict:
+                read_timeout = self.index_dict['index_proxy_read_timeout']
             else:
                 read_timeout = 30.0
                 self.logger_instance.info(u'No read timeout sent to function, defaulting to %s seconds' % read_timeout)

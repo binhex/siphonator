@@ -199,12 +199,8 @@ notification:
     to_address: ''
 
 index_proxy:
+  selected: 'jackett'
   jackett:
-    # description:
-    # type:
-    # value:
-    # example:
-    name: 'jackett'
     # description:
     # type:
     # value:
