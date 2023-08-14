@@ -1,13 +1,5 @@
 general:
-  # description: absolute path to existing media
-  # type: string
-  # value: n/a
-  # example '/media'
   library_path: ''
-  # description: daemon mode
-  # type: string
-  # value: 'foreground'|'background'
-  # example: 'foreground'
   daemon_mode: 'foreground'
   # description: schedule time key
   # type: string
