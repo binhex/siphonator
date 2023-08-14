@@ -33,8 +33,7 @@ class NotificationEmail(object):
         index_title = self.index_dict.get('index_title')
         index_details = self.index_dict.get('index_details')
         index_size_mb = self.index_dict.get('index_size_mb')
-        torrent_client = self.index_dict['torrent_client']
-        torrent_client_add_paused_bool = self.index_dict["torrent_client_%s_add_paused" % torrent_client]
+        torrent_client_add_paused_bool = self.index_dict['torrent_client_add_paused']
 
         imdb_plot = self.index_dict.get('imdb_plot_outline')
         if imdb_plot is None:
