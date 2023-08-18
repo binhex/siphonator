@@ -103,7 +103,7 @@ class Siphonator(object):
         current_time = siphonator_tools_various.current_time()
         self.logger_instance.info(f"Processing started at '{current_time}'")
 
-        user_agent = f"Siphonator/{current_version}; https://github.com/binhex/siphonator"
+        user_agent = f"Siphonator/{app_version}; https://github.com/binhex/siphonator"
 
         torrent_client = config_yaml['torrent_client']['selected']
         if torrent_client == 'qbittorrent':
@@ -354,11 +354,17 @@ def read_config(config_filepath):
     return config_yaml_load
 
 
+def write_config(config_filepath, config_option):
+
+    with open(config_filepath, "w") as config_file:
+        yaml.dump(config_option, config_file)
+
+    
 # required to prevent separate process from trying to load parent process
 if __name__ == '__main__':
 
     # set siphonator and db schema version numbers
-    current_version = "1.0.0"
+    app_version = "1.0.0"
     db_version = int(4)
 
     # custom argparse to redirect user to help if unknown argument specified
@@ -372,7 +378,7 @@ if __name__ == '__main__':
     app_root_path = os.path.dirname(os.path.realpath(__file__))
 
     # setup argparse description and usage, also increase spacing for help to 50
-    commandline_parser = ArgparseCustom(prog="Siphonator", description="Welcome to %(prog)s - Coded by binhex." + current_version, usage="%(prog)s [--help] [--config <path>] [--logs <path>] [--pidfile <path>] [--daemon] [--version]", formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=50))
+    commandline_parser = ArgparseCustom(prog="Siphonator", description="Welcome to %(prog)s - Coded by binhex." + app_version, usage="%(prog)s [--help] [--config <path>] [--logs <path>] [--pidfile <path>] [--daemon] [--version]", formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=50))
 
     # add argparse command line flags
     commandline_parser.add_argument(u"--test", action=u"store_true", help=u"run tests")
@@ -382,7 +388,7 @@ if __name__ == '__main__':
     commandline_parser.add_argument(u"--ffprobe", metavar=u"<path>", help=u"specify path for ffprobe binary e.g. --ffprobe /usr/lib/ffprobe/")
     commandline_parser.add_argument(u"--pid", metavar=u"<path>", help=u"specify path to pidfile e.g. --pid /var/run/siphonator/")
     commandline_parser.add_argument(u"--daemon", action=u"store_true", help=u"run as background daemonized process")
-    commandline_parser.add_argument(u"--version", action=u"version", version=current_version)
+    commandline_parser.add_argument(u"--version", action=u"version", version=app_version)
 
     # save arguments in dictionary
     args = vars(commandline_parser.parse_args())

@@ -1,58 +1,19 @@
 general:
   library_path: ''
   daemon_mode: 'foreground'
-  # description: schedule time key
-  # type: string
-  # value: 'minutes'|'hours'
-  # example: 'minutes'
   schedule_time_key: 'minutes'
-  # description: schedule time to re-check
-  # type: integer
-  # value: n/a
-  # example: 30
   schedule_time_value: 30
-  # description: log level
-  # type: string
-  # value: 'debug'|'info'|'warning'|'error'
-  # example: 'info'
   log_level: 'info'
+  config_version: '1.0.0'
 
 filters:
-  # description: minimum imdb year to process
-  # type: string
-  # value: n/a
-  # example: '1960'
   minimum_year: '1960'
-  # description: minimum imdb runtime in minutes
-  # type: string
-  # value: n/a
-  # example: '60'
   minimum_runtime_mins: '60'
-  # description: minimum imdb rating
-  # type: string
-  # value: n/a
-  # example: '7.0'
   minimum_rating: '7.0'
-  # description: minimum imdb votes
-  # type: integer
-  # value: n/a
-  # example: 5000
   minimum_votes: 5000
-  # description: minimum torrent seeders
-  # type: integer
-  # value: n/a
-  # example: 1
   minimum_seeders: 1
-  # description: minimum imdb genre rating comma separated dict
-  # type: dict
-  # value: n/a
-  # example: 'sci-fi': 6.8, 'action': 6.5,
   genre_minimum_rating_dict: {
   }
-  # description: permitted imdb country list comma separated list
-  # type: list
-  # value: n/a
-  # example: 'us', 'au',
   good_country_list: [
   ]
   # description: permitted imdb language list comma separated list
