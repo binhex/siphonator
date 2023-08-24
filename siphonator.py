@@ -9,6 +9,7 @@ import xml.etree.ElementTree as elementTree
 from imdbpie import ImdbAPIError
 from daemonize import Daemonize
 from apscheduler.schedulers.background import BlockingScheduler
+import lib.siphonator.config as siphonator_config
 
 # check version of python is 3.x.x
 python_version = sys.version_info
@@ -54,6 +55,14 @@ def set_paths(config_param, config_path):
     return full_path
 
 
+def read_config_file(config_filepath):
+
+    with open(config_filepath, "r") as config_file:
+        config_yaml_load = yaml.safe_load(config_file)
+
+    return config_yaml_load
+
+
 class Siphonator(object):
 
     def __init__(self, logger_instance, **kwargs):
@@ -68,7 +77,10 @@ class Siphonator(object):
         self.log_file = self.config_dict['log_file']
         self.db_path = self.config_dict['db_path']
         self.db_filepath = self.config_dict['db_filepath']
+        self.config_filepath = self.config_dict['config_filepath']
         self.config_yaml = self.config_dict['config_yaml']
+        self.config_version = self.config_dict['config_version']
+        self.config_file_version = self.config_dict['config_file_version']
 
     def schedule_run(self):
 
@@ -105,99 +117,28 @@ class Siphonator(object):
 
         user_agent = f"Siphonator/{app_version}; https://github.com/binhex/siphonator"
 
-        torrent_client = config_yaml['torrent_client']['selected']
-        if torrent_client == 'qbittorrent':
+        # begin definition of dictionary to pass around
+        index_dict = ({
+            'db_filepath': self.db_filepath,
+            'db_version': db_version,
+            'config_yaml': self.config_yaml,
+            'config_filepath': self.config_filepath,
+            'config_version': self.config_version,
+            'config_file_version': self.config_file_version,
+            'user_agent': user_agent,
+            'ffprobe_filepath': ffprobe_filepath,
+        })
 
-            torrent_client_host = config_yaml['torrent_client']['qbittorrent']['host']
-            torrent_client_port = config_yaml['torrent_client']['qbittorrent']['port']
-            torrent_client_username = config_yaml['torrent_client']['qbittorrent']['username']
-            torrent_client_password = config_yaml['torrent_client']['qbittorrent']['password']
-            torrent_client_add_paused = config_yaml['torrent_client']['qbittorrent']['add_paused']
-            torrent_client_category = config_yaml['torrent_client']['qbittorrent']['category']
-
-        else:
-
-            torrent_client_host = None
-            torrent_client_port = None
-            torrent_client_username = None
-            torrent_client_password = None
-            torrent_client_add_paused = None
-            torrent_client_category = None
-
-        index_proxy = config_yaml['index_proxy']['selected']
-        if index_proxy == 'jackett':
-
-            index_proxy_host = config_yaml['index_proxy']['jackett']['host']
-            index_proxy_port = config_yaml['index_proxy']['jackett']['port']
-            index_proxy_api_key = config_yaml['index_proxy']['jackett']['api_key']
-            index_proxy_read_timeout = config_yaml['index_proxy']['jackett']['read_timeout']
-            index_proxy_limit = config_yaml['index_proxy']['jackett']['limit']
-
-        else:
-
-            index_proxy_host = None
-            index_proxy_port = None
-            index_proxy_api_key = None
-            index_proxy_read_timeout = None
-            index_proxy_limit = None
-
-        notification_email_enabled = config_yaml['notification']['email']['enabled']
-        if notification_email_enabled:
-
-            notification_email_host = config_yaml['notification']['email']['host']
-            notification_email_port = config_yaml['notification']['email']['port']
-            notification_email_enable_tls = config_yaml['notification']['email']['enable_tls']
-            notification_email_enable_ssl = config_yaml['notification']['email']['enable_ssl']
-            notification_email_username = config_yaml['notification']['email']['username']
-            notification_email_password = config_yaml['notification']['email']['password']
-            notification_email_from_address = config_yaml['notification']['email']['from_address']
-            notification_email_to_address = config_yaml['notification']['email']['to_address']
-
-        else:
-
-            notification_email_host = None
-            notification_email_port = None
-            notification_email_enable_tls = None
-            notification_email_enable_ssl = None
-            notification_email_username = None
-            notification_email_password = None
-            notification_email_from_address = None
-            notification_email_to_address = None
-
-        library_path = config_yaml['general']['library_path']
-        filter_minimum_year = config_yaml['filters']['minimum_year']
-        filter_minimum_runtime_mins = config_yaml['filters']['minimum_runtime_mins']
-        filter_genre_minimum_rating_dict = config_yaml['filters']['genre_minimum_rating_dict']
-        filter_minimum_rating = config_yaml['filters']['minimum_rating']
-        filter_minimum_votes = config_yaml['filters']['minimum_votes']
-        filter_minimum_seeders = config_yaml['filters']['minimum_seeders']
-        filter_bad_index_title_list = config_yaml["filters"]['bad_index_title_list']
-        filter_preferred_index_group_list = config_yaml["filters"]['preferred_index_group_list']
-        filter_override_character_list = config_yaml["filters"]['override_character_list']
-
-        filter_good_country_list = config_yaml["filters"]['good_country_list']
-        filter_good_language_list = config_yaml["filters"]['good_language_list']
-        filter_bad_movie_title_list = config_yaml["filters"]['bad_movie_title_list']
-        filter_bad_genre_list = config_yaml["filters"]['bad_genre_list']
-        filter_override_cast_list = config_yaml["filters"]['override_cast_list']
-        filter_override_writer_list = config_yaml["filters"]['override_writer_list']
-        filter_override_director_list = config_yaml["filters"]['override_director_list']
-        filter_override_movie_title_list = config_yaml["filters"]['override_movie_title_list']
-        filter_preferred_index_quality_list = config_yaml["filters"]['preferred_index_quality_list']
-
-        search_tmdb_api_key = config_yaml["credentials"]['tmdb']['api_key']
-        search_omdb_api_key = config_yaml["credentials"]['omdb']['api_key']
-
-        index_site_search_dict_list = config_yaml["index_site"]['search_dict_list']
-        index_site_ignore_list = config_yaml["index_site"]['ignore_list']
-        index_site_ignore_list_lower = [x.lower() for x in index_site_ignore_list]
+        # read in config.yml and append to index_dict
+        index_dict = siphonator_config.read_config(index_dict)
 
         # walk library path and store in results dict, note we save it as a list so we can re-use it (costly)
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-        filter_library_path_walk = list(tools_various_instance.library_path_walk(library_path))
+        filter_library_path_walk = list(tools_various_instance.library_path_walk(index_dict['library_path']))
 
-        # begin definition of dictionary to pass around
-        index_dict = ({'db_filepath': self.db_filepath, 'db_version': db_version, 'config_yaml': self.config_yaml})
+        index_dict.update({
+            'filter_library_path_walk': filter_library_path_walk,
+        })
 
         # create sqlite database
         db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **index_dict)
@@ -206,70 +147,17 @@ class Siphonator(object):
         # upgrade database if required
         db_sqlite_instance.upgrade_database()
 
-        # add in additional info to pass around as dict
-        index_dict.update({
-            'user_agent': user_agent,
-            'ffprobe_filepath': ffprobe_filepath,
-            'library_path': library_path,
-            'filter_library_path_walk': filter_library_path_walk,
-            'index_proxy': index_proxy,
-            'index_proxy_host': index_proxy_host,
-            'index_proxy_port': index_proxy_port,
-            'index_proxy_api_key': index_proxy_api_key,
-            'index_proxy_limit': index_proxy_limit,
-            'index_proxy_read_timeout': index_proxy_read_timeout,
-            'torrent_client': torrent_client,
-            'torrent_client_host': torrent_client_host,
-            'torrent_client_port': torrent_client_port,
-            'torrent_client_username': torrent_client_username,
-            'torrent_client_password': torrent_client_password,
-            'torrent_client_add_paused': torrent_client_add_paused,
-            'torrent_client_category': torrent_client_category,
-            'notification_email_enabled': notification_email_enabled,
-            'notification_email_host': notification_email_host,
-            'notification_email_port': notification_email_port,
-            'notification_email_enable_tls': notification_email_enable_tls,
-            'notification_email_enable_ssl': notification_email_enable_ssl,
-            'notification_email_username': notification_email_username,
-            'notification_email_password': notification_email_password,
-            'notification_email_from_address': notification_email_from_address,
-            'notification_email_to_address': notification_email_to_address,
-            'filter_minimum_year': filter_minimum_year,
-            'filter_minimum_runtime_mins': filter_minimum_runtime_mins,
-            'filter_genre_minimum_rating_dict': filter_genre_minimum_rating_dict,
-            'filter_minimum_rating': filter_minimum_rating,
-            'filter_minimum_votes': filter_minimum_votes,
-            'filter_minimum_seeders': filter_minimum_seeders,
-            'filter_bad_genre_list': filter_bad_genre_list,
-            'filter_bad_index_title_list': filter_bad_index_title_list,
-            'filter_good_language_list': filter_good_language_list,
-            'filter_override_character_list': filter_override_character_list,
-            'filter_override_director_list': filter_override_director_list,
-            'filter_override_writer_list': filter_override_writer_list,
-            'filter_override_cast_list': filter_override_cast_list,
-            'filter_override_movie_title_list': filter_override_movie_title_list,
-            'filter_bad_movie_title_list': filter_bad_movie_title_list,
-            'filter_good_country_list': filter_good_country_list,
-            'filter_preferred_index_group_list': filter_preferred_index_group_list,
-            'filter_preferred_index_quality_list': filter_preferred_index_quality_list,
-            'search_tmdb_api_key': search_tmdb_api_key,
-            'search_omdb_api_key': search_omdb_api_key
-        })
-
-        # construct url to jackett api to get list of enabled index sites
-        url = f'http://{index_proxy_host}:{index_proxy_port}/api/v2.0/indexers/all/results/torznab/api?configured=true&apikey={index_proxy_api_key}&t=indexers&q='
-
         # download list of enabled index sites from jackett
         index_sites_return_code, index_sites_status_code, index_sites_content = siphonator_tools_downloader.http_client(
-            self.logger_instance, url=url,
+            self.logger_instance, url=index_dict['index_proxy_url'],
             user_agent=user_agent,
             request_type="get",
-            read_timeout=index_proxy_read_timeout,
+            read_timeout=index_dict['index_proxy_read_timeout'],
         )
 
         # ensure jackett is operational by checking for status code 200
         if index_sites_status_code != 200:
-            self.logger_instance.warning(f"Unable to access index site '{index_proxy}', retrying in {config_schedule_time_value} minutes")
+            self.logger_instance.warning(f"Unable to access index site '{index_dict['index_proxy']}', retrying in {config_schedule_time_value} minutes")
             return index_sites_status_code
 
         # parse xml from jackett
@@ -285,7 +173,7 @@ class Siphonator(object):
 
             if index_site_configured == 'true':
 
-                index_sites_configured_dict.update({index_site_name: index_site_search_dict_list})
+                index_sites_configured_dict.update({index_site_name: index_dict['index_site_search_dict_list']})
 
         # loop over top level dict of index sites
         for index_site in index_sites_configured_dict:
@@ -303,9 +191,9 @@ class Siphonator(object):
                 filter_minimum_bitrate_mb = (index_site_dict['filter_minimum_bitrate_mb'])
 
                 # we may want to ignore certain index sites
-                if index_site_lower in index_site_ignore_list_lower:
+                if index_site_lower in index_dict['index_site_ignore_list_lower']:
 
-                    self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{index_site_ignore_list_lower}', skipping processing...")
+                    self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{index_dict['index_site_ignore_list_lower']}', skipping processing...")
                     continue
 
                 # override category for solidtorrents as it incorrectly uses tv category (5000) for movies
@@ -345,26 +233,13 @@ class Siphonator(object):
         self.logger_instance.info(u"Processing finished at '%s'" % current_time)
         self.schedule_msg()
 
-
-def read_config(config_filepath):
-
-    with open(config_filepath, "r") as config_file:
-        config_yaml_load = yaml.safe_load(config_file)
-
-    return config_yaml_load
-
-
-def write_config(config_filepath, config_option):
-
-    with open(config_filepath, "w") as config_file:
-        yaml.dump(config_option, config_file)
-
     
 # required to prevent separate process from trying to load parent process
 if __name__ == '__main__':
 
-    # set siphonator and db schema version numbers
-    app_version = "1.0.0"
+    # set versioning for app, config, and db
+    app_version = '1.0.0'
+    config_version = '1.0.1'
     db_version = int(4)
 
     # custom argparse to redirect user to help if unknown argument specified
@@ -420,7 +295,10 @@ if __name__ == '__main__':
     configs_filepath = os.path.join(configs_path, 'config.yml')
 
     # read in config file
-    config_yaml = read_config(configs_filepath)
+    config_yaml = read_config_file(configs_filepath)
+
+    # read in config version from config file
+    config_file_version = config_yaml['general']['config_version']
 
     # setup logging
     log_level = config_yaml['general']['log_level']
@@ -462,7 +340,10 @@ if __name__ == '__main__':
         'log_file': logs_filepath,
         'db_path': db_path,
         'db_filepath': db_filepath,
+        'config_filepath': configs_filepath,
         'config_yaml': config_yaml,
+        'config_version': config_version,
+        'config_file_version': config_file_version,
     })
 
     logger_create_instance.info(u"Welcome to Siphonator - Coded by binhex.")
