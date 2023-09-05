@@ -30,7 +30,6 @@ def update_config(index_dict):
 
             config_modify_dict = {
                 'general': {
-                    #'newkey': 'newvalue',
                     'config_version': '1.0.1',
                 }
             }
@@ -41,19 +40,32 @@ def update_config(index_dict):
 
 def read_config(index_dict):
 
-    config_yaml = index_dict['config_yaml']
-
+    # use function to update config if outdated
     update_config(index_dict)
 
-    torrent_client = config_yaml['torrent_client']['selected']
+    # get absolute path to config.yml
+    config_filepath = index_dict['config_filepath']
+
+    # read in existing config data
+    with open(config_filepath, "r") as config_file:
+        # convert from yaml to python dict
+        config_dict = yaml.safe_load(config_file)
+        
+    # TODO save to config_dict and then change to key value not var name e.g. change index_dict['torrent_client_host'] to config_dict['torrent_client']['qbittorrent']['host']
+    # TODO remove deep_update as we no longer need to merge dicts as saving to config_dict not index_dict
+    # TODO rename index_dict to processed_dict
+    # TODO add in config_dict to all classes as now not in index_dict
+    print(config_dict)
+
+    torrent_client = config_dict['torrent_client']['selected']
     if torrent_client == 'qbittorrent':
 
-        torrent_client_host = config_yaml['torrent_client']['qbittorrent']['host']
-        torrent_client_port = config_yaml['torrent_client']['qbittorrent']['port']
-        torrent_client_username = config_yaml['torrent_client']['qbittorrent']['username']
-        torrent_client_password = config_yaml['torrent_client']['qbittorrent']['password']
-        torrent_client_add_paused = config_yaml['torrent_client']['qbittorrent']['add_paused']
-        torrent_client_category = config_yaml['torrent_client']['qbittorrent']['category']
+        torrent_client_host = config_dict['torrent_client']['qbittorrent']['host']
+        torrent_client_port = config_dict['torrent_client']['qbittorrent']['port']
+        torrent_client_username = config_dict['torrent_client']['qbittorrent']['username']
+        torrent_client_password = config_dict['torrent_client']['qbittorrent']['password']
+        torrent_client_add_paused = config_dict['torrent_client']['qbittorrent']['add_paused']
+        torrent_client_category = config_dict['torrent_client']['qbittorrent']['category']
 
     else:
 
@@ -64,14 +76,14 @@ def read_config(index_dict):
         torrent_client_add_paused = None
         torrent_client_category = None
 
-    index_proxy = config_yaml['index_proxy']['selected']
+    index_proxy = config_dict['index_proxy']['selected']
     if index_proxy == 'jackett':
 
-        index_proxy_host = config_yaml['index_proxy']['jackett']['host']
-        index_proxy_port = config_yaml['index_proxy']['jackett']['port']
-        index_proxy_api_key = config_yaml['index_proxy']['jackett']['api_key']
-        index_proxy_read_timeout = config_yaml['index_proxy']['jackett']['read_timeout']
-        index_proxy_limit = config_yaml['index_proxy']['jackett']['limit']
+        index_proxy_host = config_dict['index_proxy']['jackett']['host']
+        index_proxy_port = config_dict['index_proxy']['jackett']['port']
+        index_proxy_api_key = config_dict['index_proxy']['jackett']['api_key']
+        index_proxy_read_timeout = config_dict['index_proxy']['jackett']['read_timeout']
+        index_proxy_limit = config_dict['index_proxy']['jackett']['limit']
         index_proxy_url = f'http://{index_proxy_host}:{index_proxy_port}/api/v2.0/indexers/all/results/torznab/api?configured=true&apikey={index_proxy_api_key}&t=indexers&q='
 
     else:
@@ -83,17 +95,17 @@ def read_config(index_dict):
         index_proxy_limit = None
         index_proxy_url = None
 
-    notification_email_enabled = config_yaml['notification']['email']['enabled']
+    notification_email_enabled = config_dict['notification']['email']['enabled']
     if notification_email_enabled:
 
-        notification_email_host = config_yaml['notification']['email']['host']
-        notification_email_port = config_yaml['notification']['email']['port']
-        notification_email_enable_tls = config_yaml['notification']['email']['enable_tls']
-        notification_email_enable_ssl = config_yaml['notification']['email']['enable_ssl']
-        notification_email_username = config_yaml['notification']['email']['username']
-        notification_email_password = config_yaml['notification']['email']['password']
-        notification_email_from_address = config_yaml['notification']['email']['from_address']
-        notification_email_to_address = config_yaml['notification']['email']['to_address']
+        notification_email_host = config_dict['notification']['email']['host']
+        notification_email_port = config_dict['notification']['email']['port']
+        notification_email_enable_tls = config_dict['notification']['email']['enable_tls']
+        notification_email_enable_ssl = config_dict['notification']['email']['enable_ssl']
+        notification_email_username = config_dict['notification']['email']['username']
+        notification_email_password = config_dict['notification']['email']['password']
+        notification_email_from_address = config_dict['notification']['email']['from_address']
+        notification_email_to_address = config_dict['notification']['email']['to_address']
 
     else:
 
@@ -106,32 +118,32 @@ def read_config(index_dict):
         notification_email_from_address = None
         notification_email_to_address = None
 
-    library_path = config_yaml['general']['library_path']
-    filter_minimum_year = config_yaml['filters']['minimum_year']
-    filter_minimum_runtime_mins = config_yaml['filters']['minimum_runtime_mins']
-    filter_genre_minimum_rating_dict = config_yaml['filters']['genre_minimum_rating_dict']
-    filter_minimum_rating = config_yaml['filters']['minimum_rating']
-    filter_minimum_votes = config_yaml['filters']['minimum_votes']
-    filter_minimum_seeders = config_yaml['filters']['minimum_seeders']
-    filter_bad_index_title_list = config_yaml["filters"]['bad_index_title_list']
-    filter_preferred_index_group_list = config_yaml["filters"]['preferred_index_group_list']
-    filter_override_character_list = config_yaml["filters"]['override_character_list']
+    library_path = config_dict['general']['library_path']
+    filter_minimum_year = config_dict['filters']['minimum_year']
+    filter_minimum_runtime_mins = config_dict['filters']['minimum_runtime_mins']
+    filter_genre_minimum_rating_dict = config_dict['filters']['genre_minimum_rating_dict']
+    filter_minimum_rating = config_dict['filters']['minimum_rating']
+    filter_minimum_votes = config_dict['filters']['minimum_votes']
+    filter_minimum_seeders = config_dict['filters']['minimum_seeders']
+    filter_bad_index_title_list = config_dict["filters"]['bad_index_title_list']
+    filter_preferred_index_group_list = config_dict["filters"]['preferred_index_group_list']
+    filter_override_character_list = config_dict["filters"]['override_character_list']
 
-    filter_good_country_list = config_yaml["filters"]['good_country_list']
-    filter_good_language_list = config_yaml["filters"]['good_language_list']
-    filter_bad_movie_title_list = config_yaml["filters"]['bad_movie_title_list']
-    filter_bad_genre_list = config_yaml["filters"]['bad_genre_list']
-    filter_override_cast_list = config_yaml["filters"]['override_cast_list']
-    filter_override_writer_list = config_yaml["filters"]['override_writer_list']
-    filter_override_director_list = config_yaml["filters"]['override_director_list']
-    filter_override_movie_title_list = config_yaml["filters"]['override_movie_title_list']
-    filter_preferred_index_quality_list = config_yaml["filters"]['preferred_index_quality_list']
+    filter_good_country_list = config_dict["filters"]['good_country_list']
+    filter_good_language_list = config_dict["filters"]['good_language_list']
+    filter_bad_movie_title_list = config_dict["filters"]['bad_movie_title_list']
+    filter_bad_genre_list = config_dict["filters"]['bad_genre_list']
+    filter_override_cast_list = config_dict["filters"]['override_cast_list']
+    filter_override_writer_list = config_dict["filters"]['override_writer_list']
+    filter_override_director_list = config_dict["filters"]['override_director_list']
+    filter_override_movie_title_list = config_dict["filters"]['override_movie_title_list']
+    filter_preferred_index_quality_list = config_dict["filters"]['preferred_index_quality_list']
 
-    search_tmdb_api_key = config_yaml["credentials"]['tmdb']['api_key']
-    search_omdb_api_key = config_yaml["credentials"]['omdb']['api_key']
+    search_tmdb_api_key = config_dict["credentials"]['tmdb']['api_key']
+    search_omdb_api_key = config_dict["credentials"]['omdb']['api_key']
 
-    index_site_search_dict_list = config_yaml["index_site"]['search_dict_list']
-    index_site_ignore_list = config_yaml["index_site"]['ignore_list']
+    index_site_search_dict_list = config_dict["index_site"]['search_dict_list']
+    index_site_ignore_list = config_dict["index_site"]['ignore_list']
     index_site_ignore_list_lower = [x.lower() for x in index_site_ignore_list]
 
     # add in additional info to pass around as dict
