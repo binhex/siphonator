@@ -17,9 +17,11 @@ import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
 class IndexProxy(object):
 
-    def __init__(self, logger_instance, **kwargs):
+    def __init__(self, logger_instance, init_dict, result_dict, config_dict):
 
-        self.index_dict = kwargs
+        self.init_dict = init_dict
+        self.result_dict = result_dict
+        self.config_dict = config_dict
         self.search_site = 'TMDb'
         self.logger_instance = logger_instance
 
@@ -27,42 +29,61 @@ class IndexProxy(object):
     # out return_code, status_code, content
     def jackett(self):
 
-        if self.index_dict is not None:
+        if self.result_dict is not None:
 
-            self.index_dict.update({'search_site': self.search_site})
+            self.result_dict.update({'search_site': self.search_site})
 
-            if "index_proxy_host" in self.index_dict:
-                host = self.index_dict['index_proxy_host']
+            index_proxy = self.config_dict['index_proxy']['selected']
+            if index_proxy == 'jackett':
+                try:
+                    host = self.config_dict['index_proxy']['jackett']['host']
+                except KeyError:
+                    self.logger_instance.warning(u'No hostname sent to function, exiting function...')
+                    return 1, None
+
+                try:
+                    port = self.config_dict['index_proxy']['jackett']['port']
+                except KeyError:
+                    self.logger_instance.warning(u'No port sent to function, exiting function...')
+                    return 1, None
+
+                try:
+                    api_key = self.config_dict['index_proxy']['jackett']['api_key']
+                except KeyError:
+                    self.logger_instance.warning(u'No api_key sent to function, exiting function...')
+                    return 1, None
+
+                try:
+                    read_timeout = self.config_dict['index_proxy']['jackett']['read_timeout']
+                except KeyError:
+                    read_timeout = 30.0
+                    self.logger_instance.info(u'No read timeout sent to function, defaulting to %s seconds' % read_timeout)
+
+                try:
+                    limit = self.config_dict['index_proxy']['jackett']['limit']
+                except KeyError:
+                    self.logger_instance.warning(u'No limit sent to function, exiting function...')
+                    return 1, None
+
             else:
-                self.logger_instance.warning(u'No hostname sent to function, exiting function...')
-                return 1, None
 
-            if "index_proxy_port" in self.index_dict:
-                port = self.index_dict['index_proxy_port']
-            else:
-                self.logger_instance.warning(u'No port sent to function, exiting function...')
-                return 1, None
+                self.logger_instance.warning(f"Index proxy of '{index_proxy}' not valid, exiting function...")
+                return 1
 
-            if "index_proxy_api_key" in self.index_dict:
-                api_key = self.index_dict['index_proxy_api_key']
-            else:
-                self.logger_instance.warning(u'No api_key sent to function, exiting function...')
-                return 1, None
-
-            if "index_site_category" in self.index_dict:
-                category = self.index_dict['index_site_category']
+            if "index_site_category" in self.result_dict:
+                category = self.result_dict['index_site_category']
             else:
                 self.logger_instance.warning(u'No category sent to function, exiting function...')
                 return 1, None
 
-            if "index_site" in self.index_dict:
-                index_site = self.index_dict['index_site']
+            if "index_site" in self.result_dict:
+                index_site = self.result_dict['index_site']
             else:
                 self.logger_instance.warning(u'No index site sent to function, defaulting to \'all\'')
                 index_site = "all"
 
-            if "index_site_search" in self.index_dict:
-                search = self.index_dict['index_site_search']
+            if "index_site_search" in self.result_dict:
+                search = self.result_dict['index_site_search']
                 search = search.replace(",", " ")
                 # url encode search string
                 search = urllib.parse.quote_plus(search)
@@ -70,23 +91,11 @@ class IndexProxy(object):
                 self.logger_instance.warning(u'No search sent to function, exiting function...')
                 return 1, None
 
-            if "index_proxy_limit" in self.index_dict:
-                limit = self.index_dict['index_proxy_limit']
-            else:
-                self.logger_instance.warning(u'No limit sent to function, exiting function...')
-                return 1, None
-
-            if "user_agent" in self.index_dict:
-                user_agent = self.index_dict['user_agent']
-            else:
+            try:
+                user_agent = self.init_dict['user_agent']
+            except KeyError:
                 self.logger_instance.warning(u'No user_agent sent to function, exiting function...')
                 return 1, None
-
-            if "index_proxy_read_timeout" in self.index_dict:
-                read_timeout = self.index_dict['index_proxy_read_timeout']
-            else:
-                read_timeout = 30.0
-                self.logger_instance.info(u'No read timeout sent to function, defaulting to %s seconds' % read_timeout)
 
         else:
 
@@ -114,7 +123,7 @@ class IndexProxy(object):
         for node in site_feed_parse:
 
             self.logger_instance.info(u"Resetting IMDb values for dict from previous run...")
-            self.index_dict.update({
+            self.result_dict.update({
                 'imdb_title': None,
                 'imdb_year': None,
                 'imdb_poster_url': None,
@@ -145,7 +154,7 @@ class IndexProxy(object):
 
             self.logger_instance.debug(u"Checking if index title '%s' is already in the sqlite database..." % title)
 
-            db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+            db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
             read_database_simple_bool = db_sqlite_instance.read_database_simple('history', 'index_title', title)
 
             if read_database_simple_bool:
@@ -244,7 +253,7 @@ class IndexProxy(object):
                 pubdate = None
 
             self.logger_instance.debug(u"Saving index details to dict for index title '%s'..." % title)
-            self.index_dict.update({
+            self.result_dict.update({
                 'index_title': title,
                 'torrent_url': torrent_url,
                 'index_size': size,
@@ -259,82 +268,82 @@ class IndexProxy(object):
             })
 
             tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-            self.index_dict = tools_various_instance.index_title_process(**self.index_dict)
+            self.result_dict = tools_various_instance.index_title_process(self.result_dict)
 
-            if self.index_dict.get('result') != 'failed':
+            if self.result_dict.get('result') != 'failed':
 
                 self.logger_instance.info(u"Filtering movie based on index details...")
-                filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, **self.index_dict)
-                self.index_dict = filter_movies_instance.filter_index_movies()
+                filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                self.result_dict = filter_movies_instance.filter_index_movies()
 
             else:
 
-                # write to database, need repeated instance due to changing self.index_dict
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                # write to database, need repeated instance due to changing self.result_dict
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
                 db_sqlite_instance.write_database()
                 continue
 
-            if self.index_dict.get('result') != 'failed':
+            if self.result_dict.get('result') != 'failed':
 
                 # if imdbid is not found from index site (rarbg supplies tt number) then lookup
                 if imdbid is None:
 
                     self.logger_instance.info(u"Searching for IMDb ID..")
-                    get_imdb_tt_number_instance = siphonator_search_all.SearchAll(self.logger_instance, **self.index_dict)
-                    self.index_dict = get_imdb_tt_number_instance.search()
+                    get_imdb_tt_number_instance = siphonator_search_all.SearchAll(self.logger_instance, self.result_dict, self.config_dict)
+                    self.result_dict = get_imdb_tt_number_instance.search()
 
             else:
 
                 # write to database
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
                 db_sqlite_instance.write_database()
                 continue
 
-            if self.index_dict.get('result') != 'failed':
+            if self.result_dict.get('result') != 'failed':
 
                 self.logger_instance.info(u"Getting movie details from IMDb...")
-                self.index_dict = siphonator_imdb_imdbpie.imdb_json_api(self.logger_instance, **self.index_dict)
+                self.result_dict = siphonator_imdb_imdbpie.imdb_json_api(self.logger_instance, self.result_dict, self.config_dict)
 
             else:
 
                 # write to database
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
                 db_sqlite_instance.write_database()
                 continue
 
-            if self.index_dict.get('result') != 'failed':
+            if self.result_dict.get('result') != 'failed':
 
                 self.logger_instance.info(u"Filtering movie based on IMDb details...")
-                filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, **self.index_dict)
-                self.index_dict = filter_movies_instance.filter_imdb_movies()
+                filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                self.result_dict = filter_movies_instance.filter_imdb_movies()
 
             else:
 
                 # write to database
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
                 db_sqlite_instance.write_database()
                 continue
 
-            if self.index_dict.get('result') != 'failed':
+            if self.result_dict.get('result') != 'failed':
 
-                self.index_dict.update({'result': 'success', 'result_details': u"Passed all Index and IMDb filters"})
+                self.result_dict.update({'result': 'success', 'result_details': u"Passed all Index and IMDb filters"})
 
                 # write to database
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
                 db_sqlite_instance.write_database()
 
-                if self.index_dict.get('notification_email_enabled'):
+                if self.config_dict['notification']['email']['enabled']:
 
                     self.logger_instance.info(u"E-mail notification enabled, sending E-mail...")
-                    notification_email_instance = siphonator_notification_email.NotificationEmail(self.logger_instance, **self.index_dict)
+                    notification_email_instance = siphonator_notification_email.NotificationEmail(self.logger_instance, self.result_dict, self.config_dict)
                     notification_email_instance.email_send()
 
-                torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, **self.index_dict)
+                torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, self.result_dict, self.config_dict)
                 torrent_client_instance.qbittorrent_add()
 
             else:
 
                 # write to database
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **self.index_dict)
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
                 db_sqlite_instance.write_database()
                 continue

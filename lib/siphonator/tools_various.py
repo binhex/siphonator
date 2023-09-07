@@ -313,19 +313,19 @@ class ToolsVarious(object):
 
             return True
 
-    def index_title_process(self, **index_dict):
+    def index_title_process(self, result_dict):
 
-        if index_dict is None:
+        if result_dict is None:
 
             self.logger_instance.warning(u'No kwargs sent to function')
             return None
 
-        index_title = index_dict.get('index_title', None)
+        index_title = result_dict.get('index_title', None)
         if index_title is None:
 
-            self.logger_instance.warning(u"Index title not found in dictionary '%s'" % index_dict)
-            index_dict.update({'result': 'failed', 'result_details': 'Index title not found'})
-            return index_dict
+            self.logger_instance.warning(u"Index title not found in dictionary '%s'" % result_dict)
+            result_dict.update({'result': 'failed', 'result_details': 'Index title not found'})
+            return result_dict
 
         self.logger_instance.debug(u"Index title is '%s'" % index_title)
 
@@ -333,8 +333,8 @@ class ToolsVarious(object):
         if index_title_full_compare is None:
 
             self.logger_instance.debug(f"Cannot identify index title compare from index title '{index_title}' using regex")
-            index_dict.update({'result': 'failed', 'result_details': 'Cannot identify index title compare from index title'})
-            return index_dict
+            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify index title compare from index title'})
+            return result_dict
 
         self.logger_instance.info(u"Index title full compare is '%s'" % index_title_full_compare)
 
@@ -342,8 +342,8 @@ class ToolsVarious(object):
         if index_title_compare is None:
 
             self.logger_instance.debug(f"Cannot identify compare title from index title '{index_title}' using regex")
-            index_dict.update({'result': 'failed', 'result_details': 'Cannot identify compare title from index title'})
-            return index_dict
+            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify compare title from index title'})
+            return result_dict
 
         self.logger_instance.info(u"Index title compare is '%s'" % index_title_compare)
 
@@ -351,8 +351,8 @@ class ToolsVarious(object):
         if index_title_search is None:
 
             self.logger_instance.info(u"Cannot identify search title from index title '%s' using regex '%s'" % (index_title, self.index_title_search_regex))
-            index_dict.update({'result': 'failed', 'result_details': 'Cannot identify search title from index title'})
-            return index_dict
+            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify search title from index title'})
+            return result_dict
 
         self.logger_instance.info(u"Index title search is '%s'" % index_title_search)
 
@@ -360,8 +360,8 @@ class ToolsVarious(object):
         if index_title_year_to_end_compare is None:
 
             self.logger_instance.info(u"Cannot identify year to end from index title '%s' using regex '%s'" % (index_title, self.index_title_year_to_end_regex))
-            index_dict.update({'result': 'failed', 'result_details': 'Cannot identify year to end from index title'})
-            return index_dict
+            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify year to end from index title'})
+            return result_dict
 
         self.logger_instance.info(u"Index year to end is '%s'" % index_title_year_to_end_compare)
 
@@ -369,8 +369,8 @@ class ToolsVarious(object):
         if index_year_compare is None:
 
             self.logger_instance.info(u"Cannot identify year compare from index title '%s' using regex '%s'" % (index_title, self.index_title_year_regex))
-            index_dict.update({'result': 'failed', 'result_details': 'Cannot identify year compare from index title'})
-            return index_dict
+            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify year compare from index title'})
+            return result_dict
 
         self.logger_instance.info(u"Index title year compare is '%s'" % index_year_compare)
 
@@ -378,12 +378,12 @@ class ToolsVarious(object):
         if index_title_and_year_compare is None:
 
             self.logger_instance.info(u"Cannot identify index title and year compare from index title '%s'" % index_title)
-            index_dict.update({'result': 'failed', 'result_details': 'Cannot identify index title and year compare from index title'})
-            return index_dict
+            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify index title and year compare from index title'})
+            return result_dict
 
         self.logger_instance.info(u"Index title and year compare is '%s'" % index_title_and_year_compare)
 
-        index_dict.update({
+        result_dict.update({
             'index_title_compare': index_title_compare,
             'index_title_full_compare': index_title_full_compare,
             'index_year_compare': index_year_compare,
@@ -394,4 +394,4 @@ class ToolsVarious(object):
             'result_details': 'Identified title and year from index title'
         })
 
-        return index_dict
+        return result_dict

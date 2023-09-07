@@ -4,9 +4,10 @@ import re
 # TODO once we have all imdb details in the database then any index title that matches an existing processed title can use the same imdb details without the need to contact imdb
 
 
-def imdb_json_api(logger_instance, **kwargs):
+def imdb_json_api(logger_instance, result_dict, config_dict):
 
-    index_dict = kwargs
+    result_dict = result_dict
+    config_dict = config_dict
     credits_cast_list = []
     credits_director_list = []
     credits_writer_list = []
@@ -15,7 +16,7 @@ def imdb_json_api(logger_instance, **kwargs):
     country_origins_list = []
     genres_list = []
 
-    imdb_id = index_dict.get('imdb_id')
+    imdb_id = result_dict.get('imdb_id')
     logger_instance.info(u"Getting title attributes for movie with IMDb ID '%s'..." % imdb_id)
 
     try:
@@ -23,16 +24,16 @@ def imdb_json_api(logger_instance, **kwargs):
 
     except OSError:
         logger_instance.warning(u"Cannot connect to IMDb")
-        index_dict.update({'result': 'failed', 'result_details': u"Cannot connect to IMDb"})
-        return index_dict
+        result_dict.update({'result': 'failed', 'result_details': u"Cannot connect to IMDb"})
+        return result_dict
 
     try:
         imdb_get_title_dict = imdb_instance.get_title(str(imdb_id))
 
     except ValueError:
         logger_instance.warning(f"Invalid IMDb id '{imdb_id}'")
-        index_dict.update({'result': 'failed', 'result_details': f"Invalid IMDb id '{imdb_id}'"})
-        return index_dict
+        result_dict.update({'result': 'failed', 'result_details': f"Invalid IMDb id '{imdb_id}'"})
+        return result_dict
 
     imdb_get_title_genres_dict = imdb_instance.get_title_genres(str(imdb_id))
     imdb_get_title_credits_dict = imdb_instance.get_title_credits(str(imdb_id))
@@ -190,7 +191,7 @@ def imdb_json_api(logger_instance, **kwargs):
         logger_instance.warning(u"Unable to identify IMDb rating count")
         votes = None
 
-    index_dict.update({
+    result_dict.update({
         'imdb_title': imdb_title,
         'imdb_year': imdb_year,
         'imdb_poster_url': poster_url,
@@ -210,5 +211,5 @@ def imdb_json_api(logger_instance, **kwargs):
         'imdb_country_list': country_origins_list,
     })
 
-    index_dict.update({'result': 'success', 'result_details': u"Identified IMDb metadata using IMDbPie"})
-    return index_dict
+    result_dict.update({'result': 'success', 'result_details': u"Identified IMDb metadata using IMDbPie"})
+    return result_dict

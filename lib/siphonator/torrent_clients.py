@@ -3,36 +3,40 @@ import qbittorrentapi
 
 class TorrentClients(object):
 
-    def __init__(self, logger_instance, **kwargs):
+    def __init__(self, logger_instance, result_dict, config_dict):
 
-        self.index_dict = kwargs
+        self.result_dict = result_dict
+        self.config_dict = config_dict
         self.logger_instance = logger_instance
-        self.add_paused_bool = self.index_dict['torrent_client_add_paused']
-        self.category = self.index_dict['torrent_client_category']
+        self.add_paused_bool = self.config_dict['torrent_client']['qbittorrent']['add_paused']
+        self.category = self.config_dict['torrent_client']['qbittorrent']['category']
 
-        host = self.index_dict['torrent_client_host']
-        port = self.index_dict['torrent_client_port']
-        username = self.index_dict['torrent_client_username']
-        password = self.index_dict['torrent_client_password']
+        torrent_client = self.config_dict['torrent_client']['selected']
+        if torrent_client == 'qbittorrent':
 
-        # instantiate a Client using the appropriate WebUI configuration
-        self.qbt_client = qbittorrentapi.Client(
-            host=host,
-            port=port,
-            username=username,
-            password=password,
-        )
+            host = self.config_dict['torrent_client']['qbittorrent']['host']
+            port = self.config_dict['torrent_client']['qbittorrent']['port']
+            username = self.config_dict['torrent_client']['qbittorrent']['username']
+            password = self.config_dict['torrent_client']['qbittorrent']['password']
 
-        # the Client will automatically acquire/maintain a logged-in state
-        # in line with any request. therefore, this is not strictly necessary;
-        # however, you may want to test the provided login credentials.
-        try:
+            # instantiate a Client using the appropriate WebUI configuration
+            self.qbt_client = qbittorrentapi.Client(
+                host=host,
+                port=port,
+                username=username,
+                password=password,
+            )
 
-            self.qbt_client.auth_log_in()
+            # the Client will automatically acquire/maintain a logged-in state
+            # in line with any request. therefore, this is not strictly necessary;
+            # however, you may want to test the provided login credentials.
+            try:
 
-        except qbittorrentapi.LoginFailed as e:
+                self.qbt_client.auth_log_in()
 
-            self.logger_instance.warning(u"qBittorrent login failed for username '%s' with error '%s'" % (username, e))
+            except qbittorrentapi.LoginFailed as e:
+
+                self.logger_instance.warning(u"qBittorrent login failed for username '%s' with error '%s'" % (username, e))
 
     # TODO search and identify if existing movie already paused/downloading/downloaded
     def qbittorrent_search(self):
@@ -54,15 +58,15 @@ class TorrentClients(object):
 
     def qbittorrent_add(self):
 
-        download_url = self.index_dict['magnet_url']
+        download_url = self.result_dict['magnet_url']
         if download_url is None:
 
-            self.logger_instance.info(u"No magnet link present for index title '%s', trying torrent file..." % self.index_dict['index_title'])
+            self.logger_instance.info(u"No magnet link present for index title '%s', trying torrent file..." % self.result_dict['index_title'])
 
-            download_url = self.index_dict['torrent_url']
+            download_url = self.result_dict['torrent_url']
             if download_url is None:
 
-                self.logger_instance.info(u"No torrent/magnet present, cannot download index title '%s'" % self.index_dict['index_title'])
+                self.logger_instance.info(u"No torrent/magnet present, cannot download index title '%s'" % self.result_dict['index_title'])
                 return None
 
         self.logger_instance.debug(u"Magnet/Torrent link is '%s'" % download_url)

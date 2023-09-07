@@ -5,12 +5,14 @@ import lib.siphonator.tools_various as siphonator_tools_various
 
 class DbSqlite(object):
 
-    def __init__(self, logger_instance, **kwargs):
+    def __init__(self, logger_instance, init_dict, result_dict, config_dict):
 
         self.logger_instance = logger_instance
-        self.index_dict = kwargs
-        self.db_filepath = self.index_dict.get('db_filepath')
-        self.db_version = self.index_dict.get('db_version')
+        self.init_dict = init_dict
+        self.result_dict = result_dict
+        self.config_dict = config_dict
+        self.db_version = init_dict['db_version']
+        self.db_filepath = init_dict['db_filepath']
 
     def create_database(self):
 
@@ -70,36 +72,36 @@ class DbSqlite(object):
         db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
 
         db_sqlite_connection["history"].insert_all([{
-            "index_title": (self.index_dict.get('index_title')),
-            "result": (self.index_dict.get('result')),
-            "result_details": (self.index_dict.get('result_details')),
-            "index_details": (self.index_dict.get('index_details')),
-            "index_pubdate": (self.index_dict.get('index_pubdate')),
-            "index_seeders": (self.index_dict.get('index_seeders')),
-            "index_peers": (self.index_dict.get('index_peers')),
-            "index_size": (self.index_dict.get('index_size')),
-            "index_size_mb": (self.index_dict.get('index_size_mb')),
-            "torrent_url": (self.index_dict.get('torrent_url')),
-            "magnet_url": (self.index_dict.get('magnet_url')),
-            "category": (self.index_dict.get('category')),
-            "imdb_id": (self.index_dict.get('imdb_id')),
-            "imdb_title": (self.index_dict.get('imdb_title')),
-            "imdb_year": (self.index_dict.get('imdb_year')),
-            "imdb_poster_url": (self.index_dict.get('imdb_poster_url')),
-            "imdb_trailer_url": (self.index_dict.get('imdb_trailer_url')),
-            "imdb_plot_summary": (self.index_dict.get('imdb_plot_summary')),
-            "imdb_plot_outline": (self.index_dict.get('imdb_plot_outline')),
-            "imdb_rating": (self.index_dict.get('imdb_rating')),
-            "imdb_votes": (self.index_dict.get('imdb_votes')),
-            "imdb_title_type": (self.index_dict.get('imdb_title_type')),
-            "imdb_running_time_in_minutes": (self.index_dict.get('imdb_running_time_in_minutes')),
-            "imdb_genres_list": (self.index_dict.get('imdb_genres_list')),
-            "imdb_credits_director_list": (self.index_dict.get('imdb_credits_director_list')),
-            "imdb_credits_writer_list": (self.index_dict.get('imdb_credits_writer_list')),
-            "imdb_credits_cast_list": (self.index_dict.get('imdb_credits_cast_list')),
-            "imdb_credits_character_list": (self.index_dict.get('imdb_credits_character_list')),
-            "imdb_language_list": (self.index_dict.get('imdb_language_list')),
-            "imdb_country_list": (self.index_dict.get('imdb_country_list')),
+            "index_title": (self.result_dict.get('index_title')),
+            "result": (self.result_dict.get('result')),
+            "result_details": (self.result_dict.get('result_details')),
+            "index_details": (self.result_dict.get('index_details')),
+            "index_pubdate": (self.result_dict.get('index_pubdate')),
+            "index_seeders": (self.result_dict.get('index_seeders')),
+            "index_peers": (self.result_dict.get('index_peers')),
+            "index_size": (self.result_dict.get('index_size')),
+            "index_size_mb": (self.result_dict.get('index_size_mb')),
+            "torrent_url": (self.result_dict.get('torrent_url')),
+            "magnet_url": (self.result_dict.get('magnet_url')),
+            "category": (self.result_dict.get('category')),
+            "imdb_id": (self.result_dict.get('imdb_id')),
+            "imdb_title": (self.result_dict.get('imdb_title')),
+            "imdb_year": (self.result_dict.get('imdb_year')),
+            "imdb_poster_url": (self.result_dict.get('imdb_poster_url')),
+            "imdb_trailer_url": (self.result_dict.get('imdb_trailer_url')),
+            "imdb_plot_summary": (self.result_dict.get('imdb_plot_summary')),
+            "imdb_plot_outline": (self.result_dict.get('imdb_plot_outline')),
+            "imdb_rating": (self.result_dict.get('imdb_rating')),
+            "imdb_votes": (self.result_dict.get('imdb_votes')),
+            "imdb_title_type": (self.result_dict.get('imdb_title_type')),
+            "imdb_running_time_in_minutes": (self.result_dict.get('imdb_running_time_in_minutes')),
+            "imdb_genres_list": (self.result_dict.get('imdb_genres_list')),
+            "imdb_credits_director_list": (self.result_dict.get('imdb_credits_director_list')),
+            "imdb_credits_writer_list": (self.result_dict.get('imdb_credits_writer_list')),
+            "imdb_credits_cast_list": (self.result_dict.get('imdb_credits_cast_list')),
+            "imdb_credits_character_list": (self.result_dict.get('imdb_credits_character_list')),
+            "imdb_language_list": (self.result_dict.get('imdb_language_list')),
+            "imdb_country_list": (self.result_dict.get('imdb_country_list')),
         }], pk="id", column_order=(
             "index_title",
             "result",
@@ -138,7 +140,7 @@ class DbSqlite(object):
         # create database connection
         db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
 
-        # query database, note this maybe subject to sqlite injection as i am dynamically setting table and column
+        # query database, note this maybe subject to sqlite injection as I am dynamically setting table and column
         sqlite_result_generator = db_sqlite_connection.query("SELECT %s FROM %s WHERE %s LIKE ?" % (sqlite_column, sqlite_table, sqlite_column), ('%'+index_title+'%',))
 
         for sqlite_result in sqlite_result_generator:

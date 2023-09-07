@@ -4,7 +4,6 @@ import sys
 import argparse
 import datetime
 import pytest
-import yaml
 import xml.etree.ElementTree as elementTree
 from imdbpie import ImdbAPIError
 from daemonize import Daemonize
@@ -33,18 +32,18 @@ import lib.siphonator.tools_downloader as siphonator_tools_downloader
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
 
-def set_paths(config_param, config_path):
+def set_paths(config_param, relative_path):
 
-    full_path = os.path.join(app_root_path, config_path)
+    full_path = os.path.join(app_root_path, relative_path)
 
     if args[config_param]:
 
-        if not os.path.exists(args[config_path]):
+        if not os.path.exists(args[relative_path]):
 
             try:
-                os.makedirs(args[config_path])
+                os.makedirs(args[relative_path])
             except OSError as e:
-                print(f"Error setting '--{config_param}' path to '{args[config_path]}', error is '{e}', using default location '{full_path}'")
+                print(f"Error setting '--{config_param}' path to '{args[relative_path]}', error is '{e}', using default location '{full_path}'")
             else:
                 full_path = args[config_param]
 
@@ -55,41 +54,22 @@ def set_paths(config_param, config_path):
     return full_path
 
 
-def read_config_file(config_filepath):
-
-    with open(config_filepath, "r") as config_file:
-        config_yaml_load = yaml.safe_load(config_file)
-
-    return config_yaml_load
-
-
 class Siphonator(object):
 
-    def __init__(self, logger_instance, **kwargs):
+    def __init__(self, logger_instance, init_dict, config_dict):
 
         self.logger_instance = logger_instance
-        self.config_dict = kwargs
-        self.logs_path = self.config_dict['logs_path']
-        self.app_root_path = self.config_dict['app_root_path']
-        self.schedule_mode = self.config_dict['schedule_mode']
-        self.schedule_time_key = self.config_dict['schedule_time_key']
-        self.schedule_time_value = self.config_dict['schedule_time_value']
-        self.log_file = self.config_dict['log_file']
-        self.db_path = self.config_dict['db_path']
-        self.db_filepath = self.config_dict['db_filepath']
-        self.config_filepath = self.config_dict['config_filepath']
-        self.config_yaml = self.config_dict['config_yaml']
-        self.config_version = self.config_dict['config_version']
-        self.config_file_version = self.config_dict['config_file_version']
+        self.init_dict = init_dict
+        self.config_dict = config_dict
 
     def schedule_run(self):
 
         schedule = BlockingScheduler()
-        self.logger_instance.info(f"Running schedule in '{config_schedule_mode}' mode")
+        self.logger_instance.info(f"Running schedule in '{self.config_dict['general']['schedule_mode']}' mode")
 
         try:
 
-            schedule.add_job(siphonator_instance.run, 'interval', minutes=config_schedule_time_value, next_run_time=datetime.datetime.now())
+            schedule.add_job(siphonator_instance.run, 'interval', minutes=self.config_dict['general']['schedule_time_value'], next_run_time=datetime.datetime.now())
             schedule.start()
 
         except (KeyboardInterrupt, SystemExit):
@@ -103,65 +83,59 @@ class Siphonator(object):
         schedule_current_date_and_time = datetime.datetime.now()
 
         # add in minutes till next schedule
-        next_schedule_run = schedule_current_date_and_time + datetime.timedelta(minutes=int(self.schedule_time_value))
+        next_schedule_run = schedule_current_date_and_time + datetime.timedelta(minutes=int(self.config_dict['general']['schedule_time_value']))
 
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(u"Schedule running in '%s' mode every '%s %s', next run at '%s'" % (self.schedule_mode, self.schedule_time_value, self.schedule_time_key, schedule_run_converted))
+        self.logger_instance.info(u"Schedule running in '%s' mode every '%s %s', next run at '%s'" % (self.config_dict['general']['schedule_mode'], self.config_dict['general']['schedule_time_value'], self.config_dict['general']['schedule_time_key'], schedule_run_converted))
 
     def run(self):
 
         current_time = siphonator_tools_various.current_time()
         self.logger_instance.info(f"Processing started at '{current_time}'")
 
-        user_agent = f"Siphonator/{app_version}; https://github.com/binhex/siphonator"
-
-        # begin definition of dictionary to pass around
-        index_dict = ({
-            'db_filepath': self.db_filepath,
-            'db_version': db_version,
-            'config_yaml': self.config_yaml,
-            'config_filepath': self.config_filepath,
-            'config_version': self.config_version,
-            'config_file_version': self.config_file_version,
-            'user_agent': user_agent,
-            'ffprobe_filepath': ffprobe_filepath,
-        })
-
-        # read in config.yml and append to index_dict
-        index_dict = siphonator_config.read_config(index_dict)
-
         # walk library path and store in results dict, note we save it as a list so we can re-use it (costly)
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-        filter_library_path_walk = list(tools_various_instance.library_path_walk(index_dict['library_path']))
+        filter_library_path_walk = list(tools_various_instance.library_path_walk(self.config_dict['general']['library_path']))
 
-        index_dict.update({
+        # begin definition of index dict to store imdb and index details
+        result_dict = ({
             'filter_library_path_walk': filter_library_path_walk,
         })
 
         # create sqlite database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **index_dict)
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, result_dict, self.config_dict)
         db_sqlite_instance.create_database()
 
         # upgrade database if required
         db_sqlite_instance.upgrade_database()
 
-        # download list of enabled index sites from jackett
-        index_sites_return_code, index_sites_status_code, index_sites_content = siphonator_tools_downloader.http_client(
-            self.logger_instance, url=index_dict['index_proxy_url'],
-            user_agent=user_agent,
-            request_type="get",
-            read_timeout=index_dict['index_proxy_read_timeout'],
-        )
+        index_proxy = self.config_dict['index_proxy']['selected']
+        if index_proxy == 'jackett':
 
-        # ensure jackett is operational by checking for status code 200
-        if index_sites_status_code != 200:
-            self.logger_instance.warning(f"Unable to access index site '{index_dict['index_proxy']}', retrying in {config_schedule_time_value} minutes")
-            return index_sites_status_code
+            index_proxy_url = f"http://{self.config_dict['index_proxy']['jackett']['host']}:{self.config_dict['index_proxy']['jackett']['port']}/api/v2.0/indexers/all/results/torznab/api?configured=true&apikey={self.config_dict['index_proxy']['jackett']['api_key']}&t=indexers&q="
 
-        # parse xml from jackett
-        index_sites_xml = elementTree.fromstring(index_sites_content)
+            # download list of enabled index sites from jackett
+            index_sites_return_code, index_sites_status_code, index_sites_content = siphonator_tools_downloader.http_client(
+                self.logger_instance, url=index_proxy_url,
+                user_agent=user_agent,
+                request_type="get",
+                read_timeout=self.config_dict['index_proxy']['jackett']['read_timeout'],
+            )
+
+            # ensure jackett is operational by checking for status code 200
+            if index_sites_status_code != 200:
+                self.logger_instance.warning(f"Unable to access index site '{self.config_dict['index_proxy']['selected']}', retrying in {self.config_dict['general']['schedule_time_key']} minutes")
+                return index_sites_status_code
+
+            # parse xml from jackett
+            index_sites_xml = elementTree.fromstring(index_sites_content)
+
+        else:
+
+            self.logger_instance.warning(f"Index Proxy option of '{index_proxy}' not supported, exiting...")
+            return 1
 
         # empty dict to store configured index sites
         index_sites_configured_dict = {}
@@ -173,7 +147,7 @@ class Siphonator(object):
 
             if index_site_configured == 'true':
 
-                index_sites_configured_dict.update({index_site_name: index_dict['index_site_search_dict_list']})
+                index_sites_configured_dict.update({index_site_name: self.config_dict['index_site']['search_dict_list']})
 
         # loop over top level dict of index sites
         for index_site in index_sites_configured_dict:
@@ -191,9 +165,9 @@ class Siphonator(object):
                 filter_minimum_bitrate_mb = (index_site_dict['filter_minimum_bitrate_mb'])
 
                 # we may want to ignore certain index sites
-                if index_site_lower in index_dict['index_site_ignore_list_lower']:
+                if index_site_lower in self.config_dict['index_site']['ignore_list']:
 
-                    self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{index_dict['index_site_ignore_list_lower']}', skipping processing...")
+                    self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{self.config_dict['index_site']['ignore_list']}', skipping processing...")
                     continue
 
                 # override category for solidtorrents as it incorrectly uses tv category (5000) for movies
@@ -202,7 +176,7 @@ class Siphonator(object):
                     index_site_category = '5000'
 
                 # update dict with index site specific search criteria
-                index_dict.update({
+                result_dict.update({
                     'index_site': index_site,
                     'index_site_category': index_site_category,
                     'index_site_search': index_site_search,
@@ -212,7 +186,7 @@ class Siphonator(object):
                 })
 
                 self.logger_instance.info(u"Processing index site '%s' for search criteria '%s' in category '%s'..." % (index_site, index_site_search, index_site_category))
-                index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, **index_dict)
+                index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, self.init_dict, result_dict, self.config_dict)
 
                 try:
                     index_site_instance.jackett()
@@ -220,11 +194,10 @@ class Siphonator(object):
                     self.logger_instance.error(u"IMDbPie having issues contacting IMDb")
 
         # compress (vacuum) database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **index_dict)
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, result_dict, self.config_dict)
         db_sqlite_instance.vacuum_database()
 
         # close database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, **index_dict)
         db_sqlite_instance.close_database()
 
         # TODO put in elapsed time
@@ -237,10 +210,15 @@ class Siphonator(object):
 # required to prevent separate process from trying to load parent process
 if __name__ == '__main__':
 
+    # TODO switch from string subst to f-strings everywhere
+    # TODO rework readme, out of date config examples now
+    # TODO fix tests to reflect changes in dict
+
     # set versioning for app, config, and db
     app_version = '1.0.0'
     config_version = '1.0.1'
     db_version = int(4)
+    user_agent = f"Siphonator/{app_version}; https://github.com/binhex/siphonator"
 
     # custom argparse to redirect user to help if unknown argument specified
     class ArgparseCustom(argparse.ArgumentParser):
@@ -279,8 +257,8 @@ if __name__ == '__main__':
     ffprobe_filepath = os.path.join(ffprobe_path, 'ffprobe')
 
     # set path using app location or if specified use argument path
-    logs_path = set_paths('logs', 'logs')
-    logs_filepath = os.path.join(logs_path, 'siphonator.log')
+    log_path = set_paths('logs', 'logs')
+    logs_filepath = os.path.join(log_path, 'siphonator.log')
 
     # set path using app location or if specified use argument path
     db_path = set_paths('db', 'db')
@@ -291,20 +269,44 @@ if __name__ == '__main__':
     pid_filepath = os.path.join(pid_path, 'process.pid')
 
     # set path using app location or if specified use argument path
-    configs_path = set_paths('configs', 'configs')
-    configs_filepath = os.path.join(configs_path, 'config.yml')
+    config_path = set_paths('configs', 'configs')
+    config_filepath = os.path.join(config_path, 'config.yml')
 
-    # read in config file
-    config_yaml = read_config_file(configs_filepath)
+    # define initial settings in dict
+    main_init_dict = ({
+        'app_version': app_version,
+        'app_root_path': app_root_path,
+        'log_path': log_path,
+        'log_filepath': logs_filepath,
+        'pid_path': pid_path,
+        'pid_filepath': pid_filepath,
+        'db_path': db_path,
+        'db_filepath': db_filepath,
+        'db_version': db_version,
+        'config_path': config_path,
+        'config_filepath': config_filepath,
+        'config_version': config_version,
+        'user_agent': user_agent,
+        'ffprobe_filepath': ffprobe_filepath,
+    })
 
-    # read in config version from config file
-    config_file_version = config_yaml['general']['config_version']
+    # send main_init_dict and return main_config_dict read from config.yml
+    main_config_dict = siphonator_config.read_config(main_init_dict)
 
     # setup logging
-    log_level = config_yaml['general']['log_level']
+    log_level = main_config_dict['general']['log_level']
     logger = siphonator_tools_logging.app_logging(log_level, logs_filepath)
     logger_create_instance = logger.get('logger')
     logger_handler = logger.get('handler')
+
+    # read in config version from config file
+    config_file_version = main_config_dict['general']['config_version']
+
+    # update config.yml if required
+    siphonator_config.update_config(main_init_dict, config_file_version)
+
+    # verify config.yml is valid
+    siphonator_config.verify_config(logger_create_instance, main_init_dict, main_config_dict)
 
     # if daemon cli flag defined
     if args['daemon']:
@@ -312,45 +314,27 @@ if __name__ == '__main__':
         if platform.system() == 'Windows':
 
             # force daemon mode to foreground as windows cannot run daemonized
-            config_daemon_mode = 'foreground'
+            daemon_mode = 'foreground'
 
         else:
 
-            config_daemon_mode = 'background'
+            daemon_mode = 'background'
 
     else:
 
         # read daemon mode from config
-        config_daemon_mode = config_yaml['general']['daemon_mode']
-        config_daemon_mode = config_daemon_mode.lower()
+        daemon_mode = main_config_dict['general']['daemon_mode'].lower()
 
     # setup scheduler
-    config_schedule_mode = 'foreground'
-    config_schedule_time_key = config_yaml['general']['schedule_time_key']
-    config_schedule_time_value = config_yaml['general']['schedule_time_value']
-
-    # define initial settings in dict
-    run_dict = ({
-        'schedule_mode': config_schedule_mode,
-        'schedule_time_key': config_schedule_time_key,
-        'schedule_time_value': config_schedule_time_value,
-        'config_schedule_mode': config_schedule_mode,
-        'app_root_path': app_root_path,
-        'logs_path': logs_path,
-        'log_file': logs_filepath,
-        'db_path': db_path,
-        'db_filepath': db_filepath,
-        'config_filepath': configs_filepath,
-        'config_yaml': config_yaml,
-        'config_version': config_version,
-        'config_file_version': config_file_version,
-    })
+    schedule_mode = main_config_dict['general']['schedule_mode'].lower()
+    schedule_time_key = main_config_dict['general']['schedule_time_key']
+    schedule_time_value = main_config_dict['general']['schedule_time_value']
 
     logger_create_instance.info(u"Welcome to Siphonator - Coded by binhex.")
-    logger_create_instance.info(f"Starting daemon in '{config_daemon_mode}' mode...")
+    logger_create_instance.info(f"Starting daemon in '{daemon_mode}' mode...")
 
-    siphonator_instance = Siphonator(logger_create_instance, **run_dict)
-    if config_daemon_mode == 'background':
+    siphonator_instance = Siphonator(logger_create_instance, main_init_dict, main_config_dict)
+    if daemon_mode == 'background':
 
         # note when calling method in class for 'action' drop '()'
         # 'keep_fds' prevents daemonize of file descriptors, such as logger, otherwise logging stops

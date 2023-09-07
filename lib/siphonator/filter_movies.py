@@ -8,104 +8,106 @@ import lib.siphonator.tools_various as siphonator_tools_various
 
 class FilterMovies(object):
 
-    def __init__(self, logger_instance, **kwargs):
+    def __init__(self, logger_instance, init_dict, result_dict, config_dict):
 
-        self.index_dict = kwargs
+        self.init_dict = init_dict
+        self.result_dict = result_dict
+        self.config_dict = config_dict
         self.logger_instance = logger_instance
         self.tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
 
     def filter_index_movies(self):
 
-        self.index_dict.update({'result': 'failed'})
+        self.result_dict.update({'result': 'failed'})
         # Local/Index filters
         filter_size_result = self.filter_size('minimum')
         if not filter_size_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_size' (minimum)" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed index filter 'filter_size' (minimum)"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_size' (minimum)" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed index filter 'filter_size' (minimum)"})
+            return self.result_dict
 
         filter_size_result = self.filter_size('maximum')
         if not filter_size_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_size' (maximum)" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed index filter 'filter_size' (maximum)"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_size' (maximum)" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed index filter 'filter_size' (maximum)"})
+            return self.result_dict
 
         filter_bad_index_title = self.filter_bad_index_title()
         if not filter_bad_index_title:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_index_title'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed index filter 'filter_bad_index_title'"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_index_title'" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed index filter 'filter_bad_index_title'"})
+            return self.result_dict
 
         filter_bad_index_type = self.filter_bad_index_type()
         if not filter_bad_index_type:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_index_type'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed index filter 'filter_bad_index_type'"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_index_type'" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed index filter 'filter_bad_index_type'"})
+            return self.result_dict
 
         filter_bad_movie_title = self.filter_bad_movie_title()
         if not filter_bad_movie_title:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_movie_title'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed index filter 'filter_bad_movie_title'"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_movie_title'" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed index filter 'filter_bad_movie_title'"})
+            return self.result_dict
 
         # if library file returns false then file exists in library
         filter_downloaded_file_result = self.filter_downloaded_file()
         if not filter_downloaded_file_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_file'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_file'"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_file'" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed index filter 'filter_downloaded_file'"})
+            return self.result_dict
         # if library file looks to be missing then get movie title from directory name and get resolution using ffprobe (if resolution missing from filename)
         else:
             filter_downloaded_dir_result = self.filter_downloaded_dir()
             if not filter_downloaded_dir_result:
-                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.index_dict.get('index_title'))
-                self.index_dict.update({'result_details': u"Failed index filter 'filter_downloaded_dir'"})
-                return self.index_dict
+                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.result_dict.get('index_title'))
+                self.result_dict.update({'result_details': u"Failed index filter 'filter_downloaded_dir'"})
+                return self.result_dict
 
-        self.logger_instance.debug(u"Index title '%s' passed all index filters" % self.index_dict.get('index_title'))
-        self.index_dict.update({'result': 'index passed'})
+        self.logger_instance.debug(u"Index title '%s' passed all index filters" % self.result_dict.get('index_title'))
+        self.result_dict.update({'result': 'index passed'})
 
-        return self.index_dict
+        return self.result_dict
 
     def filter_imdb_movies(self):
 
-        self.index_dict.update({'result': 'failed'})
+        self.result_dict.update({'result': 'failed'})
 
         filter_bad_genre_result = self.filter_bad_genre()
         if not filter_bad_genre_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_genre'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_bad_genre'"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_genre'" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_bad_genre'"})
+            return self.result_dict
 
         filter_bitrate_result = self.filter_bitrate()
         if not filter_bitrate_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bitrate'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_bitrate'"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bitrate'" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_bitrate'"})
+            return self.result_dict
 
         filter_year_result = self.filter_year()
         if not filter_year_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_year'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_year'"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_year'" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_year'"})
+            return self.result_dict
 
         filter_runtime_result = self.filter_runtime()
         if not filter_runtime_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_runtime'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_runtime'"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_runtime'" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_runtime'"})
+            return self.result_dict
 
         filter_good_language_result = self.filter_good_language_country('language')
         if not filter_good_language_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type 'language'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type 'language'"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type 'language'" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type 'language'"})
+            return self.result_dict
 
         filter_good_country_result = self.filter_good_language_country('country')
         if not filter_good_country_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type 'country'" % self.index_dict.get('index_title'))
-            self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type 'country'"})
-            return self.index_dict
+            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type 'country'" % self.result_dict.get('index_title'))
+            self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type 'country'"})
+            return self.result_dict
 
         filter_override_character = self.filter_override_person('character')
 
@@ -125,25 +127,25 @@ class FilterMovies(object):
 
                             filter_rating_result = self.filter_rating()
                             if not filter_rating_result:
-                                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_rating'" % self.index_dict.get('index_title'))
-                                self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_rating'"})
-                                return self.index_dict
+                                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_rating'" % self.result_dict.get('index_title'))
+                                self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_rating'"})
+                                return self.result_dict
 
                             filter_votes_result = self.filter_votes()
                             if not filter_votes_result:
-                                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_votes'" % self.index_dict.get('index_title'))
-                                self.index_dict.update({'result_details': u"Failed IMDb filter 'filter_votes'"})
-                                return self.index_dict
+                                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_votes'" % self.result_dict.get('index_title'))
+                                self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_votes'"})
+                                return self.result_dict
 
-        self.logger_instance.debug(u"Index title '%s' passed all IMDb filters" % self.index_dict.get('index_title'))
-        self.index_dict.update({'result': 'imdb passed'})
+        self.logger_instance.debug(u"Index title '%s' passed all IMDb filters" % self.result_dict.get('index_title'))
+        self.result_dict.update({'result': 'imdb passed'})
 
-        return self.index_dict
+        return self.result_dict
 
     def filter_genre_rating(self):
 
-        imdb_genres_list = self.index_dict.get('imdb_genres_list')
-        filter_genre_minimum_rating_dict = self.index_dict.get('filter_genre_minimum_rating_dict')
+        imdb_genres_list = self.result_dict.get('imdb_genres_list')
+        filter_genre_minimum_rating_dict = self.config_dict['filters']['genre_minimum_rating_dict']
 
         if imdb_genres_list is None:
 
@@ -173,8 +175,8 @@ class FilterMovies(object):
 
     def filter_rating(self):
 
-        imdb_rating = self.index_dict.get('imdb_rating')
-        filter_minimum_rating = self.index_dict.get('filter_minimum_rating')
+        imdb_rating = self.result_dict.get('imdb_rating')
+        filter_minimum_rating = self.config_dict['filters']['minimum_rating']
         filter_genre_minimum_rating = self.filter_genre_rating()
 
         if filter_minimum_rating is None:
@@ -211,8 +213,8 @@ class FilterMovies(object):
 
     def filter_votes(self):
 
-        imdb_votes = self.index_dict.get('imdb_votes')
-        filter_minimum_votes = self.index_dict.get('filter_minimum_votes')
+        imdb_votes = self.result_dict.get('imdb_votes')
+        filter_minimum_votes = self.config_dict['filters']['minimum_votes']
 
         if filter_minimum_votes is None:
 
@@ -240,8 +242,8 @@ class FilterMovies(object):
 
     def filter_size(self, size):
 
-        index_size = self.index_dict.get('index_size')
-        filter_size_mb = self.index_dict.get('filter_%s_size_mb' % size)
+        index_size = self.result_dict.get('index_size')
+        filter_size_mb = self.result_dict.get('filter_%s_size_mb' % size)
 
         if filter_size_mb is None:
 
@@ -281,9 +283,9 @@ class FilterMovies(object):
 
     def filter_bitrate(self):
 
-        index_size = self.index_dict.get('index_size')
-        imdb_runtime_in_minutes = self.index_dict.get('imdb_running_time_in_minutes')
-        filter_minimum_bitrate_mb = self.index_dict.get('filter_minimum_bitrate_mb')
+        index_size = self.result_dict.get('index_size')
+        imdb_runtime_in_minutes = self.result_dict.get('imdb_running_time_in_minutes')
+        filter_minimum_bitrate_mb = self.result_dict.get('filter_minimum_bitrate_mb')
 
         if filter_minimum_bitrate_mb is None:
 
@@ -316,8 +318,8 @@ class FilterMovies(object):
 
     def filter_year(self):
 
-        index_year_compare = self.index_dict.get('index_year_compare')
-        filter_minimum_year = self.index_dict.get('filter_minimum_year')
+        index_year_compare = self.result_dict.get('index_year_compare')
+        filter_minimum_year = self.config_dict['filters']['minimum_year']
 
         if filter_minimum_year is None:
 
@@ -344,8 +346,8 @@ class FilterMovies(object):
 
     def filter_runtime(self):
 
-        imdb_runtime_in_minutes = self.index_dict.get('imdb_running_time_in_minutes')
-        filter_minimum_runtime_mins = self.index_dict.get('filter_minimum_runtime_mins')
+        imdb_runtime_in_minutes = self.result_dict.get('imdb_running_time_in_minutes')
+        filter_minimum_runtime_mins = self.config_dict['filters']['minimum_runtime_mins']
 
         if filter_minimum_runtime_mins is None:
 
@@ -372,12 +374,12 @@ class FilterMovies(object):
 
     def filter_downloaded_file(self):
 
-        filter_library_path_walk = self.index_dict.get('filter_library_path_walk')
-        library_path = self.index_dict.get('library_path')
-        index_title = self.index_dict.get('index_title')
-        index_title_compare = self.index_dict.get('index_title_compare')
-        index_year_compare = self.index_dict.get('index_year_compare')
-        index_site_search = self.index_dict.get('index_site_search')
+        filter_library_path_walk = self.result_dict.get('filter_library_path_walk')
+        library_path = self.config_dict['general']['library_path']
+        index_title = self.result_dict.get('index_title')
+        index_title_compare = self.result_dict.get('index_title_compare')
+        index_year_compare = self.result_dict.get('index_year_compare')
+        index_site_search = self.result_dict.get('index_site_search')
         index_site_search_list = index_site_search.split()
 
         if filter_library_path_walk is None:
@@ -429,8 +431,8 @@ class FilterMovies(object):
 
     def filter_downloaded_file_search_criteria(self, library_filename, library_filepath):
 
-        index_site_search = self.index_dict.get('index_site_search')
-        ffprobe_filepath = self.index_dict.get('ffprobe_filepath')
+        index_site_search = self.result_dict.get('index_site_search')
+        ffprobe_filepath = self.init_dict.get('ffprobe_filepath')
         index_site_search_list = index_site_search.split()
         library_filename_title_full_compare = self.tools_various_instance.custom_title_full_compare(library_filename)
 
@@ -473,11 +475,11 @@ class FilterMovies(object):
         # determine the resolution to see if it matches the search criteria, if it does match ALL the search
         # criteria then return false (movies already downloaded)
 
-        filter_library_path_walk = self.index_dict.get('filter_library_path_walk')
-        library_path = self.index_dict.get('library_path')
-        index_title = self.index_dict.get('index_title')
-        index_title_compare = self.index_dict.get('index_title_compare')
-        index_year_compare = self.index_dict.get('index_year_compare')
+        filter_library_path_walk = self.result_dict.get('filter_library_path_walk')
+        library_path = self.config_dict['general']['library_path']
+        index_title = self.result_dict.get('index_title')
+        index_title_compare = self.result_dict.get('index_title_compare')
+        index_year_compare = self.result_dict.get('index_year_compare')
 
         if filter_library_path_walk is None:
 
@@ -536,8 +538,8 @@ class FilterMovies(object):
 
     def filter_bad_genre(self):
 
-        imdb_genres_list = self.index_dict.get('imdb_genres_list')
-        filter_bad_genre_list = self.index_dict.get('filter_bad_genre_list')
+        imdb_genres_list = self.result_dict.get('imdb_genres_list')
+        filter_bad_genre_list = self.config_dict["filters"]['bad_genre_list']
 
         if filter_bad_genre_list is None:
 
@@ -564,8 +566,8 @@ class FilterMovies(object):
 
     def filter_bad_index_title(self):
 
-        index_title = self.index_dict.get('index_title')
-        filter_bad_title_list = self.index_dict.get('filter_bad_index_title_list')
+        index_title = self.result_dict.get('index_title')
+        filter_bad_title_list = self.config_dict["filters"]['bad_index_title_list']
 
         if filter_bad_title_list is None:
 
@@ -591,8 +593,8 @@ class FilterMovies(object):
 
     def filter_bad_movie_title(self):
 
-        index_title_and_year_compare = self.index_dict.get('index_title_and_year_compare')
-        filter_bad_movie_title_list = self.index_dict.get('filter_bad_movie_title_list')
+        index_title_and_year_compare = self.result_dict.get('index_title_and_year_compare')
+        filter_bad_movie_title_list = self.config_dict["filters"]['bad_movie_title_list']
 
         if filter_bad_movie_title_list is None:
 
@@ -614,7 +616,7 @@ class FilterMovies(object):
 
     def filter_bad_index_type(self):
 
-        index_title = self.index_dict.get('index_title')
+        index_title = self.result_dict.get('index_title')
         index_title_tv_season_episode = self.tools_various_instance.custom_title_tv_season_episode(index_title)
 
         if not index_title_tv_season_episode:
@@ -626,8 +628,8 @@ class FilterMovies(object):
 
     def filter_good_language_country(self, filter_type):
 
-        imdb_list = self.index_dict.get('imdb_%s_list' % filter_type)
-        filter_list = self.index_dict.get('filter_good_%s_list' % filter_type)
+        imdb_list = self.result_dict.get('imdb_%s_list' % filter_type)
+        filter_list = self.config_dict["filters"][f"good_{filter_type}_list"]
 
         if filter_list is None:
 
@@ -654,7 +656,7 @@ class FilterMovies(object):
 
     def filter_preferred_index_group(self, library_filename, index_title):
 
-        filter_preferred_index_group_list = self.index_dict.get('filter_preferred_index_group_list')
+        filter_preferred_index_group_list = self.config_dict["filters"]['preferred_index_group_list']
 
         if filter_preferred_index_group_list is None:
 
@@ -687,7 +689,7 @@ class FilterMovies(object):
 
     def filter_preferred_index_quality(self, library_filename, index_title):
 
-        filter_preferred_index_quality_list = self.index_dict.get('filter_preferred_index_quality_list')
+        filter_preferred_index_quality_list = self.config_dict["filters"]['preferred_index_quality_list']
 
         if not filter_preferred_index_quality_list:
 
@@ -729,8 +731,8 @@ class FilterMovies(object):
 
     def filter_override_person(self, filter_type):
 
-        imdb_list = self.index_dict.get('imdb_credits_%s_list' % filter_type)
-        filter_list = self.index_dict.get('filter_override_%s_list' % filter_type)
+        imdb_list = self.result_dict.get('imdb_credits_%s_list' % filter_type)
+        filter_list = self.config_dict["filters"][f"override_{filter_type}_list"]
 
         if filter_list is None:
 
@@ -757,8 +759,8 @@ class FilterMovies(object):
 
     def filter_override_movie_title(self):
 
-        index_title_and_year_compare = self.index_dict.get('index_title_and_year_compare')
-        filter_override_movie_title_list = self.index_dict.get('filter_override_movie_title_list')
+        index_title_and_year_compare = self.result_dict.get('index_title_and_year_compare')
+        filter_override_movie_title_list = self.config_dict["filters"]['override_movie_title_list']
 
         if filter_override_movie_title_list is None:
 
@@ -783,7 +785,7 @@ class FilterMovies(object):
         self.logger_instance.debug(u"Index title '%s' does NOT match any override movie titles in list" % index_title_and_year_compare)
         return False
 
-    # TODO dev
+    # TODO WIP - multiple filters, fix up or delete!!
     def filter_year_runtime(self, process_dict_key, filter_dict_key):
 
         log_message = 'movie year'
@@ -794,8 +796,8 @@ class FilterMovies(object):
         process_dict_key = 'imdb_running_time_in_minutes'
         filter_dict_key = 'filter_minimum_runtime_mins'
 
-        process_compare = self.index_dict.get(process_dict_key)
-        filter_compare = self.index_dict.get(filter_dict_key)
+        process_compare = self.result_dict.get(process_dict_key)
+        filter_compare = self.result_dict.get(filter_dict_key)
 
         if filter_compare is None:
 
