@@ -76,8 +76,8 @@ class SearchGoogle(object):
 
         if not imdb_id_search:
 
-            self.logger_instance.debug(f"Unable to identify IMDB ID from URL '{imdb_url}'")
-            self.result_dict.update({'result': 'failed', 'result_details': f"Unable to identify IMDB ID from URL '{imdb_url}'"})
+            self.logger_instance.debug(f"IMDb URL '{imdb_url}' from Google search does not contain IMDb ID")
+            self.result_dict.update({'result': 'failed', 'result_details': f"IMDb URL '{imdb_url}' from Google search does not contain IMDb ID"})
             return self.result_dict
 
         imdb_id = imdb_id_search.group()

@@ -1,6 +1,6 @@
 import yaml
-# TODO remove deep_update as we no longer need to merge dicts as saving to config_dict not result_dict
 from pydantic.v1.utils import deep_update
+from pydantic import BaseModel
 
 
 def modify_config(config_filepath, config_modify_dict):
@@ -48,35 +48,44 @@ def read_config(init_dict):
         # convert from yaml to python dict
         config_dict = yaml.safe_load(config_file)
 
-    # TODO work out best way to capture bad keys when calling dict, currently this style 'self.config_dict['notification']['email']['enabled']' will fail wil keyerror is not defined
-    # TODO tidy up reading dict currently nasty mash up of .get and dict['key']
-
     return config_dict
 
 
 def verify_config(logger_instance, init_dict, config_dict):
 
-    # get absolute path to config.yml
-    config_filepath = init_dict['config_filepath']
+    class General(BaseModel):
 
-    # TODO verify options set correctly eg if notification email enabled then ensure we have all options set, see below
-    if config_dict['notification']['email']['enabled']:
+        library_path: str
+        daemon_mode: str
+        schedule_mode: str
+        schedule_time_key: str
+        schedule_time_value: int
+        log_level: str
+        config_version: float
 
-        if not config_dict['notification']['email']['host']:
+        class Config:
 
-            logger_instance.warning(f"E-mail notification enabled but no SMTP host specified in '{config_filepath}', please fix, disabling email notification...")
-            config_modify_dict = {
-                'notification': {
-                    'email': {
-                        'enabled': False,
-                    }
-                }
-            }
+            str_strip_whitespace = True
 
-            # write new config option to config.yaml and then bump config_version
-            modify_config(config_filepath, config_modify_dict)
+    class Filters(BaseModel):
 
-    # check enabled options
-    # check values are sane
-    # fill in missing values with defaults and write to config
-    pass
+        minimum_year: str
+        minimum_runtime_mins: str
+        minimum_rating: str
+        minimum_votes: int
+        minimum_seeders: int
+        genre_minimum_rating_dict: dict
+        good_country_list: list
+        good_language_list: list
+        bad_index_title_list: list
+        bad_movie_title_list: list
+        bad_genre_list: list
+        override_cast_list: list
+        override_writer_list: list
+        override_director_list: list
+        override_movie_title_list: list
+        preferred_index_quality_list: list
+        preferred_index_group_list: list
+        override_character_list: list
+
+    test = [General.model_validate(general_data) for general_data in config_dict]

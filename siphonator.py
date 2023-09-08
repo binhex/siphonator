@@ -213,6 +213,7 @@ if __name__ == '__main__':
     # TODO switch from string subst to f-strings everywhere
     # TODO rework readme, out of date config examples now
     # TODO fix tests to reflect changes in dict
+    # TODO tidy up reading dict currently nasty mash up of .get and dict['key']
 
     # set versioning for app, config, and db
     app_version = '1.0.0'
@@ -306,7 +307,7 @@ if __name__ == '__main__':
     siphonator_config.update_config(main_init_dict, config_file_version)
 
     # verify config.yml is valid
-    siphonator_config.verify_config(logger_create_instance, main_init_dict, main_config_dict)
+    #siphonator_config.verify_config(logger_create_instance, main_init_dict, main_config_dict)
 
     # if daemon cli flag defined
     if args['daemon']:

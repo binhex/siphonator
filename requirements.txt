@@ -23,4 +23,4 @@ qbittorrent-api         # API support to add torrents/magnets to qbittorrent
 Pytest                  # Test framework for Python
 PyYAML                  # Tool used to pretty print YAML/dict for debug
 Unidecode               # Transliterate from Unicode to ASCII
-pydantic                # Data validation e.g. dict merging
+pydantic                # Data validation, used for dict merging and yaml validation
