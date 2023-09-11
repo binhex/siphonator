@@ -20,14 +20,24 @@ def filter_bad_genre(imdb_genres_list):
 
     logger = setup()
 
+    init_dict = {
+        'ffprobe_filepath': '',
+    }
+
     # Arrange
-    test_data = {
+    result_dict = {
         'imdb_genres_list': imdb_genres_list,
-        'filter_bad_genre_list': ['Documentary'],
+    }
+
+    # Arrange
+    config_dict = {
+        'filters': {
+            'bad_genre_list': ['Documentary'],
+        }
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
     response = siphonator_filter_movies_instance.filter_bad_genre()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -39,13 +49,21 @@ def filter_preferred_index_group(filter_preferred_index_group_list, library_file
 
     logger = setup()
 
+    init_dict = {
+        'ffprobe_filepath': '',
+    }
+
+    result_dict = {}
+
     # Arrange
-    test_data = {
-        'filter_preferred_index_group_list': filter_preferred_index_group_list,
+    config_dict = {
+        'filters': {
+            'preferred_index_group_list': filter_preferred_index_group_list,
+        }
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
     response = siphonator_filter_movies_instance.filter_preferred_index_group(library_filename, index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -57,13 +75,21 @@ def filter_preferred_index_quality(filter_preferred_index_quality_list, library_
 
     logger = setup()
 
+    init_dict = {
+        'ffprobe_filepath': '',
+    }
+
+    result_dict = []
+
     # Arrange
-    test_data = {
-        'filter_preferred_index_quality_list': filter_preferred_index_quality_list,
+    config_dict = {
+        'filters': {
+            'preferred_index_quality_list': filter_preferred_index_quality_list,
+        }
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
     response = siphonator_filter_movies_instance.filter_preferred_index_quality(library_filename, index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -75,15 +101,23 @@ def filter_rating(imdb_rating):
 
     logger = setup()
 
-    # Arrange
-    test_data = {
+    init_dict = {
+        'ffprobe_filepath': '',
+    }
+
+    result_dict = {
         'imdb_rating': imdb_rating,
-        'filter_minimum_rating': 6.0,
-        'filter_genre_minimum_rating': None
+    }
+    # Arrange
+    config_dict = {
+        'filters': {
+            'minimum_rating': 6.0,
+            'genre_minimum_rating_dict': None,
+        }
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
     response = siphonator_filter_movies_instance.filter_rating()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -95,14 +129,22 @@ def filter_bad_index_title(index_title, filter_bad_index_title_list):
 
     logger = setup()
 
-    # Arrange
-    test_data = {
+    init_dict = {
+        'ffprobe_filepath': '',
+    }
+
+    result_dict = {
         'index_title': index_title,
-        'filter_bad_index_title_list': filter_bad_index_title_list
+    }
+    # Arrange
+    config_dict = {
+        'filters': {
+            'bad_index_title_list': filter_bad_index_title_list
+        }
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
     response = siphonator_filter_movies_instance.filter_bad_index_title()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -114,14 +156,23 @@ def filter_bad_movie_title(filter_bad_movie_title_list):
 
     logger = setup()
 
-    # Arrange
-    test_data = {
+    init_dict = {
+        'ffprobe_filepath': '',
+    }
+
+    result_dict = {
         'index_title_and_year_compare': 'badmovie2020',
-        'filter_bad_movie_title_list': filter_bad_movie_title_list
+    }
+
+    # Arrange
+    config_dict = {
+        'filters': {
+            'bad_movie_title_list': filter_bad_movie_title_list
+        }
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
     response = siphonator_filter_movies_instance.filter_bad_movie_title()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -133,14 +184,23 @@ def filter_genre_rating(filter_genre_minimum_rating_dict):
 
     logger = setup()
 
-    # Arrange
-    test_data = {
+    init_dict = {
+        'ffprobe_filepath': '',
+    }
+
+    result_dict = {
         'imdb_genres_list': ['sci-fi', 'comedy'],
-        'filter_genre_minimum_rating_dict': filter_genre_minimum_rating_dict
+    }
+
+    # Arrange
+    config_dict = {
+        'filters': {
+            'genre_minimum_rating_dict': filter_genre_minimum_rating_dict
+        }
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
     response = siphonator_filter_movies_instance.filter_genre_rating()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -168,20 +228,30 @@ def filter_downloaded_file(index_title, index_site_search, library_path, filenam
     # walk path to get test directory and filename
     filter_library_path_walk = os.walk(library_path, topdown=False)
 
-    # Arrange
-    test_data = {
-        'library_path': library_path,
-        'filter_library_path_walk': filter_library_path_walk,
+    init_dict = {
+        'ffprobe_filepath': '',
+    }
+
+    result_dict = {
         'index_title': index_title,
         'index_title_compare': index_title_compare,
         'index_year_compare': index_year_compare,
         'index_site_search': index_site_search,
-        'filter_preferred_index_group_list': filter_preferred_index_group_list,
-        'filter_preferred_index_quality_list': filter_preferred_index_quality_list,
+        'filter_library_path_walk': filter_library_path_walk,
+    }
+    # Arrange
+    config_dict = {
+        'general': {
+            'library_path': library_path,
+        },
+        'filters': {
+            'preferred_index_group_list': filter_preferred_index_group_list,
+            'preferred_index_quality_list': filter_preferred_index_quality_list,
+        }
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
     response = siphonator_filter_movies_instance.filter_downloaded_file()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -218,19 +288,27 @@ def filter_downloaded_dir(library_path, src_filename, dst_filename, dst_director
     # walk path to get test directory and filename
     filter_library_path_walk = os.walk(library_path, topdown=False)
 
-    # Arrange
-    test_data = {
-        'library_path': library_path,
+    init_dict = {
         'ffprobe_filepath': ffprobe_filepath,
-        'filter_library_path_walk': filter_library_path_walk,
+    }
+
+    result_dict = {
         'index_title': index_title,
         'index_title_compare': index_title_compare,
         'index_year_compare': index_year_compare,
         'index_site_search': index_site_search,
+        'filter_library_path_walk': filter_library_path_walk,
+    }
+
+    # Arrange
+    config_dict = {
+        'general': {
+            'library_path': library_path,
+        }
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, **test_data)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
     response = siphonator_filter_movies_instance.filter_downloaded_dir()
 
     # yield used instead of return to allow us to do cleanup afterward

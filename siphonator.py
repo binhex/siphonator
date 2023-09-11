@@ -88,7 +88,7 @@ class Siphonator(object):
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(u"Schedule running in '%s' mode every '%s %s', next run at '%s'" % (self.config_dict['general']['schedule_mode'], self.config_dict['general']['schedule_time_value'], self.config_dict['general']['schedule_time_key'], schedule_run_converted))
+        self.logger_instance.info(f"Schedule running in '{self.config_dict['general']['schedule_mode']}' mode every '{self.config_dict['general']['schedule_time_value']} {self.config_dict['general']['schedule_time_key']}', next run at '{schedule_run_converted}'")
 
     def run(self):
 
@@ -185,7 +185,7 @@ class Siphonator(object):
                     'filter_minimum_bitrate_mb': filter_minimum_bitrate_mb
                 })
 
-                self.logger_instance.info(u"Processing index site '%s' for search criteria '%s' in category '%s'..." % (index_site, index_site_search, index_site_category))
+                self.logger_instance.info(f"Processing index site '{index_site}' for search criteria '{index_site_search}' in category '{index_site_category}'...")
                 index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, self.init_dict, result_dict, self.config_dict)
 
                 try:
@@ -203,7 +203,7 @@ class Siphonator(object):
         # TODO put in elapsed time
         current_time = siphonator_tools_various.current_time()
 
-        self.logger_instance.info(u"Processing finished at '%s'" % current_time)
+        self.logger_instance.info(f"Processing finished at '{current_time}'")
         self.schedule_msg()
 
     
@@ -212,7 +212,6 @@ if __name__ == '__main__':
 
     # TODO switch from string subst to f-strings everywhere
     # TODO rework readme, out of date config examples now
-    # TODO fix tests to reflect changes in dict
     # TODO tidy up reading dict currently nasty mash up of .get and dict['key']
 
     # set versioning for app, config, and db
