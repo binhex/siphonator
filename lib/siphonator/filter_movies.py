@@ -22,49 +22,49 @@ class FilterMovies(object):
         # Local/Index filters
         filter_size_result = self.filter_size('minimum')
         if not filter_size_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_size' (minimum)" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_size' (minimum)")
             self.result_dict.update({'result_details': u"Failed index filter 'filter_size' (minimum)"})
             return self.result_dict
 
         filter_size_result = self.filter_size('maximum')
         if not filter_size_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_size' (maximum)" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_size' (maximum)")
             self.result_dict.update({'result_details': u"Failed index filter 'filter_size' (maximum)"})
             return self.result_dict
 
         filter_bad_index_title = self.filter_bad_index_title()
         if not filter_bad_index_title:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_index_title'" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_bad_index_title'")
             self.result_dict.update({'result_details': u"Failed index filter 'filter_bad_index_title'"})
             return self.result_dict
 
         filter_bad_index_type = self.filter_bad_index_type()
         if not filter_bad_index_type:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_index_type'" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_bad_index_type'")
             self.result_dict.update({'result_details': u"Failed index filter 'filter_bad_index_type'"})
             return self.result_dict
 
         filter_bad_movie_title = self.filter_bad_movie_title()
         if not filter_bad_movie_title:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_movie_title'" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_bad_movie_title'")
             self.result_dict.update({'result_details': u"Failed index filter 'filter_bad_movie_title'"})
             return self.result_dict
 
         # if library file returns false then file exists in library
         filter_downloaded_file_result = self.filter_downloaded_file()
         if not filter_downloaded_file_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_file'" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_downloaded_file'")
             self.result_dict.update({'result_details': u"Failed index filter 'filter_downloaded_file'"})
             return self.result_dict
         # if library file looks to be missing then get movie title from directory name and get resolution using ffprobe (if resolution missing from filename)
         else:
             filter_downloaded_dir_result = self.filter_downloaded_dir()
             if not filter_downloaded_dir_result:
-                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_downloaded_dir'" % self.result_dict.get('index_title'))
+                self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_downloaded_dir'")
                 self.result_dict.update({'result_details': u"Failed index filter 'filter_downloaded_dir'"})
                 return self.result_dict
 
-        self.logger_instance.debug(u"Index title '%s' passed all index filters" % self.result_dict.get('index_title'))
+        self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' passed all index filters")
         self.result_dict.update({'result': 'index passed'})
 
         return self.result_dict
@@ -75,37 +75,37 @@ class FilterMovies(object):
 
         filter_bad_genre_result = self.filter_bad_genre()
         if not filter_bad_genre_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bad_genre'" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_bad_genre'")
             self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_bad_genre'"})
             return self.result_dict
 
         filter_bitrate_result = self.filter_bitrate()
         if not filter_bitrate_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_bitrate'" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_bitrate'")
             self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_bitrate'"})
             return self.result_dict
 
         filter_year_result = self.filter_year()
         if not filter_year_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_year'" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_year'")
             self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_year'"})
             return self.result_dict
 
         filter_runtime_result = self.filter_runtime()
         if not filter_runtime_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_runtime'" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_runtime'")
             self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_runtime'"})
             return self.result_dict
 
         filter_good_language_result = self.filter_good_language_country('language')
         if not filter_good_language_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type 'language'" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_good_language_country' for filter type 'language'")
             self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type 'language'"})
             return self.result_dict
 
         filter_good_country_result = self.filter_good_language_country('country')
         if not filter_good_country_result:
-            self.logger_instance.debug(u"Index title '%s' failed filter 'filter_good_language_country' for filter type 'country'" % self.result_dict.get('index_title'))
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_good_language_country' for filter type 'country'")
             self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_good_language_country' for filter type 'country'"})
             return self.result_dict
 
@@ -127,17 +127,17 @@ class FilterMovies(object):
 
                             filter_rating_result = self.filter_rating()
                             if not filter_rating_result:
-                                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_rating'" % self.result_dict.get('index_title'))
+                                self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_rating'")
                                 self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_rating'"})
                                 return self.result_dict
 
                             filter_votes_result = self.filter_votes()
                             if not filter_votes_result:
-                                self.logger_instance.debug(u"Index title '%s' failed filter 'filter_votes'" % self.result_dict.get('index_title'))
+                                self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_votes'")
                                 self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_votes'"})
                                 return self.result_dict
 
-        self.logger_instance.debug(u"Index title '%s' passed all IMDb filters" % self.result_dict.get('index_title'))
+        self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' passed all IMDb filters")
         self.result_dict.update({'result': 'imdb passed'})
 
         return self.result_dict
@@ -170,7 +170,7 @@ class FilterMovies(object):
                 if genre_minimum_rating.lower() == imdb_genre.lower():
 
                     filter_genre_minimum_rating = filter_genre_minimum_rating_dict.get(genre_minimum_rating)
-                    self.logger_instance.debug(u"Genre '%s' matches IMDb genre '%s', setting minimum IMDb rating to '%s'" % (genre_minimum_rating.lower(), imdb_genre.lower(), filter_genre_minimum_rating))
+                    self.logger_instance.debug(f"Genre '{genre_minimum_rating.lower()}' matches IMDb genre '{imdb_genre.lower()}', setting minimum IMDb rating to '{filter_genre_minimum_rating}'")
                     return filter_genre_minimum_rating
 
     def filter_rating(self):
@@ -187,7 +187,7 @@ class FilterMovies(object):
         filter_minimum_rating_dec = Decimal(filter_minimum_rating)
         if filter_minimum_rating_dec > Decimal('10.0'):
 
-            self.logger_instance.debug(u"IMDb rating defined as '%s' is greater than the maximum value of 10.0, assuming above threshold" % filter_minimum_rating)
+            self.logger_instance.debug(f"IMDb rating defined as '{filter_minimum_rating}' is greater than the maximum value of 10.0, assuming above threshold")
             return True
 
         if imdb_rating is None:
@@ -203,12 +203,12 @@ class FilterMovies(object):
         filter_minimum_rating_dec = Decimal(filter_minimum_rating)
         if imdb_rating >= filter_minimum_rating_dec:
 
-            self.logger_instance.info(u"IMDb rating '%s' equal to/above threshold '%s'" % (imdb_rating, filter_minimum_rating))
+            self.logger_instance.info(f"IMDb rating '{imdb_rating}' equal to/above threshold '{filter_minimum_rating}'")
             return True
 
         else:
 
-            self.logger_instance.warning(u"IMDb rating '%s' below threshold '%s'" % (imdb_rating, filter_minimum_rating))
+            self.logger_instance.warning(f"IMDb rating '{imdb_rating}' below threshold '{filter_minimum_rating}'")
             return False
 
     def filter_votes(self):
@@ -232,22 +232,22 @@ class FilterMovies(object):
 
         if imdb_votes_int >= minimum_votes_int:
 
-            self.logger_instance.info(u"IMDb votes '%s' equal to/above threshold '%s'" % (imdb_votes, filter_minimum_votes))
+            self.logger_instance.info(f"IMDb votes '{imdb_votes}' equal to/above threshold '{filter_minimum_votes}'")
             return True
 
         else:
 
-            self.logger_instance.warning(u"IMDb votes '%s' below threshold '%s'" % (imdb_votes, filter_minimum_votes))
+            self.logger_instance.warning(f"IMDb votes '{imdb_votes}' below threshold '{filter_minimum_votes}'")
             return False
 
     def filter_size(self, size):
 
         index_size = self.result_dict.get('index_size')
-        filter_size_mb = self.result_dict.get('filter_%s_size_mb' % size)
+        filter_size_mb = self.result_dict.get(f'filter_{size}_size_mb')
 
         if filter_size_mb is None:
 
-            self.logger_instance.info(u"%s size not defined, skipping maximum size check" % size.capitalize())
+            self.logger_instance.info(f"'{size.capitalize()}' size not defined, skipping maximum size check")
             return True
 
         if index_size is None:
@@ -261,24 +261,24 @@ class FilterMovies(object):
 
             if imdb_size_int_mb >= filter_size_mb:
 
-                self.logger_instance.info(u"Index size '%s' (MB) is within %s size threshold '%s' (MB)" % (imdb_size_int_mb, size, filter_size_mb))
+                self.logger_instance.info(f"Index size '{imdb_size_int_mb}' (MB) is within '{size}' size threshold '{filter_size_mb}' (MB)")
                 return True
 
             else:
 
-                self.logger_instance.info(u"Index size '%s' (MB) not within %s size threshold '%s' (MB)" % (imdb_size_int_mb, size, filter_size_mb))
+                self.logger_instance.info(f"Index size '{imdb_size_int_mb}' (MB) not within '{size}' size threshold '{filter_size_mb}' (MB)")
                 return False
 
         if size == "maximum":
 
             if imdb_size_int_mb <= filter_size_mb:
 
-                self.logger_instance.info(u"Index size '%s' (MB) is within %s size threshold '%s' (MB)" % (imdb_size_int_mb, size, filter_size_mb))
+                self.logger_instance.info(f"Index size '{imdb_size_int_mb}' (MB) is within '{size}' size threshold '{filter_size_mb}' (MB)")
                 return True
 
             else:
 
-                self.logger_instance.info(u"Index size '%s' (MB) not within %s size threshold '%s' (MB)" % (imdb_size_int_mb, size, filter_size_mb))
+                self.logger_instance.info(f"Index size '{imdb_size_int_mb}' (MB) not within '{size}' size threshold '{filter_size_mb}' (MB)")
                 return False
 
     def filter_bitrate(self):
@@ -308,12 +308,12 @@ class FilterMovies(object):
 
         if imdb_bitrate_int_mb >= filter_minimum_bitrate_mb:
 
-            self.logger_instance.info(u"Index bitrate '%s' (MB/min) equal to/above minimum bitrate threshold '%s' (MB/min)" % (imdb_bitrate_int_mb, filter_minimum_bitrate_mb))
+            self.logger_instance.info(f"Index bitrate '{imdb_bitrate_int_mb}' (MB/min) equal to/above minimum bitrate threshold '{filter_minimum_bitrate_mb}' (MB/min)")
             return True
 
         else:
 
-            self.logger_instance.warning(u"Index bitrate '%s' (MB/min) below minimum bitrate threshold '%s' (MB/min)" % (imdb_bitrate_int_mb, filter_minimum_bitrate_mb))
+            self.logger_instance.warning(f"Index bitrate '{imdb_bitrate_int_mb}' (MB/min) below minimum bitrate threshold '{filter_minimum_bitrate_mb}' (MB/min)")
             return False
 
     def filter_year(self):
@@ -336,12 +336,12 @@ class FilterMovies(object):
 
         if index_year_compare_int >= filter_minimum_year_int:
 
-            self.logger_instance.info(u"Movie year '%s' equal to/above minimum year threshold '%s'" % (index_year_compare, filter_minimum_year))
+            self.logger_instance.info(f"Movie year '{index_year_compare}' equal to/above minimum year threshold '{filter_minimum_year}'")
             return True
 
         else:
 
-            self.logger_instance.warning(u"Movie year '%s' below minimum year threshold '%s'" % (index_year_compare, filter_minimum_year))
+            self.logger_instance.warning(f"Movie year '{index_year_compare}' below minimum year threshold '{filter_minimum_year}'")
             return False
 
     def filter_runtime(self):
@@ -364,12 +364,12 @@ class FilterMovies(object):
 
         if imdb_runtime_int_mins >= filter_minimum_runtime_mins_int:
 
-            self.logger_instance.info(u"Movie runtime '%s' (mins) equal to/above minimum runtime threshold '%s' (mins)" % (imdb_runtime_int_mins, filter_minimum_runtime_mins_int))
+            self.logger_instance.info(f"Movie runtime '{imdb_runtime_int_mins}' (mins) equal to/above minimum runtime threshold '{filter_minimum_runtime_mins_int}' (mins)")
             return True
 
         else:
 
-            self.logger_instance.warning(u"Movie runtime '%s' (mins) below minimum runtime threshold '%s' (mins)" % (imdb_runtime_int_mins, filter_minimum_runtime_mins_int))
+            self.logger_instance.warning(f"Movie runtime '{imdb_runtime_int_mins}' (mins) below minimum runtime threshold '{filter_minimum_runtime_mins_int}' (mins)")
             return False
 
     def filter_downloaded_file(self):
@@ -387,8 +387,8 @@ class FilterMovies(object):
             self.logger_instance.warning(u"No library path defined, assuming movie is not present in library")
             return True
 
-        self.logger_instance.debug(u"Index title compare is '%s'" % index_title_compare)
-        self.logger_instance.debug(u"Index year compare is '%s'" % index_year_compare)
+        self.logger_instance.debug(f"Index title compare is '{index_title_compare}'")
+        self.logger_instance.debug(f"Index year compare is '{index_year_compare}'")
 
         for root, dirs, files in filter_library_path_walk:
 
@@ -423,10 +423,10 @@ class FilterMovies(object):
                                 # if preferred index quality is not present in index title or library file already exists with preferred index quality then continue towards false (already downloaded)
                                 if not self.filter_preferred_index_quality(library_filename, index_title):
 
-                                    self.logger_instance.info(u"Index title '%s' already exists in library file '%s', skipping movie" % (index_title, library_filename))
+                                    self.logger_instance.info(f"Index title '{index_title}' already exists in library file '{library_filename}', skipping movie")
                                     return False
 
-        self.logger_instance.debug(u"Index title '%s' not found in library filenames for library path '%s', continue processing..." % (index_title, library_path))
+        self.logger_instance.debug(f"Index title '{index_title}' not found in library filenames for library path '{library_path}', continue processing...")
         return True
 
     def filter_downloaded_file_search_criteria(self, library_filename, library_filepath):
@@ -486,8 +486,8 @@ class FilterMovies(object):
             self.logger_instance.warning(u"No library path defined, assuming movie is not present in library")
             return True
 
-        self.logger_instance.debug(u"Index title compare is '%s'" % index_title_compare)
-        self.logger_instance.debug(u"Index year compare is '%s'" % index_year_compare)
+        self.logger_instance.debug(f"Index title compare is '{index_title_compare}'")
+        self.logger_instance.debug(f"Index year compare is '{index_year_compare}'")
 
         for root, dirs, files in filter_library_path_walk:
 
@@ -530,7 +530,7 @@ class FilterMovies(object):
                                     # if library file contains all search criteria then mark as already in library
                                     if not self.filter_downloaded_file_search_criteria(library_sub_file, library_dirs_abs_filepath):
 
-                                        self.logger_instance.debug(u"Index title '%s' already exists in library directory '%s', skipping movie" % (index_title, library_dirs))
+                                        self.logger_instance.debug(f"Index title '{index_title}' already exists in library directory '{library_dirs}', skipping movie")
                                         return False
 
         self.logger_instance.debug(f"Index title '{index_title}' not found in library directories for library path '{library_path}'")
@@ -558,10 +558,10 @@ class FilterMovies(object):
 
             if filter_bad_genre in imdb_genres_list_lower:
 
-                self.logger_instance.info(u"IMDb genre(s) '%s' match bad genre(s) list '%s', skipping movie" % (imdb_genres_list_lower, filter_bad_genre_list_lower))
+                self.logger_instance.info(f"IMDb genre(s) '{imdb_genres_list_lower}' match bad genre(s) list '{filter_bad_genre_list_lower}', skipping movie")
                 return False
 
-        self.logger_instance.info(u"IMDb genre(s) '%s' does NOT match any of the bad genre(s) '%s'" % (imdb_genres_list_lower, filter_bad_genre_list_lower))
+        self.logger_instance.info(f"IMDb genre(s) '{imdb_genres_list_lower}' does NOT match any of the bad genre(s) '{filter_bad_genre_list_lower}'")
         return True
 
     def filter_bad_index_title(self):
@@ -577,7 +577,7 @@ class FilterMovies(object):
         # get bad index title compare using tools various
         index_title_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(index_title)
 
-        self.logger_instance.debug(u"Index title for bad keyword comparison is '%s'" % index_title_year_to_end_compare)
+        self.logger_instance.debug(f"Index title for bad keyword comparison is '{index_title_year_to_end_compare}'")
 
         for filter_bad_title in filter_bad_title_list:
 
@@ -585,10 +585,10 @@ class FilterMovies(object):
 
             if filter_bad_title_lower_search:
 
-                self.logger_instance.warning(u"Index title '%s' contains bad title keyword '%s', skipping movie" % (index_title_year_to_end_compare, filter_bad_title))
+                self.logger_instance.warning(f"Index title '{index_title_year_to_end_compare}' contains bad title keyword '{filter_bad_title}', skipping movie")
                 return False
 
-        self.logger_instance.info(u"Index title '%s' does NOT contain bad title keyword(s) '%s'" % (index_title_year_to_end_compare, filter_bad_title_list))
+        self.logger_instance.info(f"Index title '{index_title_year_to_end_compare}' does NOT contain bad title keyword(s) '{filter_bad_title_list}'")
         return True
 
     def filter_bad_movie_title(self):
@@ -608,10 +608,10 @@ class FilterMovies(object):
 
             if filter_bad_movie_title_full_compare in index_title_and_year_compare:
 
-                self.logger_instance.warning(u"Index title '%s' contains bad movie title '%s', skipping movie" % (index_title_and_year_compare, filter_bad_movie_title_full_compare))
+                self.logger_instance.warning(f"Index title '{index_title_and_year_compare}' contains bad movie title '{filter_bad_movie_title_full_compare}', skipping movie")
                 return False
 
-        self.logger_instance.info(u"Index title '%s' does NOT match any bad movie titles in list" % index_title_and_year_compare)
+        self.logger_instance.info(f"Index title '{index_title_and_year_compare}' does NOT match any bad movie titles in list")
         return True
 
     def filter_bad_index_type(self):
@@ -621,24 +621,24 @@ class FilterMovies(object):
 
         if not index_title_tv_season_episode:
 
-            self.logger_instance.warning(u"Index title '%s' contains tv season or episode string match for regex, skipping movie" % index_title)
+            self.logger_instance.warning(f"Index title '{index_title}' contains tv season or episode string match for regex, skipping movie")
             return False
 
         return True
 
     def filter_good_language_country(self, filter_type):
 
-        imdb_list = self.result_dict.get('imdb_%s_list' % filter_type)
+        imdb_list = self.result_dict.get(f'imdb_{filter_type}_list')
         filter_list = self.config_dict["filters"][f"good_{filter_type}_list"]
 
         if filter_list is None:
 
-            self.logger_instance.debug(u"Filter for %s not defined, skipping %s checks" % (filter_type, filter_type))
+            self.logger_instance.debug(f"Filter for '{filter_type}' not defined, skipping '{filter_type}' checks")
             return True
 
         if imdb_list is None:
 
-            self.logger_instance.warning(u"IMDb %s not found, assuming %s is OK" % (filter_type, filter_type))
+            self.logger_instance.warning(f"IMDb '{filter_type}' not found, assuming '{filter_type}' is OK")
             return True
 
         imdb_lower_list = [x.lower() for x in imdb_list]
@@ -648,10 +648,10 @@ class FilterMovies(object):
 
             if filter_lower_item in imdb_lower_list:
 
-                self.logger_instance.info(u"IMDb %s list '%s' is in good %s list '%s'" % (filter_type, imdb_lower_list, filter_type, filter_lower_list))
+                self.logger_instance.info(f"IMDb '{filter_type}' list '{imdb_lower_list}' is in good '{filter_type}' list '{filter_lower_list}'")
                 return True
 
-        self.logger_instance.debug(u"IMDb %s list '%s' is not in good %s list '%s'" % (filter_type, imdb_lower_list, filter_type, filter_lower_list))
+        self.logger_instance.debug(f"IMDb '{filter_type}' list '{imdb_lower_list}' is not in good '{filter_type}' list '{filter_lower_list}'")
         return False
 
     def filter_preferred_index_group(self, library_filename, index_title):
@@ -712,13 +712,13 @@ class FilterMovies(object):
 
             if filter_preferred_index_quality_lower_convert_separators_to_spaces_search:
 
-                self.logger_instance.info(u"Index title '%s' does contain preferred quality keyword '%s'" % (index_title, filter_preferred_index_quality))
+                self.logger_instance.info(f"Index title '{index_title}' does contain preferred quality keyword '{filter_preferred_index_quality}'")
 
                 filter_preferred_index_quality_lower_search = re.search(rf'[\s._-]{filter_preferred_index_quality_lower_convert_separators_to_spaces}[\s._-]', library_filename_year_to_end_compare_convert_separators_to_spaces)
 
                 if filter_preferred_index_quality_lower_search:
 
-                    self.logger_instance.info(u"Library filename '%s' contains preferred quality keyword '%s'" % (library_filename, filter_preferred_index_quality))
+                    self.logger_instance.info(f"Library filename '{library_filename}' contains preferred quality keyword '{filter_preferred_index_quality}'")
                     return False
 
                 else:
@@ -726,22 +726,22 @@ class FilterMovies(object):
                     self.logger_instance.info(f"Index title '{index_title}' does include keyword from preferred index quality list '{filter_preferred_index_quality_list}' and library filename '{library_filename}' does not contain keyword from preferred quality list, ignoring existing library file,")
                     return True
 
-        self.logger_instance.info(u"Index title '%s' does not contain any keywords from the preferred quality list '%s'" % (index_title, filter_preferred_index_quality_list))
+        self.logger_instance.info(f"Index title '{index_title}' does not contain any keywords from the preferred quality list '{filter_preferred_index_quality_list}'")
         return False
 
     def filter_override_person(self, filter_type):
 
-        imdb_list = self.result_dict.get('imdb_credits_%s_list' % filter_type)
+        imdb_list = self.result_dict.get(f'imdb_credits_{filter_type}_list' % filter_type)
         filter_list = self.config_dict["filters"][f"override_{filter_type}_list"]
 
         if filter_list is None:
 
-            self.logger_instance.debug(u"Filter for %s not defined, skipping %s checks" % (filter_type, filter_type))
+            self.logger_instance.debug(f"Filter for '{filter_type}' not defined, skipping '{filter_type}' checks")
             return False
 
         if imdb_list is None:
 
-            self.logger_instance.warning(u"IMDb %s not found, assuming %s is OK" % (filter_type, filter_type))
+            self.logger_instance.warning(f"IMDb '{filter_type}' not found, assuming '{filter_type}' is OK")
             return False
 
         imdb_lower_list = [x.lower() for x in imdb_list]
@@ -751,10 +751,10 @@ class FilterMovies(object):
 
             if filter_lower_item in imdb_lower_list:
 
-                self.logger_instance.info(u"IMDb %s list '%s' is in good %s list '%s', skipping votes and rating checks" % (filter_type, imdb_list, filter_type, filter_list))
+                self.logger_instance.info(f"IMDb '{filter_type}' list '{imdb_list}' is in good '{filter_type}' list '{filter_list}', skipping votes and rating checks")
                 return True
 
-        self.logger_instance.debug(u"IMDb %s list '%s' is not in good %s list '%s'" % (filter_type, imdb_list, filter_type, filter_list))
+        self.logger_instance.debug(f"IMDb '{filter_type}' list '{imdb_list}' is not in good '{filter_type}' list '{filter_list}'")
         return False
 
     def filter_override_movie_title(self):
@@ -779,10 +779,10 @@ class FilterMovies(object):
 
             if filter_override_movie_title_compare in index_title_and_year_compare:
 
-                self.logger_instance.info(u"Index title '%s' contains override movie title '%s'" % (index_title_and_year_compare, filter_override_movie_title_compare))
+                self.logger_instance.info(f"Index title '{index_title_and_year_compare}' contains override movie title '{filter_override_movie_title_compare}'")
                 return True
 
-        self.logger_instance.debug(u"Index title '%s' does NOT match any override movie titles in list" % index_title_and_year_compare)
+        self.logger_instance.debug(f"Index title '{index_title_and_year_compare}' does NOT match any override movie titles in list")
         return False
 
     # TODO WIP - multiple filters, fix up or delete!!
@@ -801,12 +801,12 @@ class FilterMovies(object):
 
         if filter_compare is None:
 
-            self.logger_instance.warning(u"No minimum %s defined, assuming above threshold" % log_message)
+            self.logger_instance.warning(f"No minimum '{log_message}' defined, assuming above threshold")
             return True
 
         if process_compare is None:
 
-            self.logger_instance.warning(u"No %s available to filter on, assuming below threshold" % log_message)
+            self.logger_instance.warning(f"No '{log_message}' available to filter on, assuming below threshold")
             return False
 
         process_compare_int = int(process_compare)
@@ -814,10 +814,10 @@ class FilterMovies(object):
 
         if process_compare_int >= filter_compare_int:
 
-            self.logger_instance.info(u"%s '%s' equal to/above minimum threshold '%s'" % (log_message, process_compare, filter_compare))
+            self.logger_instance.info(f"'{log_message}' '{process_compare}' equal to/above minimum threshold '{filter_compare}'")
             return True
 
         else:
 
-            self.logger_instance.warning(u"%s '%s' below minimum threshold '%s'" % (log_message, process_compare, filter_compare))
+            self.logger_instance.warning(f"'{log_message}' '{process_compare}' below minimum threshold '{filter_compare}'")
             return False

@@ -163,7 +163,7 @@ class DbSqlite(object):
 
         # get index title with sqlite wildcard char '%'
         custom_title_sqlite_query = tools_various_instance.custom_title_sqlite(index_title)
-        self.logger_instance.debug(u"Database index title query is '%s'" % custom_title_sqlite_query)
+        self.logger_instance.debug(f"Database index title query is '{custom_title_sqlite_query}'")
 
         # query database, note this maybe subject to sqlite injection as I am dynamically setting table and column
         sqlite_result_generator = db_sqlite_connection.query("SELECT %s FROM %s WHERE %s LIKE ?" % (sqlite_column, sqlite_table, sqlite_column), (custom_title_sqlite_query,))
