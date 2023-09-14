@@ -211,7 +211,6 @@ class Siphonator(object):
 # required to prevent separate process from trying to load parent process
 if __name__ == '__main__':
 
-    # TODO switch from string subst to f-strings everywhere
     # TODO rework readme, out of date config examples now
     # TODO tidy up reading dict currently nasty mash up of .get and dict['key']
 
@@ -312,19 +311,17 @@ if __name__ == '__main__':
     # if daemon cli flag defined
     if args['daemon']:
 
-        if platform.system() == 'Windows':
-
-            # force daemon mode to foreground as windows cannot run daemonized
-            daemon_mode = 'foreground'
-
-        else:
-
-            daemon_mode = 'background'
+        daemon_mode = 'background'
 
     else:
 
         # read daemon mode from config
         daemon_mode = main_config_dict['general']['daemon_mode'].lower()
+
+    if platform.system() == 'Windows':
+
+        # force daemon mode to foreground as windows cannot run daemonized
+        daemon_mode = 'foreground'
 
     # setup scheduler
     schedule_mode = main_config_dict['general']['schedule_mode'].lower()
