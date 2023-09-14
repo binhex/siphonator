@@ -46,7 +46,7 @@ class ToolsVarious(object):
 
         filter_library_path_walk = os.walk(library_path, topdown=False)
 
-        self.logger_instance.debug(u"Filter library path '%s' walked" % library_path)
+        self.logger_instance.debug(f"Filter library path '{library_path}' walked")
         return filter_library_path_walk
 
     def resolution_from_ffprobe(self, library_filepath, ffprobe_filepath):
@@ -82,7 +82,7 @@ class ToolsVarious(object):
             # hard set as video height may not be consistent but width should be
             stream_height = '720'
 
-        self.logger_instance.debug(u"Resolution from ffmpeg for filepath '%s' is '%s'" % (library_filepath, stream_height))
+        self.logger_instance.debug(f"Resolution from ffmpeg for filepath '{library_filepath}' is '{stream_height}'")
         return stream_height
 
     def resolution_from_string(self, custom_title):
@@ -106,8 +106,8 @@ class ToolsVarious(object):
             resolution = None
             resolution_numeric = None
 
-        self.logger_instance.debug(u"Resolution from string '%s' is '%s'" % (custom_title, resolution))
-        self.logger_instance.debug(u"Numeric resolution from string '%s' is '%s'" % (custom_title, resolution_numeric))
+        self.logger_instance.debug(f"Resolution from string '{custom_title}' is '{resolution}'")
+        self.logger_instance.debug(f"Numeric resolution from string '{custom_title}' is '{resolution_numeric}'")
         return resolution, resolution_numeric
 
     def custom_title_sqlite(self, custom_title):
@@ -323,11 +323,11 @@ class ToolsVarious(object):
         index_title = result_dict.get('index_title', None)
         if index_title is None:
 
-            self.logger_instance.warning(u"Index title not found in dictionary '%s'" % result_dict)
+            self.logger_instance.warning(f"Index title not found in dictionary '{result_dict}'")
             result_dict.update({'result': 'failed', 'result_details': 'Index title not found'})
             return result_dict
 
-        self.logger_instance.debug(u"Index title is '%s'" % index_title)
+        self.logger_instance.debug(f"Index title is '{index_title}'")
 
         index_title_full_compare = self.custom_title_full_compare(index_title)
         if index_title_full_compare is None:
@@ -336,7 +336,7 @@ class ToolsVarious(object):
             result_dict.update({'result': 'failed', 'result_details': 'Cannot identify index title compare from index title'})
             return result_dict
 
-        self.logger_instance.info(u"Index title full compare is '%s'" % index_title_full_compare)
+        self.logger_instance.info(f"Index title full compare is '{index_title_full_compare}'")
 
         index_title_compare = self.custom_title_compare(index_title)
         if index_title_compare is None:
@@ -345,43 +345,43 @@ class ToolsVarious(object):
             result_dict.update({'result': 'failed', 'result_details': 'Cannot identify compare title from index title'})
             return result_dict
 
-        self.logger_instance.info(u"Index title compare is '%s'" % index_title_compare)
+        self.logger_instance.info(f"Index title compare is '{index_title_compare}'")
 
         index_title_search = self.custom_title_search(index_title)
         if index_title_search is None:
 
-            self.logger_instance.info(u"Cannot identify search title from index title '%s' using regex '%s'" % (index_title, self.index_title_search_regex))
+            self.logger_instance.info(f"Cannot identify search title from index title '{index_title}' using regex '{self.index_title_search_regex}'")
             result_dict.update({'result': 'failed', 'result_details': 'Cannot identify search title from index title'})
             return result_dict
 
-        self.logger_instance.info(u"Index title search is '%s'" % index_title_search)
+        self.logger_instance.info(f"Index title search is '{index_title_search}'")
 
         index_title_year_to_end_compare = self.custom_title_year_to_end_compare(index_title)
         if index_title_year_to_end_compare is None:
 
-            self.logger_instance.info(u"Cannot identify year to end from index title '%s' using regex '%s'" % (index_title, self.index_title_year_to_end_regex))
+            self.logger_instance.info(f"Cannot identify year to end from index title '{index_title}' using regex '{self.index_title_year_to_end_regex}'")
             result_dict.update({'result': 'failed', 'result_details': 'Cannot identify year to end from index title'})
             return result_dict
 
-        self.logger_instance.info(u"Index year to end is '%s'" % index_title_year_to_end_compare)
+        self.logger_instance.info(f"Index year to end is '{index_title_year_to_end_compare}'")
 
         index_year_compare = self.custom_title_year_compare(index_title)
         if index_year_compare is None:
 
-            self.logger_instance.info(u"Cannot identify year compare from index title '%s' using regex '%s'" % (index_title, self.index_title_year_regex))
+            self.logger_instance.info(f"Cannot identify year compare from index title '{index_title}' using regex '{self.index_title_year_regex}'")
             result_dict.update({'result': 'failed', 'result_details': 'Cannot identify year compare from index title'})
             return result_dict
 
-        self.logger_instance.info(u"Index title year compare is '%s'" % index_year_compare)
+        self.logger_instance.info(f"Index title year compare is '{index_year_compare}'")
 
         index_title_and_year_compare = self.custom_title_and_year_compare(index_title)
         if index_title_and_year_compare is None:
 
-            self.logger_instance.info(u"Cannot identify index title and year compare from index title '%s'" % index_title)
+            self.logger_instance.info(f"Cannot identify index title and year compare from index title '{index_title}'")
             result_dict.update({'result': 'failed', 'result_details': 'Cannot identify index title and year compare from index title'})
             return result_dict
 
-        self.logger_instance.info(u"Index title and year compare is '%s'" % index_title_and_year_compare)
+        self.logger_instance.info(f"Index title and year compare is '{index_title_and_year_compare}'")
 
         result_dict.update({
             'index_title_compare': index_title_compare,

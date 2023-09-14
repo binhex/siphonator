@@ -36,7 +36,7 @@ class TorrentClients(object):
 
             except qbittorrentapi.LoginFailed as e:
 
-                self.logger_instance.warning(u"qBittorrent login failed for username '%s' with error '%s'" % (username, e))
+                self.logger_instance.warning(f"qBittorrent login failed for username '{username}' with error '{e}'")
 
     # TODO search and identify if existing movie already paused/downloading/downloaded
     def qbittorrent_search(self):
@@ -61,15 +61,15 @@ class TorrentClients(object):
         download_url = self.result_dict['magnet_url']
         if download_url is None:
 
-            self.logger_instance.info(u"No magnet link present for index title '%s', trying torrent file..." % self.result_dict['index_title'])
+            self.logger_instance.info(f"No magnet link present for index title '{self.result_dict['index_title']}', trying torrent file...")
 
             download_url = self.result_dict['torrent_url']
             if download_url is None:
 
-                self.logger_instance.info(u"No torrent/magnet present, cannot download index title '%s'" % self.result_dict['index_title'])
+                self.logger_instance.info(f"No torrent/magnet present, cannot download index title '{self.result_dict['index_title']}'")
                 return None
 
-        self.logger_instance.debug(u"Magnet/Torrent link is '%s'" % download_url)
+        self.logger_instance.debug(f"Magnet/Torrent link is '{download_url}'")
 
         # add torrent/magnet to queue
         self.qbt_client.torrents_add(urls=download_url, category=self.category, is_paused=self.add_paused_bool)

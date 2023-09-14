@@ -22,8 +22,8 @@ class SearchTMDB(object):
         index_title_search_encoded = urllib.parse.quote(self.index_title_search)
 
         # generate url to find tmdb id number
-        tmdb_find_id_json_url = "https://api.themoviedb.org/3/search/movie?query=%s&year=%s&api_key=%s" % (index_title_search_encoded, self.index_year_compare, search_tmdb_api_key)
-        self.logger_instance.info(u"Find id URL is %s" % tmdb_find_id_json_url)
+        tmdb_find_id_json_url = f"https://api.themoviedb.org/3/search/movie?query={index_title_search_encoded}&year={self.index_year_compare}&api_key={search_tmdb_api_key}"
+        self.logger_instance.info(f"Find id URL is {tmdb_find_id_json_url}")
 
         # download tmdb json (used for iphone/android)
         return_code, status_code, content = siphonator_tools_downloader.http_client(self.logger_instance, url=tmdb_find_id_json_url, request_type='get')
@@ -47,8 +47,8 @@ class SearchTMDB(object):
         # if resulting tmdb json page is blank then continue
         if tmdb_find_id_json == {}:
 
-            self.logger_instance.info(u"No match for movie title '%s' on TMDb json" % self.index_title_search)
-            self.result_dict.update({'result': 'failed', 'result_details': u"No match for movie title '%s' on TMDb json" % self.index_title_search})
+            self.logger_instance.info(f"No match for movie title '{self.index_title_search}' on TMDb json")
+            self.result_dict.update({'result': 'failed', 'result_details': f"No match for movie title '{self.index_title_search}' on TMDb json"})
             return self.result_dict
 
         for tmdb_find_id in tmdb_find_id_json["results"]:
@@ -64,20 +64,20 @@ class SearchTMDB(object):
 
             if tmdb_title_compare not in self.index_title_compare:
 
-                self.logger_instance.debug(u"TMDb title compare '%s' not in index title compare '%s', attempting comparison of original title..." % (tmdb_title_compare, self.index_title_compare))
+                self.logger_instance.debug(f"TMDb title compare '{tmdb_title_compare}' not in index title compare '{self.index_title_compare}', attempting comparison of original title...")
 
                 if tmdb_original_title_compare not in self.index_title_compare:
 
-                    self.logger_instance.debug(u"TMDb original title compare '%s' not in index title compare '%s'" % (tmdb_title_compare, self.index_title_compare))
+                    self.logger_instance.debug(f"TMDb original title compare '{tmdb_title_compare}' not in index title compare '{self.index_title_compare}'")
                     continue
 
                 else:
 
-                    self.logger_instance.debug(u"TMDb original title compare '%s' matches index title compare '%s'" % (tmdb_title_compare, self.index_title_compare))
+                    self.logger_instance.debug(f"TMDb original title compare '{tmdb_title_compare}' matches index title compare '{self.index_title_compare}'")
 
             else:
 
-                self.logger_instance.debug(u"TMDb title compare '%s' matches index title compare '%s'" % (tmdb_title_compare, self.index_title_compare))
+                self.logger_instance.debug(f"TMDb title compare '{tmdb_title_compare}' matches index title compare '{self.index_title_compare}'")
 
             tmdb_release_date = (tmdb_find_id["release_date"])
             tmdb_release_date_object = datetime.strptime(tmdb_release_date, '%Y-%m-%d')
@@ -85,16 +85,16 @@ class SearchTMDB(object):
 
             if int(tmdb_release_year) != int(self.index_year_compare):
 
-                self.logger_instance.debug(u"TMDb year compare '%s' does not equal index year compare '%s'" % (tmdb_release_year, self.index_year_compare))
+                self.logger_instance.debug(f"TMDb year compare '{tmdb_release_year}' does not equal index year compare '{self.index_year_compare}'")
                 continue
 
-            self.logger_instance.debug(u"TMDb year compare '%s' equals index year compare '%s'" % (tmdb_release_year, self.index_year_compare))
+            self.logger_instance.debug(f"TMDb year compare '{tmdb_release_year}' equals index year compare '{self.index_year_compare}'")
 
             # find tmdb id
             try:
 
                 tmdb_movie_id = tmdb_find_id["id"]
-                self.logger_instance.info(u"TMDb id is %s" % tmdb_movie_id)
+                self.logger_instance.info(f"TMDb id is {tmdb_movie_id}")
 
             except (IndexError, KeyError, TypeError):
 
@@ -103,8 +103,8 @@ class SearchTMDB(object):
                 return self.result_dict
 
             # generate url to find imdb tt number using tmdb id number from previous search
-            tmdb_find_tt_json_url = "https://api.themoviedb.org/3/movie/%s?api_key=%s" % (tmdb_movie_id, search_tmdb_api_key)
-            self.logger_instance.info(u"TMDb find tt URL is %s" % tmdb_find_tt_json_url)
+            tmdb_find_tt_json_url = f"https://api.themoviedb.org/3/movie/{tmdb_movie_id}?api_key={search_tmdb_api_key}"
+            self.logger_instance.info(f"TMDb find tt URL is {tmdb_find_tt_json_url}")
 
             request_type = "get"
 
@@ -128,14 +128,14 @@ class SearchTMDB(object):
                 return self.result_dict
 
             if tmdb_find_tt_json is None or tmdb_find_tt_json == {}:
-                self.logger_instance.info(u"No IMDb ID for movie title %s on TMDb json" % self.index_title_search)
+                self.logger_instance.info(f"No IMDb ID for movie title {self.index_title_search} on TMDb json")
                 self.result_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
                 return self.result_dict
 
             try:
 
                 imdb_id = tmdb_find_tt_json["imdb_id"]
-                self.logger_instance.info(u"IMDb ID from TMDb is '%s'" % imdb_id)
+                self.logger_instance.info(f"IMDb ID from TMDb is '{imdb_id}'")
 
             except (IndexError, KeyError, TypeError):
 
@@ -149,11 +149,11 @@ class SearchTMDB(object):
                 self.result_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
                 return self.result_dict
 
-            self.logger_instance.info(u"IMDb ID URL is 'https://www.imdb.com/title/%s/'" % imdb_id)
+            self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
             self.result_dict.update({'imdb_id': imdb_id})
 
-            self.result_dict.update({'result': 'success', 'result_details': u"Found IMDb ID for movie '%s' using TMDb search" % self.index_title_search})
+            self.result_dict.update({'result': 'success', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using TMDb search"})
             return self.result_dict
 
-        self.result_dict.update({'result': 'failed', 'result_details': u"Failed to identify movie '%s' using TMDb search" % self.index_title_search})
+        self.result_dict.update({'result': 'failed', 'result_details': f"Failed to identify movie '{self.index_title_search}' using TMDb search"})
         return self.result_dict

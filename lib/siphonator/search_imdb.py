@@ -1,9 +1,10 @@
 import imdbpie
 import lib.siphonator.tools_various as siphonator_tools_various
 
+
 class SearchIMDB(object):
 
-    def __init__(self,logger_instance, result_dict, config_dict):
+    def __init__(self, logger_instance, result_dict, config_dict):
 
         self.result_dict = result_dict
         self.config_dict = config_dict
@@ -21,14 +22,14 @@ class SearchIMDB(object):
 
         except (AttributeError, ValueError):
 
-            self.result_dict.update({'result': 'failed', 'result_details': u"Failed to search IMDb for index title compare '%s'" % self.index_title_compare})
+            self.result_dict.update({'result': 'failed', 'result_details': f"Failed to search IMDb for index title compare '{self.index_title_compare}'"})
             return self.result_dict
 
         # if resulting imdb json page is blank then continue
         if imdb_find_id_dict == {}:
 
-            self.logger_instance.info(u"No match for movie title '%s' on IMDb json" % self.index_title_search)
-            self.result_dict.update({'result': 'failed', 'result_details': u"No match for movie title '%s' on IMDb json" % self.index_title_search})
+            self.logger_instance.info(f"No match for movie title '{self.index_title_search}' on IMDb json")
+            self.result_dict.update({'result': 'failed', 'result_details': f"No match for movie title '{self.index_title_search}' on IMDb json"})
             return self.result_dict
 
         for imdb_find_id in imdb_find_id_dict:
@@ -37,7 +38,7 @@ class SearchIMDB(object):
             try:
 
                 imdb_title = imdb_find_id["title"]
-                self.logger_instance.info(u"IMDb title is '%s'" % imdb_title)
+                self.logger_instance.info(f"IMDb title is '{imdb_title}'")
 
             except (IndexError, KeyError, TypeError):
 
@@ -55,16 +56,16 @@ class SearchIMDB(object):
 
             if imdb_title_compare not in self.index_title_compare:
 
-                self.logger_instance.debug(u"IMDb title compare '%s' not in index title compare '%s'" % (imdb_title_compare, self.index_title_compare))
+                self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'")
                 continue
 
-            self.logger_instance.debug(u"IMDb title compare '%s' matches index title compare '%s'" % (imdb_title_compare, self.index_title_compare))
+            self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' matches index title compare '{self.index_title_compare}'")
 
             # find imdb year
             try:
 
                 imdb_year = imdb_find_id["year"]
-                self.logger_instance.info(u"IMDb year is '%s'" % imdb_year)
+                self.logger_instance.info(f"IMDb year is '{imdb_year}'")
 
             except (IndexError, KeyError, TypeError):
 
@@ -78,27 +79,27 @@ class SearchIMDB(object):
 
             if int(imdb_year) != int(self.index_year_compare):
 
-                self.logger_instance.debug(u"IMDb year compare '%s' does not equal index year compare '%s'" % (imdb_year, self.index_year_compare))
+                self.logger_instance.debug(f"IMDb year compare '{imdb_year}' does not equal index year compare '{self.index_year_compare}'")
                 continue
 
-            self.logger_instance.debug(u"IMDb year compare '%s' equals index year compare '%s'" % (imdb_year, self.index_year_compare))
+            self.logger_instance.debug(f"IMDb year compare '{imdb_year}' equals index year compare '{self.index_year_compare}'")
 
             # find imdb id
             try:
 
                 imdb_id = imdb_find_id["imdb_id"]
-                self.logger_instance.info(u"IMDb id is '%s'" % imdb_id)
+                self.logger_instance.info(f"IMDb id is '{imdb_id}'")
 
             except (IndexError, KeyError, TypeError):
 
                 self.logger_instance.info(u"Cannot find IMDb id for movie")
                 continue
 
-            self.logger_instance.info(u"IMDb ID URL is 'https://www.imdb.com/title/%s/'" % imdb_id)
+            self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
             self.result_dict.update({'imdb_id': imdb_id})
 
-            self.result_dict.update({'result': 'success', 'result_details': u"Found IMDb ID for movie '%s' using IMDb search" % self.index_title_search})
+            self.result_dict.update({'result': 'success', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using IMDb search"})
             return self.result_dict
 
-        self.result_dict.update({'result': 'failed', 'result_details': u"Failed to identify movie '%s' using IMDb search" % self.index_title_search})
+        self.result_dict.update({'result': 'failed', 'result_details': f"Failed to identify movie '{self.index_title_search}' using IMDb search"})
         return self.result_dict

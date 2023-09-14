@@ -731,7 +731,7 @@ class FilterMovies(object):
 
     def filter_override_person(self, filter_type):
 
-        imdb_list = self.result_dict.get(f'imdb_credits_{filter_type}_list' % filter_type)
+        imdb_list = self.result_dict.get(f'imdb_credits_{filter_type}_list')
         filter_list = self.config_dict["filters"][f"override_{filter_type}_list"]
 
         if filter_list is None:

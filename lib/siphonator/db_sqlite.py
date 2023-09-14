@@ -141,7 +141,7 @@ class DbSqlite(object):
         db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
 
         # query database, note this maybe subject to sqlite injection as I am dynamically setting table and column
-        sqlite_result_generator = db_sqlite_connection.query("SELECT %s FROM %s WHERE %s LIKE ?" % (sqlite_column, sqlite_table, sqlite_column), ('%'+index_title+'%',))
+        sqlite_result_generator = db_sqlite_connection.query(f"SELECT {sqlite_column} FROM {sqlite_table} WHERE {sqlite_column} LIKE ?", ('%'+index_title+'%',))
 
         for sqlite_result in sqlite_result_generator:
 
@@ -166,7 +166,7 @@ class DbSqlite(object):
         self.logger_instance.debug(f"Database index title query is '{custom_title_sqlite_query}'")
 
         # query database, note this maybe subject to sqlite injection as I am dynamically setting table and column
-        sqlite_result_generator = db_sqlite_connection.query("SELECT %s FROM %s WHERE %s LIKE ?" % (sqlite_column, sqlite_table, sqlite_column), (custom_title_sqlite_query,))
+        sqlite_result_generator = db_sqlite_connection.query(f"SELECT {sqlite_column} FROM {sqlite_table} WHERE {sqlite_column} LIKE ?", (custom_title_sqlite_query,))
 
         for sqlite_result in sqlite_result_generator:
 

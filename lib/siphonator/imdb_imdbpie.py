@@ -17,7 +17,7 @@ def imdb_json_api(logger_instance, result_dict, config_dict):
     genres_list = []
 
     imdb_id = result_dict.get('imdb_id')
-    logger_instance.info(u"Getting title attributes for movie with IMDb ID '%s'..." % imdb_id)
+    logger_instance.info(f"Getting title attributes for movie with IMDb ID '{imdb_id}'...")
 
     try:
         imdb_instance = imdbpie.Imdb()

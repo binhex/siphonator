@@ -5,7 +5,7 @@ import re
 
 class SearchGoogle(object):
 
-    def __init__(self,logger_instance, result_dict, config_dict):
+    def __init__(self, logger_instance, result_dict, config_dict):
 
         self.result_dict = result_dict
         self.config_dict = config_dict
@@ -22,7 +22,7 @@ class SearchGoogle(object):
 
         if not google_find_id_gen:
 
-            self.result_dict.update({'result': 'failed', 'result_details': u"Failed to search Google for index title compare '%s'" % self.index_title_compare})
+            self.result_dict.update({'result': 'failed', 'result_details': f"Failed to search Google for index title compare '{self.index_title_compare}'"})
             return self.result_dict
 
         try:
@@ -32,7 +32,7 @@ class SearchGoogle(object):
 
         except StopIteration:
 
-            self.result_dict.update({'result': 'failed', 'result_details': u"Failed to return results from Google for index title compare '%s'" % self.index_title_compare})
+            self.result_dict.update({'result': 'failed', 'result_details': f"Failed to return results from Google for index title compare '{self.index_title_compare}'"})
             return self.result_dict
 
         imdb_title = google_find_id_dict.title
@@ -41,12 +41,12 @@ class SearchGoogle(object):
         # if title or url is none then return
         if not imdb_title or not imdb_url:
 
-            self.result_dict.update({'result': 'failed', 'result_details': u"Failed to return IMDb title or URL from Google for index title compare '%s'" % self.index_title_compare})
+            self.result_dict.update({'result': 'failed', 'result_details': f"Failed to return IMDb title or URL from Google for index title compare '{self.index_title_compare}'"})
             return self.result_dict
 
         # find imdb title
-        self.logger_instance.info(u"IMDb title is '%s'" % imdb_title)
-        self.logger_instance.info(u"IMDb URL is '%s'" % imdb_url)
+        self.logger_instance.info(f"IMDb title is '{imdb_title}'")
+        self.logger_instance.info(f"IMDb URL is '{imdb_url}'")
 
         # create imdb_title to compare
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
@@ -60,7 +60,7 @@ class SearchGoogle(object):
             self.result_dict.update({'result': 'failed', 'result_details': f"IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'"})
             return self.result_dict
 
-        self.logger_instance.debug(u"IMDb title compare '%s' matches index title compare '%s'" % (imdb_title_compare, self.index_title_compare))
+        self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' matches index title compare '{self.index_title_compare}'")
 
         # check imdb title year matches index title year
         if self.index_year_compare not in imdb_title:
@@ -69,9 +69,9 @@ class SearchGoogle(object):
             self.result_dict.update({'result': 'failed', 'result_details': f"IMDb title '{imdb_title}' does not contain index year compare '{self.index_year_compare}'"})
             return self.result_dict
 
-        self.logger_instance.debug(u"IMDb title '%s' does contain index year compare '%s'" % (imdb_title, self.index_year_compare))
+        self.logger_instance.debug(f"IMDb title '{imdb_title}' does contain index year compare '{self.index_year_compare}'")
 
-        # regex for tt number as we get full url returned from google search
+        # regex for tt number as we get full url returned from Google search
         imdb_id_search = re.search('tt[0-9]+', imdb_url)
 
         if not imdb_id_search:
@@ -85,5 +85,5 @@ class SearchGoogle(object):
         self.logger_instance.debug(f"IMDb URL is '{imdb_url}'")
 
         self.result_dict.update({'imdb_id': imdb_id})
-        self.result_dict.update({'result': 'success', 'result_details': u"Found IMDb ID for movie '%s' using Google search" % self.index_title_search})
+        self.result_dict.update({'result': 'success', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using Google search"})
         return self.result_dict

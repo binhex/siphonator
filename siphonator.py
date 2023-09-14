@@ -23,7 +23,7 @@ root_dir = os.path.dirname(os.path.realpath(__file__))
 # -------------------- siphonator modules -----------------------------
 # this is req to allow import of local modules (pex bug):-
 # https://github.com/pantsbuild/pex/issues/340#issuecomment-358775440
-sys.path.append('%s/' % root_dir)
+sys.path.append(f"{root_dir}/")
 
 import lib.siphonator.index_proxy as siphonator_index_proxy
 import lib.siphonator.tools_logging as siphonator_tools_logging
@@ -170,8 +170,9 @@ class Siphonator(object):
                     self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{self.config_dict['index_site']['ignore_list']}', skipping processing...")
                     continue
 
+                # TODO ned some way of capturing this in config.yml
                 # override category for solidtorrents as it incorrectly uses tv category (5000) for movies
-                if index_site_lower == "solidtorrents":
+                if index_site_lower == "solidtorrents" or index_site_lower == "bitsearch":
 
                     index_site_category = '5000'
 
@@ -224,7 +225,7 @@ if __name__ == '__main__':
     class ArgparseCustom(argparse.ArgumentParser):
 
         def error(self, message):
-            sys.stderr.write('error: %s\n' % message)
+            sys.stderr.write(f"error: {message}\n")
             self.print_help()
             sys.exit(2)
 

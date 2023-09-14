@@ -47,21 +47,20 @@ class NotificationEmail(object):
         else:
             queue_status = 'Unknown'
 
-        content = """
-**Title:** [%s (%s)](https://imdb.com/title/%s) %s from %s users<br/><br/>
-**Plot:** %s<br/><br/>
-**Actors:** %s<br/><br/>
-**Directors:** %s<br/><br/>
-**Genres:** %s<br/><br/>
-**Queue Status:** %s<br/><br/>
-**Release:** [%s](%s)<br/><br/>
-**Size:** %s MB
-        """ % (imdb_title, imdb_year, imdb_id, imdb_rating, imdb_votes, imdb_plot, imdb_actors, imdb_credits_director,
-               imdb_genres, queue_status, index_title, index_details, index_size_mb)
+        content = f"""
+**Title:** [{imdb_title} ({imdb_year})](https://imdb.com/title/{imdb_id}) {imdb_rating} from {imdb_votes} users<br/><br/>
+**Plot:** {imdb_plot}<br/><br/>
+**Actors:** {imdb_actors}<br/><br/>
+**Directors:** {imdb_credits_director}<br/><br/>
+**Genres:** {imdb_genres}<br/><br/>
+**Queue Status:** {queue_status}<br/><br/>
+**Release:** [{index_title}]({index_details})<br/><br/>
+**Size:** {index_size_mb} MB
+        """
 
         nmdmail.send(
             content,
-            subject='Siphonator: %s (%s) - IMDb rating %s - Action Queued' % (imdb_title, imdb_year, imdb_rating),
+            subject=f"Siphonator: {imdb_title} ({imdb_year}) - IMDb rating {imdb_rating} - Action Queued",
             from_email=self.config_dict['notification']['email']['from_address'],
             to_email=self.config_dict['notification']['email']['to_address'],
             smtp=self.smtp

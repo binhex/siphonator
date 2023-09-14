@@ -57,7 +57,7 @@ class IndexProxy(object):
                     read_timeout = self.config_dict['index_proxy']['jackett']['read_timeout']
                 except KeyError:
                     read_timeout = 30.0
-                    self.logger_instance.info(u'No read timeout sent to function, defaulting to %s seconds' % read_timeout)
+                    self.logger_instance.info(f"No read timeout sent to function, defaulting to '{read_timeout}' seconds")
 
                 try:
                     limit = self.config_dict['index_proxy']['jackett']['limit']
@@ -79,7 +79,7 @@ class IndexProxy(object):
             if "index_site" in self.result_dict:
                 index_site = self.result_dict['index_site']
             else:
-                self.logger_instance.warning(u'No index site sent to function, defaulting to \'all\'')
+                self.logger_instance.warning(u"No index site sent to function, defaulting to 'all'")
                 index_site = "all"
 
             if "index_site_search" in self.result_dict:
@@ -103,7 +103,7 @@ class IndexProxy(object):
             return 1
 
         # construct url for api
-        url = "http://%s:%s/api/v2.0/indexers/%s/results/torznab/api?apikey=%s&t=search&cat=%s&q=%s&extended=1&maxage=%s" % (host, port, index_site, api_key, category, search, limit)
+        url = f"http://{host}:{port}/api/v2.0/indexers/{index_site}/results/torznab/api?apikey={api_key}&t=search&cat={category}&q={search}&extended=1&maxage={limit}"
 
         # download torznab results using requests
         return_code, status_code, content = siphonator_tools_downloader.http_client(self.logger_instance, url=url, user_agent=user_agent, request_type="get", read_timeout=read_timeout)
@@ -116,7 +116,7 @@ class IndexProxy(object):
 
         except (ValueError, TypeError, KeyError):
 
-            self.logger_instance.warning(u"Unable to process feed from index site '%s'" % index_site)
+            self.logger_instance.warning(f"Unable to process feed from index site '{index_site}'")
             return 1
 
         # this breaks down the rss feed page into tag sections
@@ -149,30 +149,30 @@ class IndexProxy(object):
 
             except (KeyError, TypeError, IndexError, AttributeError):
 
-                self.logger_instance.warning(u"Unable to identify title from index site '%s'" % index_site)
+                self.logger_instance.warning(f"Unable to identify title from index site '{index_site}'")
                 continue
 
-            self.logger_instance.debug(u"Checking if index title '%s' is already in the sqlite database..." % title)
+            self.logger_instance.debug(f"Checking if index title '{title}' is already in the sqlite database...")
 
             db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
             read_database_simple_bool = db_sqlite_instance.read_database_simple('history', 'index_title', title)
 
             if read_database_simple_bool:
 
-                self.logger_instance.info(u"Index title '%s' found in sqlite database using simple match, skipping movie" % title)
+                self.logger_instance.info(f"Index title '{title}' found in sqlite database using simple match, skipping movie")
                 continue
 
             else:
 
-                self.logger_instance.info(u"Index title '%s' not found in sqlite database using simple match, performing adv sqlite match..." % title)
+                self.logger_instance.info(f"Index title '{title}' not found in sqlite database using simple match, performing adv sqlite match...")
                 read_database_adv_bool = db_sqlite_instance.read_database_adv('history', 'index_title', title)
 
                 if read_database_adv_bool:
 
-                    self.logger_instance.info(u"Index title '%s' found in sqlite database using adv match, skipping movie" % title)
+                    self.logger_instance.info(f"Index title '{title}' found in sqlite database using adv match, skipping movie")
                     continue
 
-            self.logger_instance.debug(u"Index title '%s' not in sqlite database, continuing..." % title)
+            self.logger_instance.debug(f"Index title '{title}' not in sqlite database, continuing...")
 
             try:
 
@@ -184,7 +184,7 @@ class IndexProxy(object):
 
             except (KeyError, TypeError, IndexError, AttributeError):
 
-                self.logger_instance.debug(u"Unable to determine torrent url from index site '%s'" % index_site)
+                self.logger_instance.debug(f"Unable to determine torrent url from index site '{index_site}'")
                 torrent_url = None
 
             try:
@@ -193,7 +193,7 @@ class IndexProxy(object):
 
             except TypeError:
 
-                self.logger_instance.info(u"Unable to process attributes from index site '%s'" % index_site)
+                self.logger_instance.info(f"Unable to process attributes from index site '{index_site}'")
                 continue
 
             seeders = None
@@ -223,7 +223,7 @@ class IndexProxy(object):
 
             if magnet_url is None and torrent_url is None:
 
-                self.logger_instance.info(u"No magnet or torrent url available, skipping processing for index title '%s'..." % title)
+                self.logger_instance.info(f"No magnet or torrent url available, skipping processing for index title '{title}'...")
                 continue
 
             try:
@@ -252,7 +252,7 @@ class IndexProxy(object):
 
                 pubdate = None
 
-            self.logger_instance.debug(u"Saving index details to dict for index title '%s'..." % title)
+            self.logger_instance.debug(f"Saving index details to dict for index title '{title}'...")
             self.result_dict.update({
                 'index_title': title,
                 'torrent_url': torrent_url,

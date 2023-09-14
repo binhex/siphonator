@@ -132,40 +132,40 @@ def http_client(logger_instance, **kwargs):
 
         if status_code == 401:
 
-            logger_instance.warning(u"The status code %s indicates unauthorised access for %s, error is %s" % (status_code, url, content))
+            logger_instance.warning(f"The status code '{status_code}' indicates unauthorised access for '{url}', error is '{content}'")
             raise requests.exceptions.HTTPError(status_code, url, content)
 
         elif status_code == 404:
 
-            logger_instance.warning(u"The status code %s indicates the requested resource could not be found  for %s, error is %s" % (status_code, url, content))
+            logger_instance.warning(f"The status code '{status_code}' indicates the requested resource could not be found  for '{url}', error is '{content}'")
             raise requests.exceptions.HTTPError(status_code, url, content)
 
         elif status_code == 422:
 
-            logger_instance.warning(u"The status code %s indicates a request was well-formed but was unable to be followed due to semantic errors for %s, error is %s" % (status_code, url, content))
+            logger_instance.warning(f"The status code '{status_code}' indicates a request was well-formed but was unable to be followed due to semantic errors for '{url}', error is '{content}'")
             raise requests.exceptions.HTTPError(status_code, url, content)
 
         elif not 200 <= status_code <= 299:
 
-            logger_instance.warning(u"The status code %s indicates an unexpected error for %s, error is %s" % (status_code, url, content))
+            logger_instance.warning(f"The status code '{status_code}' indicates an unexpected error for '{url}', error is '{content}'")
             raise requests.exceptions.HTTPError(status_code, url, content)
 
     except requests.exceptions.ConnectTimeout as content:
 
         # connect timeout occurred
-        logger_instance.warning(u"Connection timeout for URL %s with error %s" % (url, content))
+        logger_instance.warning(f"Connection timeout for URL '{url}' with error '{content}'")
         return 1, status_code, content
 
     except requests.exceptions.ConnectionError as content:
 
         # connection error occurred
-        logger_instance.warning(u"Connection error for URL %s with error %s" % (url, content))
+        logger_instance.warning(f"Connection error for URL '{url}' with error '{content}'")
         return 1, status_code, content
 
     except requests.exceptions.TooManyRedirects as content:
 
         # too many redirects, bad site or circular redirect
-        logger_instance.warning(u"Too many retries for URL %s with error %s" % (url, content))
+        logger_instance.warning(f"Too many retries for URL '{url}' with error '{content}'")
         return 1, status_code, content
 
     except requests.exceptions.HTTPError as content:
@@ -175,18 +175,18 @@ def http_client(logger_instance, **kwargs):
 
     except requests.exceptions.ReadTimeout as content:
         # too many redirects, bad site or circular redirect
-        logger_instance.warning(u"Read timeout for URL %s with error %s" % (url, content))
+        logger_instance.warning(f"Read timeout for URL '{url}' with error '{content}'")
         return 1, status_code, content
 
     except requests.exceptions.RequestException as content:
 
         # catch any other exceptions thrown by requests
-        logger_instance.warning(u"Caught other exceptions for URL %s with error %s" % (url, content))
+        logger_instance.warning(f"Caught other exceptions for URL '{url}' with error '{content}'")
         return 1, status_code, content
 
     else:
 
         if 200 <= status_code <= 299:
 
-            logger_instance.info(u"The status code %s indicates a successful request for %s" % (status_code, url))
+            logger_instance.info(f"The status code '{status_code}' indicates a successful request for '{url}'")
             return 0, status_code, content
