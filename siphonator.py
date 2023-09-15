@@ -155,6 +155,12 @@ class Siphonator(object):
             index_site_lower = index_site.lower()
             index_site_list_dict = (index_sites_configured_dict[index_site])
 
+            # we may want to ignore certain index sites
+            if index_site_lower in self.config_dict['index_site']['ignore_list']:
+
+                self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{self.config_dict['index_site']['ignore_list']}', skipping processing...")
+                continue
+
             # loop over dict containing search criteria
             for index_site_dict in index_site_list_dict:
 
@@ -163,12 +169,6 @@ class Siphonator(object):
                 filter_minimum_size_mb = (index_site_dict['filter_minimum_size_mb'])
                 filter_maximum_size_mb = (index_site_dict['filter_maximum_size_mb'])
                 filter_minimum_bitrate_mb = (index_site_dict['filter_minimum_bitrate_mb'])
-
-                # we may want to ignore certain index sites
-                if index_site_lower in self.config_dict['index_site']['ignore_list']:
-
-                    self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{self.config_dict['index_site']['ignore_list']}', skipping processing...")
-                    continue
 
                 # TODO ned some way of capturing this in config.yml
                 # override category for solidtorrents as it incorrectly uses tv category (5000) for movies
