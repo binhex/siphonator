@@ -147,7 +147,7 @@ class Siphonator(object):
 
             if index_site_configured == 'true':
 
-                index_sites_configured_dict.update({index_site_name: self.config_dict['index_site']['search_dict_list']})
+                index_sites_configured_dict.update({index_site_name: self.config_dict['index_site']['search']})
 
         # loop over top level dict of index sites
         for index_site in index_sites_configured_dict:
@@ -164,23 +164,30 @@ class Siphonator(object):
             # loop over dict containing search criteria
             for index_site_dict in index_site_list_dict:
 
-                index_site_search = (index_site_dict['index_site_search'])
-                index_site_category = (index_site_dict['index_site_category'])
-                filter_minimum_size_mb = (index_site_dict['filter_minimum_size_mb'])
-                filter_maximum_size_mb = (index_site_dict['filter_maximum_size_mb'])
-                filter_minimum_bitrate_mb = (index_site_dict['filter_minimum_bitrate_mb'])
+                index_site_search = (index_site_dict['criteria'])
+                index_site_category = (index_site_dict['category'])
+                filter_minimum_size_mb = (index_site_dict['minimum_size_mb'])
+                filter_maximum_size_mb = (index_site_dict['maximum_size_mb'])
+                filter_minimum_bitrate_mb = (index_site_dict['minimum_bitrate_mb'])
 
-                # TODO ned some way of capturing this in config.yml
-                # override category for solidtorrents as it incorrectly uses tv category (5000) for movies
-                if index_site_lower == "solidtorrents" or index_site_lower == "bitsearch":
+                # get category overrides for specific index sites
+                override_category_list_dict = self.config_dict['index_site']['override']
+                for override_category_dict in override_category_list_dict:
 
-                    index_site_category = '5000'
+                    # if index site is in the override dictionary then proceed
+                    if index_site_lower in override_category_dict:
+
+                        get_index_site_category = override_category_dict.get('category')
+                        if get_index_site_category:
+
+                            index_site_category = get_index_site_category
+                            self.logger_instance.debug(f"Override category found for index site '{index_site_lower}', category set to '{index_site_category}'")
 
                 # update dict with index site specific search criteria
                 result_dict.update({
                     'index_site': index_site,
-                    'index_site_category': index_site_category,
                     'index_site_search': index_site_search,
+                    'index_site_category': index_site_category,
                     'filter_minimum_size_mb': filter_minimum_size_mb,
                     'filter_maximum_size_mb': filter_maximum_size_mb,
                     'filter_minimum_bitrate_mb': filter_minimum_bitrate_mb
@@ -213,6 +220,8 @@ if __name__ == '__main__':
 
     # TODO rework readme, out of date config examples now
     # TODO tidy up reading dict currently nasty mash up of .get and dict['key']
+    # TODO rename filters with override to preferred so we are consistent
+    # TODO rename config.yml genre_minimum_rating_dict to genre_override_dict and allow to override imdb rating AND votes sci-fi should be 6.0, votes should be 4000
 
     # set versioning for app, config, and db
     app_version = '1.0.0'
