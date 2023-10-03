@@ -171,17 +171,16 @@ class Siphonator(object):
                 filter_minimum_bitrate_mb = (index_site_dict['minimum_bitrate_mb'])
 
                 # get category overrides for specific index sites
-                override_category_list_dict = self.config_dict['index_site']['override']
-                for override_category_dict in override_category_list_dict:
+                override_category_dict = self.config_dict.get('index_site', {}).get('override_search', {}).get(index_site_lower, {})
 
-                    # if index site is in the override dictionary then proceed
-                    if index_site_lower in override_category_dict:
+                # if index site is in the override dictionary then proceed
+                if override_category_dict:
 
-                        get_index_site_category = override_category_dict.get('category')
-                        if get_index_site_category:
+                    get_index_site_category = override_category_dict.get('category', {})
+                    if get_index_site_category:
 
-                            index_site_category = get_index_site_category
-                            self.logger_instance.debug(f"Override category found for index site '{index_site_lower}', category set to '{index_site_category}'")
+                        index_site_category = get_index_site_category
+                        self.logger_instance.debug(f"Override category found for index site '{index_site_lower}', category set to '{index_site_category}'")
 
                 # update dict with index site specific search criteria
                 result_dict.update({
@@ -219,7 +218,7 @@ class Siphonator(object):
 if __name__ == '__main__':
 
     # TODO rework readme, out of date config examples now
-    # TODO tidy up reading dict currently nasty mash up of .get and dict['key']
+    # TODO tidy up reading dict currently nasty mash up of .get and dict['key']  - use .get with default of empty dict then do if <var>
     # TODO rename filters with override to preferred so we are consistent
     # TODO rename config.yml genre_minimum_rating_dict to genre_override_dict and allow to override imdb rating AND votes sci-fi should be 6.0, votes should be 4000
 

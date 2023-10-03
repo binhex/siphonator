@@ -21,6 +21,7 @@ class FilterMovies(object):
         self.result_dict.update({'result': 'failed'})
         # Local/Index filters
         filter_size_result = self.filter_size('minimum')
+        # TODO can we move the following if blocks into each method?
         if not filter_size_result:
             self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_size' (minimum)")
             self.result_dict.update({'result_details': u"Failed index filter 'filter_size' (minimum)"})
@@ -125,6 +126,9 @@ class FilterMovies(object):
 
                         if not filter_override_movie_title:
 
+                            # if genre matches override genre then update self.config_dict with override values for votes/rating
+                            self.config_dict = self.filter_override_genre()
+
                             filter_rating_result = self.filter_rating()
                             if not filter_rating_result:
                                 self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_rating'")
@@ -142,42 +146,40 @@ class FilterMovies(object):
 
         return self.result_dict
 
-    def filter_genre_rating(self):
+    def filter_override_genre(self):
 
-        imdb_genres_list = self.result_dict.get('imdb_genres_list')
-        filter_genre_minimum_rating_dict = self.config_dict['filters']['genre_minimum_rating_dict']
+        imdb_genres_list = self.result_dict.get('imdb_genres_list', [])
 
-        if imdb_genres_list is None:
+        if not imdb_genres_list:
 
             self.logger_instance.debug(u"IMDb genre not found, skipping filter genre rating")
             return None
 
-        if filter_genre_minimum_rating_dict is None:
+        # loop over imdb genre list
+        for imdb_genre in imdb_genres_list:
 
-            self.logger_instance.debug(u"No genre minimum rating defined, skipping filter genre rating")
-            return None
+            filter_override_genre_dict = self.config_dict.get('filters', {}).get('override_genre', {}).get(imdb_genre.lower(), {})
 
-        # sort by rating, lowest rating first
-        filter_genre_minimum_rating_sorted = sorted(filter_genre_minimum_rating_dict.items(), key=lambda x: x[1])
-        filter_genre_minimum_rating_sorted_dict = dict(filter_genre_minimum_rating_sorted)
+            if filter_override_genre_dict:
 
-        # loop over user defined dictionary of genre minimum ratings
-        for genre_minimum_rating in filter_genre_minimum_rating_sorted_dict.keys():
+                filter_override_minimum_rating = filter_override_genre_dict.get('minimum_rating', {})
+                if filter_override_minimum_rating:
 
-            # loop over imdb genre list
-            for imdb_genre in imdb_genres_list:
+                    self.logger_instance.debug(f"Override genre '{imdb_genre.lower()}' found, setting minimum IMDb rating to '{filter_override_minimum_rating}'")
+                    self.config_dict['filters']['minimum_rating'] = filter_override_minimum_rating
 
-                if genre_minimum_rating.lower() == imdb_genre.lower():
+                filter_override_minimum_votes = filter_override_genre_dict.get('minimum_votes', {})
+                if filter_override_minimum_votes:
 
-                    filter_genre_minimum_rating = filter_genre_minimum_rating_dict.get(genre_minimum_rating)
-                    self.logger_instance.debug(f"Genre '{genre_minimum_rating.lower()}' matches IMDb genre '{imdb_genre.lower()}', setting minimum IMDb rating to '{filter_genre_minimum_rating}'")
-                    return filter_genre_minimum_rating
+                    self.logger_instance.debug(f"Override genre '{imdb_genre.lower()}' found, setting minimum IMDb votes to '{filter_override_minimum_votes}'")
+                    self.config_dict['filters']['minimum_votes'] = filter_override_minimum_votes
+
+        return self.config_dict
 
     def filter_rating(self):
 
         imdb_rating = self.result_dict.get('imdb_rating')
         filter_minimum_rating = self.config_dict['filters']['minimum_rating']
-        filter_genre_minimum_rating = self.filter_genre_rating()
 
         if filter_minimum_rating is None:
 
@@ -194,11 +196,6 @@ class FilterMovies(object):
 
             self.logger_instance.debug(u"No IMDb rating available to filter on, assuming below threshold")
             return False
-
-        # if override rating for genre found then specify as minimum rating
-        if filter_genre_minimum_rating is not None:
-
-            filter_minimum_rating = filter_genre_minimum_rating
 
         filter_minimum_rating_dec = Decimal(filter_minimum_rating)
         if imdb_rating >= filter_minimum_rating_dec:
@@ -784,40 +781,3 @@ class FilterMovies(object):
 
         self.logger_instance.debug(f"Index title '{index_title_and_year_compare}' does NOT match any override movie titles in list")
         return False
-
-    # TODO WIP - multiple filters, fix up or delete!!
-    def filter_year_runtime(self, process_dict_key, filter_dict_key):
-
-        log_message = 'movie year'
-        process_dict_key = 'index_year_compare'
-        filter_dict_key = 'filter_minimum_year'
-
-        log_message = 'movie runtime'
-        process_dict_key = 'imdb_running_time_in_minutes'
-        filter_dict_key = 'filter_minimum_runtime_mins'
-
-        process_compare = self.result_dict.get(process_dict_key)
-        filter_compare = self.result_dict.get(filter_dict_key)
-
-        if filter_compare is None:
-
-            self.logger_instance.warning(f"No minimum '{log_message}' defined, assuming above threshold")
-            return True
-
-        if process_compare is None:
-
-            self.logger_instance.warning(f"No '{log_message}' available to filter on, assuming below threshold")
-            return False
-
-        process_compare_int = int(process_compare)
-        filter_compare_int = int(filter_compare)
-
-        if process_compare_int >= filter_compare_int:
-
-            self.logger_instance.info(f"'{log_message}' '{process_compare}' equal to/above minimum threshold '{filter_compare}'")
-            return True
-
-        else:
-
-            self.logger_instance.warning(f"'{log_message}' '{process_compare}' below minimum threshold '{filter_compare}'")
-            return False

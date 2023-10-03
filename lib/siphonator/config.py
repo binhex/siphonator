@@ -1,5 +1,4 @@
 import yaml
-from pydantic.v1.utils import deep_update
 from pydantic import BaseModel
 
 
@@ -11,7 +10,7 @@ def modify_config(config_filepath, config_modify_dict):
         config_data = yaml.safe_load(config_file)
 
         # using pydantic to merge dicts without overwriting existing keys
-        config_data = deep_update(config_data, config_modify_dict)
+        #config_data = deep_update(config_data, config_modify_dict)
 
     # write modified data back to the config file
     with open(config_filepath, "w") as config_file:
@@ -88,4 +87,3 @@ def verify_config(logger_instance, init_dict, config_dict):
         preferred_index_group_list: list
         override_character_list: list
 
-    test = [General.model_validate(general_data) for general_data in config_dict]

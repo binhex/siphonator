@@ -180,7 +180,7 @@ def filter_bad_movie_title(filter_bad_movie_title_list):
 
 
 @pytest.fixture
-def filter_genre_rating(filter_genre_minimum_rating_dict):
+def filter_override_genre(imdb_genres_list, override_genre, override_genre_minimum_rating, override_genre_minimum_votes):
 
     logger = setup()
 
@@ -189,19 +189,26 @@ def filter_genre_rating(filter_genre_minimum_rating_dict):
     }
 
     result_dict = {
-        'imdb_genres_list': ['sci-fi', 'comedy'],
+        'imdb_genres_list': imdb_genres_list,
     }
 
     # Arrange
     config_dict = {
         'filters': {
-            'genre_minimum_rating_dict': filter_genre_minimum_rating_dict
+            'minimum_rating': 7.0,
+            'minimum_votes': 5000,
+            'override_genre': {
+                override_genre: {
+                    'minimum_rating': override_genre_minimum_rating,
+                    'minimum_votes': override_genre_minimum_votes,
+                }
+            }
         }
     }
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
-    response = siphonator_filter_movies_instance.filter_genre_rating()
+    response = siphonator_filter_movies_instance.filter_override_genre()
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -366,14 +373,14 @@ def test_filter_bad_movie_title(filter_bad_movie_title, filter_bad_movie_title_l
     assert response == exp_assert
 
 
-@pytest.mark.parametrize('filter_genre_minimum_rating_dict, exp_assert', [
-    (({'sci-fi': 6.5, 'comedy': 8.5}), 6.5),    # genres both match, set to the lowest rating value
-    (({'sci-fi': 8.5, 'music': 6.5}), 8.5),     # single genre matches
-    (({'music': 8.5, 'romance': 6.5}), None),   # neither genre match
+@pytest.mark.parametrize('imdb_genres_list, override_genre, override_genre_minimum_rating, override_genre_minimum_votes, exp_assert', [
+    (['sci-fi'], 'sci-fi', 6.5, 4000, {'filters': {'minimum_rating': 6.5, 'minimum_votes': 4000, 'override_genre': {'sci-fi': {'minimum_rating': 6.5, 'minimum_votes': 4000}}}}),               # imdb genre matches override genre, return override rating and votes
+    (['sci-fi', 'animation'], 'sci-fi', 6.5, 4000, {'filters': {'minimum_rating': 6.5, 'minimum_votes': 4000, 'override_genre': {'sci-fi': {'minimum_rating': 6.5, 'minimum_votes': 4000}}}}),  # imdb genre matches override genre, return override rating and votes
+    (['music'], 'sci-fi', 6.5, 4000, {'filters': {'minimum_rating': 7.0, 'minimum_votes': 5000, 'override_genre': {'sci-fi': {'minimum_rating': 6.5, 'minimum_votes': 4000}}}}),                # imdb genre does not match override genre, return default rating and votes
 ])
-def test_filter_genre_rating(filter_genre_rating, filter_genre_minimum_rating_dict, exp_assert):
+def test_filter_override_genre(filter_override_genre, imdb_genres_list, override_genre, override_genre_minimum_rating, override_genre_minimum_votes, exp_assert):
 
-    response = filter_genre_rating
+    response = filter_override_genre
 
     # Assert
     assert response == exp_assert
