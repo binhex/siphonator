@@ -14,7 +14,7 @@ import lib.siphonator.config as siphonator_config
 python_version = sys.version_info
 if python_version < (3, 10, 0):
 
-    sys.stderr.write(f"WARNING - You need Python 3.10.x or later installed to run Siphonator, your running version '{python_version,}'")
+    sys.stderr.write(f"WARNING - You need Python 3.10.x or later installed to run Siphonator, your running version '{python_version, }'")
     sys.exit(1)
 
 # define path to siphonator root path - required for linux
@@ -126,7 +126,7 @@ class Siphonator(object):
 
             # ensure jackett is operational by checking for status code 200
             if index_sites_status_code != 200:
-                self.logger_instance.warning(f"Unable to access index site '{self.config_dict['index_proxy']['selected']}', retrying in {self.config_dict['general']['schedule_time_key']} minutes")
+                self.logger_instance.warning(f"Unable to access index site '{self.config_dict['index_proxy']['selected']}', retrying in {self.config_dict['general']['schedule_time_value']} minutes")
                 return index_sites_status_code
 
             # parse xml from jackett
@@ -314,7 +314,7 @@ if __name__ == '__main__':
     siphonator_config.update_config(main_init_dict, config_file_version)
 
     # verify config.yml is valid
-    #siphonator_config.verify_config(logger_create_instance, main_init_dict, main_config_dict)
+    # siphonator_config.verify_config(logger_create_instance, main_init_dict, main_config_dict)
 
     # if daemon cli flag defined
     if args['daemon']:

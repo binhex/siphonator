@@ -115,10 +115,11 @@ def filter_rating(imdb_rating):
             'genre_minimum_rating_dict': None,
         }
     }
+    override_genre_dict = {}
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
-    response = siphonator_filter_movies_instance.filter_rating()
+    response = siphonator_filter_movies_instance.filter_rating(override_genre_dict)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -374,9 +375,11 @@ def test_filter_bad_movie_title(filter_bad_movie_title, filter_bad_movie_title_l
 
 
 @pytest.mark.parametrize('imdb_genres_list, override_genre, override_genre_minimum_rating, override_genre_minimum_votes, exp_assert', [
-    (['sci-fi'], 'sci-fi', 6.5, 4000, {'filters': {'minimum_rating': 6.5, 'minimum_votes': 4000, 'override_genre': {'sci-fi': {'minimum_rating': 6.5, 'minimum_votes': 4000}}}}),               # imdb genre matches override genre, return override rating and votes
-    (['sci-fi', 'animation'], 'sci-fi', 6.5, 4000, {'filters': {'minimum_rating': 6.5, 'minimum_votes': 4000, 'override_genre': {'sci-fi': {'minimum_rating': 6.5, 'minimum_votes': 4000}}}}),  # imdb genre matches override genre, return override rating and votes
-    (['music'], 'sci-fi', 6.5, 4000, {'filters': {'minimum_rating': 7.0, 'minimum_votes': 5000, 'override_genre': {'sci-fi': {'minimum_rating': 6.5, 'minimum_votes': 4000}}}}),                # imdb genre does not match override genre, return default rating and votes
+    (['sci-fi'], 'sci-fi', 6.5, 4000, {'minimum_rating': 6.5, 'minimum_votes': 4000}),               # imdb genre matches override genre, return override rating and votes
+    (['sci-fi', 'animation'], 'sci-fi', 6.5, 4000, {'minimum_rating': 6.5, 'minimum_votes': 4000}),  # imdb genre matches override genre, return override rating and votes
+    (['sci-fi', 'animation'], 'sci-fi', 6.5, None, {'minimum_rating': 6.5}),                         # imdb genre matches override genre, return override rating
+    (['sci-fi', 'animation'], 'sci-fi', None, 4000, {'minimum_votes': 4000}),                        # imdb genre matches override genre, return override votes
+    (['music'], 'sci-fi', 6.5, 4000, {}),                                                            # imdb genre does not match override genre, return default rating and votes
 ])
 def test_filter_override_genre(filter_override_genre, imdb_genres_list, override_genre, override_genre_minimum_rating, override_genre_minimum_votes, exp_assert):
 

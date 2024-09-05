@@ -18,10 +18,16 @@ class FilterMovies(object):
 
     def filter_index_movies(self):
 
-        self.result_dict.update({'result': 'failed'})
-        # Local/Index filters
-        filter_size_result = self.filter_size('minimum')
         # TODO can we move the following if blocks into each method?
+        self.result_dict.update({'result': 'failed'})
+
+        filter_index_title_search_check = self.filter_index_title_search_check()
+        if not filter_index_title_search_check:
+            self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_index_title_search_check'")
+            self.result_dict.update({'result_details': u"Failed index filter 'filter_index_title_search_check'"})
+            return self.result_dict
+
+        filter_size_result = self.filter_size('minimum')
         if not filter_size_result:
             self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_size' (minimum)")
             self.result_dict.update({'result_details': u"Failed index filter 'filter_size' (minimum)"})
@@ -126,16 +132,17 @@ class FilterMovies(object):
 
                         if not filter_override_movie_title:
 
-                            # if genre matches override genre then update self.config_dict with override values for votes/rating
-                            self.config_dict = self.filter_override_genre()
+                            override_genre_dict = self.filter_override_genre()
 
-                            filter_rating_result = self.filter_rating()
+                            filter_rating_result = self.filter_rating(override_genre_dict)
+
                             if not filter_rating_result:
                                 self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_rating'")
                                 self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_rating'"})
                                 return self.result_dict
 
-                            filter_votes_result = self.filter_votes()
+                            filter_votes_result = self.filter_votes(override_genre_dict)
+
                             if not filter_votes_result:
                                 self.logger_instance.debug(f"Index title '{self.result_dict.get('index_title')}' failed filter 'filter_votes'")
                                 self.result_dict.update({'result_details': u"Failed IMDb filter 'filter_votes'"})
@@ -155,6 +162,8 @@ class FilterMovies(object):
             self.logger_instance.debug(u"IMDb genre not found, skipping filter genre rating")
             return None
 
+        override_genre_dict = {}
+
         # loop over imdb genre list
         for imdb_genre in imdb_genres_list:
 
@@ -166,17 +175,17 @@ class FilterMovies(object):
                 if filter_override_minimum_rating:
 
                     self.logger_instance.debug(f"Override genre '{imdb_genre.lower()}' found, setting minimum IMDb rating to '{filter_override_minimum_rating}'")
-                    self.config_dict['filters']['minimum_rating'] = filter_override_minimum_rating
+                    override_genre_dict['minimum_rating'] = filter_override_minimum_rating
 
                 filter_override_minimum_votes = filter_override_genre_dict.get('minimum_votes', {})
                 if filter_override_minimum_votes:
 
                     self.logger_instance.debug(f"Override genre '{imdb_genre.lower()}' found, setting minimum IMDb votes to '{filter_override_minimum_votes}'")
-                    self.config_dict['filters']['minimum_votes'] = filter_override_minimum_votes
+                    override_genre_dict['minimum_votes'] = filter_override_minimum_votes
 
-        return self.config_dict
+        return override_genre_dict
 
-    def filter_rating(self):
+    def filter_rating(self, override_genre_dict):
 
         imdb_rating = self.result_dict.get('imdb_rating')
         filter_minimum_rating = self.config_dict['filters']['minimum_rating']
@@ -186,16 +195,24 @@ class FilterMovies(object):
             self.logger_instance.debug(u"No IMDb minimum rating defined, assuming above threshold")
             return True
 
+        if imdb_rating is None:
+
+            self.logger_instance.debug(u"No IMDb rating available to filter on, assuming below threshold")
+            return False
+
+        # if override genre dict is not empty then proceed
+        if override_genre_dict:
+
+            # if minimum_rating defined in override dict then use
+            if override_genre_dict.get('minimum_rating', {}):
+
+                filter_minimum_rating = override_genre_dict.get('minimum_rating', {})
+
         filter_minimum_rating_dec = Decimal(filter_minimum_rating)
         if filter_minimum_rating_dec > Decimal('10.0'):
 
             self.logger_instance.debug(f"IMDb rating defined as '{filter_minimum_rating}' is greater than the maximum value of 10.0, assuming above threshold")
             return True
-
-        if imdb_rating is None:
-
-            self.logger_instance.debug(u"No IMDb rating available to filter on, assuming below threshold")
-            return False
 
         filter_minimum_rating_dec = Decimal(filter_minimum_rating)
         if imdb_rating >= filter_minimum_rating_dec:
@@ -208,7 +225,7 @@ class FilterMovies(object):
             self.logger_instance.warning(f"IMDb rating '{imdb_rating}' below threshold '{filter_minimum_rating}'")
             return False
 
-    def filter_votes(self):
+    def filter_votes(self, override_genre_dict):
 
         imdb_votes = self.result_dict.get('imdb_votes')
         filter_minimum_votes = self.config_dict['filters']['minimum_votes']
@@ -222,6 +239,14 @@ class FilterMovies(object):
 
             self.logger_instance.warning(u"No IMDb votes available to filter on, assuming below threshold")
             return False
+
+        # if override genre dict is not empty then proceed
+        if override_genre_dict:
+
+            # if minimum_votes defined in override dict then use
+            if override_genre_dict.get('minimum_votes', {}):
+
+                filter_minimum_votes = override_genre_dict.get('minimum_votes', {})
 
         imdb_votes_int = int(imdb_votes)
 
@@ -522,7 +547,7 @@ class FilterMovies(object):
                                 if library_sub_file.lower().endswith(('.mkv', '.mp4', '.avi')):
 
                                     # get full path to filename
-                                    library_dirs_abs_filepath = os.path.join(library_dirs_abs_path, library_sub_file)
+                                    library_dirs_abs_filepath = os.path.join(str(library_dirs_abs_path), str(library_sub_file))
 
                                     # if library file contains all search criteria then mark as already in library
                                     if not self.filter_downloaded_file_search_criteria(library_sub_file, library_dirs_abs_filepath):
@@ -781,3 +806,23 @@ class FilterMovies(object):
 
         self.logger_instance.debug(f"Index title '{index_title_and_year_compare}' does NOT match any override movie titles in list")
         return False
+
+    def filter_index_title_search_check(self):
+
+        index_title = self.result_dict.get('index_title')
+        index_title_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(index_title)
+        index_title_year_to_end_search_compare = self.tools_various_instance.custom_title_word_match_compare(index_title_year_to_end_compare)
+        index_site_search_result_dict = self.result_dict.get('index_site_search')
+        index_site_search_list = index_site_search_result_dict.split()
+
+        self.logger_instance.debug(f"Index title search criteria check is '{index_title_year_to_end_compare}'")
+
+        for index_site_search in index_site_search_list:
+
+            if index_site_search not in index_title_year_to_end_search_compare:
+
+                self.logger_instance.warning(f"Index title '{index_title_year_to_end_compare}' does not contain search criteria keyword '{index_site_search}', skipping movie")
+                return False
+
+        self.logger_instance.info(f"Index title '{index_title_year_to_end_compare}' does contain all search criteria keyword(s) '{index_site_search_result_dict}'")
+        return True

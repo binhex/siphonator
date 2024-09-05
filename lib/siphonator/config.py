@@ -1,21 +1,7 @@
 import yaml
 from pydantic import BaseModel
 
-
-def modify_config(config_filepath, config_modify_dict):
-
-    # read in existing config data
-    with open(config_filepath, "r") as config_file:
-        # convert from yaml to python dict
-        config_data = yaml.safe_load(config_file)
-
-        # using pydantic to merge dicts without overwriting existing keys
-        #config_data = deep_update(config_data, config_modify_dict)
-
-    # write modified data back to the config file
-    with open(config_filepath, "w") as config_file:
-        # convert from python dict to yaml
-        yaml.safe_dump(config_data, config_file, sort_keys=False)
+# TODO rework, read config.yml to dict, then write back to yaml if file not exist
 
 
 def update_config(init_dict, config_file_version):
@@ -34,9 +20,10 @@ def update_config(init_dict, config_file_version):
             }
 
             # write new config option to config.yaml and then bump config_version
-            modify_config(config_filepath, config_modify_dict)
+            #modify_config(config_filepath, config_modify_dict)
 
 
+# read in init_dict as arg, get location of config.yml and return as dict
 def read_config(init_dict):
 
     # get absolute path to config.yml
@@ -48,6 +35,18 @@ def read_config(init_dict):
         config_dict = yaml.safe_load(config_file)
 
     return config_dict
+
+
+# read in config_dict as arg, then write back to config.yml
+def write_config(init_dict, config_dict):
+
+    # get absolute path to config.yml
+    config_filepath = init_dict['config_filepath']
+
+    # write modified data back to the config file
+    with open(config_filepath, "w") as config_file:
+        # convert from python dict to yaml
+        yaml.safe_dump(config_dict, config_file, sort_keys=False)
 
 
 def verify_config(logger_instance, init_dict, config_dict):

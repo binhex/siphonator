@@ -176,6 +176,7 @@ class ToolsVarious(object):
         custom_title_strip = re.sub(self.index_title_remove_website_regex, '', custom_title).lower()
         custom_title_strip = re.sub(self.index_title_remove_square_brackets_and_content_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_separators_regex, '', custom_title_strip).lower()
+        custom_title_strip = re.sub(self.index_title_remove_non_ascii_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_bad_words_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_invalid_windows_filename_chars_regex, '', custom_title_strip).lower()
         return custom_title_strip
