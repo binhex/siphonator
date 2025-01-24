@@ -495,11 +495,11 @@ class FilterMovies(object):
                 library_filename_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(library_filename)
                 library_filename_abs_path = os.path.join(root, library_filename)
 
-                # if we cannot determine the year then continue
+                # if we cannot determine the year then go to top of loop
                 if library_filename_year_compare is None:
                     continue
 
-                # if library filename title compare not in index title compare then continue
+                # if library filename title compare not in index title compare then go to top of loop
                 if library_filename_title_compare not in index_title_compare:
                     continue
 
@@ -507,7 +507,7 @@ class FilterMovies(object):
                 if library_filename_year_compare is None:
                     continue
 
-                # if library filename title compare not in index title year compare then continue
+                # if library filename title compare not in index title year compare then go to top of loop
                 if library_filename_year_compare not in index_year_compare:
                     continue
 
@@ -521,7 +521,7 @@ class FilterMovies(object):
                 self.logger_instance.debug(f"Library filename quality score is '{library_filename_score}'")
                 self.logger_instance.debug(f"Index title quality score is '{index_title_score}'")
 
-                # if library filename title quality score is less than the index title then continue
+                # if library filename title quality score is less than the index title then go to top of loop
                 if library_filename_score < index_title_score:
                     continue
 

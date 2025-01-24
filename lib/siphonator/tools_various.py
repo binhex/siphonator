@@ -35,29 +35,20 @@ def quality_score(index_title_year_to_end):
 
     # define scores for resolution, score increases as resolution increases
     resolution_score_dict = {
-        "sd": int(10),
-        "480p": int(10),
-        "720p": int(20),
-        "1080p": int(30),
-        "hd": int(30),
-        "2160p": int(40),
-        "4k": int(40),
-        "uhd": int(40),
-        "8k": int(50)
+        "(480p|sd)": int(10),
+        "(720p)": int(20),
+        "(1080p|hd)": int(30),
+        "(2160p|4k|uhd)": int(40),
+        "(8k)": int(50)
     }
 
     # define score for source type, score increases as source type improves (higher bitrate)
     source_score_dict = {
-        "dvdrip": int(10),
-        "web": int(20),
-        "hdtv": int(20),
-        "webdl": int(30),
-        "web-dl": int(30),
-        "webrip": int(30),
-        "hdrip": int(40),
-        "bdrip": int(40),
-        "bluray": int(40),
-        "remux": int(50)
+        "(dvdrip)": int(10),
+        "(hdtv|web)": int(20),
+        "(web-dl|webdl|webrip)": int(30),
+        "(bdrip|hdrip|bluray)": int(40),
+        "(remux)": int(50)
     }
 
     score = 0
@@ -70,7 +61,7 @@ def quality_score(index_title_year_to_end):
         for key, value in score_dict.items():
 
             # search for key name for resolution, if found add score value to score
-            if re.search(fr'[_.\s]{key}[_.\s]|^{key}[_.\s]', index_title_year_to_end, re.IGNORECASE):
+            if re.search(fr'[_\-.\s]{key}[_\-.\s]|^{key}[_\-.\s]', index_title_year_to_end, re.IGNORECASE):
                 score += value
 
     # return final score
