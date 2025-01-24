@@ -19,7 +19,7 @@ sqlite-utils            # Python CLI utility and library for manipulating SQLite
 validators              # Used to validate data from user e.g. email, url etc
 configobj               # Config reading, writing and validation
 ConfigArgParse          # Drop-in replacement for argparse that allows options to be set via cli, config files and/or environment variables
-qbittorrent-api         # API support to add torrents/magnets to qbittorrent
+qbittorrent-api         # API support to add torrents/magnets to qBittorrent
 Pytest                  # Test framework for Python
 PyYAML                  # Tool used to pretty print YAML/dict for debug
 Unidecode               # Transliterate from Unicode to ASCII

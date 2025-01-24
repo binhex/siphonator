@@ -22,7 +22,7 @@ class SearchGoogle(object):
 
         if not google_find_id_gen:
 
-            self.result_dict.update({'result': 'failed', 'result_details': f"Failed to search Google for index title compare '{self.index_title_compare}'"})
+            self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to search Google for index title compare '{self.index_title_compare}'"})
             return self.result_dict
 
         try:
@@ -32,7 +32,7 @@ class SearchGoogle(object):
 
         except StopIteration:
 
-            self.result_dict.update({'result': 'failed', 'result_details': f"Failed to return results from Google for index title compare '{self.index_title_compare}'"})
+            self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to return results from Google for index title compare '{self.index_title_compare}'"})
             return self.result_dict
 
         imdb_title = google_find_id_dict.title
@@ -41,7 +41,7 @@ class SearchGoogle(object):
         # if title or url is none then return
         if not imdb_title or not imdb_url:
 
-            self.result_dict.update({'result': 'failed', 'result_details': f"Failed to return IMDb title or URL from Google for index title compare '{self.index_title_compare}'"})
+            self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to return IMDb title or URL from Google for index title compare '{self.index_title_compare}'"})
             return self.result_dict
 
         # find imdb title
@@ -57,7 +57,7 @@ class SearchGoogle(object):
         if imdb_title_compare not in self.index_title_compare:
 
             self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'")
-            self.result_dict.update({'result': 'failed', 'result_details': f"IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'"})
+            self.result_dict.update({'result': 'Failed', 'result_details': f"IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'"})
             return self.result_dict
 
         self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' matches index title compare '{self.index_title_compare}'")
@@ -66,7 +66,7 @@ class SearchGoogle(object):
         if self.index_year_compare not in imdb_title:
 
             self.logger_instance.debug(f"IMDb title '{imdb_title}' does not contain index year compare '{self.index_year_compare}'")
-            self.result_dict.update({'result': 'failed', 'result_details': f"IMDb title '{imdb_title}' does not contain index year compare '{self.index_year_compare}'"})
+            self.result_dict.update({'result': 'Failed', 'result_details': f"IMDb title '{imdb_title}' does not contain index year compare '{self.index_year_compare}'"})
             return self.result_dict
 
         self.logger_instance.debug(f"IMDb title '{imdb_title}' does contain index year compare '{self.index_year_compare}'")
@@ -77,7 +77,7 @@ class SearchGoogle(object):
         if not imdb_id_search:
 
             self.logger_instance.debug(f"IMDb URL '{imdb_url}' from Google search does not contain IMDb ID")
-            self.result_dict.update({'result': 'failed', 'result_details': f"IMDb URL '{imdb_url}' from Google search does not contain IMDb ID"})
+            self.result_dict.update({'result': 'Failed', 'result_details': f"IMDb URL '{imdb_url}' from Google search does not contain IMDb ID"})
             return self.result_dict
 
         imdb_id = imdb_id_search.group()
@@ -85,5 +85,5 @@ class SearchGoogle(object):
         self.logger_instance.debug(f"IMDb URL is '{imdb_url}'")
 
         self.result_dict.update({'imdb_id': imdb_id})
-        self.result_dict.update({'result': 'success', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using Google search"})
+        self.result_dict.update({'result': 'Passed', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using Google search"})
         return self.result_dict

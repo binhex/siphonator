@@ -360,3 +360,4 @@ if __name__ == '__main__':
 
             # cleanup pid file
             daemon.exit()
+logger_instance

@@ -24,7 +24,7 @@ def imdb_json_api(logger_instance, result_dict, config_dict):
 
     except OSError:
         logger_instance.warning(u"Cannot connect to IMDb")
-        result_dict.update({'result': 'failed', 'result_details': u"Cannot connect to IMDb"})
+        result_dict.update({'result': 'Failed', 'result_details': u"Cannot connect to IMDb"})
         return result_dict
 
     try:
@@ -32,7 +32,7 @@ def imdb_json_api(logger_instance, result_dict, config_dict):
 
     except ValueError:
         logger_instance.warning(f"Invalid IMDb id '{imdb_id}'")
-        result_dict.update({'result': 'failed', 'result_details': f"Invalid IMDb id '{imdb_id}'"})
+        result_dict.update({'result': 'Failed', 'result_details': f"Invalid IMDb id '{imdb_id}'"})
         return result_dict
 
     imdb_get_title_genres_dict = imdb_instance.get_title_genres(str(imdb_id))
@@ -211,5 +211,5 @@ def imdb_json_api(logger_instance, result_dict, config_dict):
         'imdb_country_list': country_origins_list,
     })
 
-    result_dict.update({'result': 'success', 'result_details': u"Identified IMDb metadata using IMDbPie"})
+    result_dict.update({'result': 'Passed', 'result_details': u"Identified IMDb metadata using IMDbPie"})
     return result_dict

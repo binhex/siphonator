@@ -4,6 +4,7 @@ import datetime
 import ffmpeg
 import yaml
 from unidecode import unidecode
+import inspect
 
 
 def current_time():
@@ -14,6 +15,66 @@ def current_time():
     # convert to human-readable format dd/mm/YY H:M:S
     run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
     return run_current_date_and_time_converted
+
+
+def get_function_name():
+
+    # Get the current frame
+    current_frame = inspect.currentframe()
+
+    # Get the caller's frame (one level up)
+    caller_frame = current_frame.f_back
+
+    # Get the function/method name from the caller's frame
+    function_name = caller_frame.f_code.co_name
+
+    return function_name
+
+
+def quality_score(index_title_year_to_end):
+
+    # define scores for resolution, score increases as resolution increases
+    resolution_score_dict = {
+        "sd": int(10),
+        "480p": int(10),
+        "720p": int(20),
+        "1080p": int(30),
+        "hd": int(30),
+        "2160p": int(40),
+        "4k": int(40),
+        "uhd": int(40),
+        "8k": int(50)
+    }
+
+    # define score for source type, score increases as source type improves (higher bitrate)
+    source_score_dict = {
+        "dvdrip": int(10),
+        "web": int(20),
+        "hdtv": int(20),
+        "webdl": int(30),
+        "web-dl": int(30),
+        "webrip": int(30),
+        "hdrip": int(40),
+        "bdrip": int(40),
+        "bluray": int(40),
+        "remux": int(50)
+    }
+
+    score = 0
+    score_dicts = [resolution_score_dict, source_score_dict]
+
+    # iterate over resolution and source dicts
+    for score_dict in score_dicts:
+
+        # Iterate over the key-value pairs
+        for key, value in score_dict.items():
+
+            # search for key name for resolution, if found add score value to score
+            if re.search(fr'[_.\s]{key}[_.\s]|^{key}[_.\s]', index_title_year_to_end, re.IGNORECASE):
+                score += value
+
+    # return final score
+    return score
 
 
 def pretty_print_yaml(yaml_string):
@@ -325,7 +386,7 @@ class ToolsVarious(object):
         if index_title is None:
 
             self.logger_instance.warning(f"Index title not found in dictionary '{result_dict}'")
-            result_dict.update({'result': 'failed', 'result_details': 'Index title not found'})
+            result_dict.update({'result': 'Failed', 'result_details': 'Index title not found'})
             return result_dict
 
         self.logger_instance.debug(f"Index title is '{index_title}'")
@@ -334,7 +395,7 @@ class ToolsVarious(object):
         if index_title_full_compare is None:
 
             self.logger_instance.debug(f"Cannot identify index title compare from index title '{index_title}' using regex")
-            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify index title compare from index title'})
+            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify index title compare from index title'})
             return result_dict
 
         self.logger_instance.info(f"Index title full compare is '{index_title_full_compare}'")
@@ -343,7 +404,7 @@ class ToolsVarious(object):
         if index_title_compare is None:
 
             self.logger_instance.debug(f"Cannot identify compare title from index title '{index_title}' using regex")
-            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify compare title from index title'})
+            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify compare title from index title'})
             return result_dict
 
         self.logger_instance.info(f"Index title compare is '{index_title_compare}'")
@@ -352,7 +413,7 @@ class ToolsVarious(object):
         if index_title_search is None:
 
             self.logger_instance.info(f"Cannot identify search title from index title '{index_title}' using regex '{self.index_title_search_regex}'")
-            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify search title from index title'})
+            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify search title from index title'})
             return result_dict
 
         self.logger_instance.info(f"Index title search is '{index_title_search}'")
@@ -361,7 +422,7 @@ class ToolsVarious(object):
         if index_title_year_to_end_compare is None:
 
             self.logger_instance.info(f"Cannot identify year to end from index title '{index_title}' using regex '{self.index_title_year_to_end_regex}'")
-            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify year to end from index title'})
+            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify year to end from index title'})
             return result_dict
 
         self.logger_instance.info(f"Index year to end is '{index_title_year_to_end_compare}'")
@@ -370,7 +431,7 @@ class ToolsVarious(object):
         if index_year_compare is None:
 
             self.logger_instance.info(f"Cannot identify year compare from index title '{index_title}' using regex '{self.index_title_year_regex}'")
-            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify year compare from index title'})
+            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify year compare from index title'})
             return result_dict
 
         self.logger_instance.info(f"Index title year compare is '{index_year_compare}'")
@@ -379,7 +440,7 @@ class ToolsVarious(object):
         if index_title_and_year_compare is None:
 
             self.logger_instance.info(f"Cannot identify index title and year compare from index title '{index_title}'")
-            result_dict.update({'result': 'failed', 'result_details': 'Cannot identify index title and year compare from index title'})
+            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify index title and year compare from index title'})
             return result_dict
 
         self.logger_instance.info(f"Index title and year compare is '{index_title_and_year_compare}'")
@@ -391,7 +452,7 @@ class ToolsVarious(object):
             'index_title_search': index_title_search,
             'index_title_year_to_end_compare': index_title_year_to_end_compare,
             'index_title_and_year_compare': index_title_and_year_compare,
-            'result': 'success',
+            'result': 'Passed',
             'result_details': 'Identified title and year from index title'
         })
 

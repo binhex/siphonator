@@ -31,7 +31,7 @@ class SearchTMDB(object):
         if return_code != 0:
 
             self.logger_instance.warning(u"Site feed download failed for TMDb")
-            self.result_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+            self.result_dict.update({'result': 'Failed', 'result_details': u"Site feed download failed for TMDb"})
             return self.result_dict
 
         try:
@@ -41,14 +41,14 @@ class SearchTMDB(object):
         except (ValueError, TypeError, KeyError):
 
             self.logger_instance.warning(u"Site feed parse failed for TMDb")
-            self.result_dict.update({'result': 'failed', 'result_details': u"Site feed parse failed for TMDb"})
+            self.result_dict.update({'result': 'Failed', 'result_details': u"Site feed parse failed for TMDb"})
             return self.result_dict
 
         # if resulting tmdb json page is blank then continue
         if tmdb_find_id_json == {}:
 
             self.logger_instance.info(f"No match for movie title '{self.index_title_search}' on TMDb json")
-            self.result_dict.update({'result': 'failed', 'result_details': f"No match for movie title '{self.index_title_search}' on TMDb json"})
+            self.result_dict.update({'result': 'Failed', 'result_details': f"No match for movie title '{self.index_title_search}' on TMDb json"})
             return self.result_dict
 
         for tmdb_find_id in tmdb_find_id_json["results"]:
@@ -99,7 +99,7 @@ class SearchTMDB(object):
             except (IndexError, KeyError, TypeError):
 
                 self.logger_instance.info(u"Cannot find TMDb ID for movie")
-                self.result_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                self.result_dict.update({'result': 'Failed', 'result_details': u"Site feed download failed for TMDb"})
                 return self.result_dict
 
             # generate url to find imdb tt number using tmdb id number from previous search
@@ -114,7 +114,7 @@ class SearchTMDB(object):
             if return_code != 0:
 
                 self.logger_instance.warning(u"Site feed download failed for TMDb")
-                self.result_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                self.result_dict.update({'result': 'Failed', 'result_details': u"Site feed download failed for TMDb"})
                 return self.result_dict
 
             try:
@@ -124,12 +124,12 @@ class SearchTMDB(object):
             except (ValueError, TypeError, KeyError):
 
                 self.logger_instance.warning(u"Site feed parse failed for TMDb")
-                self.result_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                self.result_dict.update({'result': 'Failed', 'result_details': u"Site feed download failed for TMDb"})
                 return self.result_dict
 
             if tmdb_find_tt_json is None or tmdb_find_tt_json == {}:
                 self.logger_instance.info(f"No IMDb ID for movie title {self.index_title_search} on TMDb json")
-                self.result_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                self.result_dict.update({'result': 'Failed', 'result_details': u"Site feed download failed for TMDb"})
                 return self.result_dict
 
             try:
@@ -140,20 +140,20 @@ class SearchTMDB(object):
             except (IndexError, KeyError, TypeError):
 
                 self.logger_instance.info(u"Cannot find IMDb ID for movie")
-                self.result_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                self.result_dict.update({'result': 'Failed', 'result_details': u"Site feed download failed for TMDb"})
                 return self.result_dict
 
             if imdb_id is None or imdb_id == "":
 
                 self.logger_instance.warning(u"IMDb ID is None, unable to identify valid value")
-                self.result_dict.update({'result': 'failed', 'result_details': u"Site feed download failed for TMDb"})
+                self.result_dict.update({'result': 'Failed', 'result_details': u"Site feed download failed for TMDb"})
                 return self.result_dict
 
             self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
             self.result_dict.update({'imdb_id': imdb_id})
 
-            self.result_dict.update({'result': 'success', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using TMDb search"})
+            self.result_dict.update({'result': 'Passed', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using TMDb search"})
             return self.result_dict
 
-        self.result_dict.update({'result': 'failed', 'result_details': f"Failed to identify movie '{self.index_title_search}' using TMDb search"})
+        self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to identify movie '{self.index_title_search}' using TMDb search"})
         return self.result_dict

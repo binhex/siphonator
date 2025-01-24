@@ -65,6 +65,12 @@ class IndexProxy(object):
                     self.logger_instance.warning(u'No limit sent to function, exiting function...')
                     return 1, None
 
+                try:
+                    max_offset = self.config_dict['index_proxy']['jackett']['offset']
+                except KeyError:
+                    self.logger_instance.warning(u'No offset sent to function, exiting function...')
+                    return 1, None
+
             else:
 
                 self.logger_instance.warning(f"Index proxy of '{index_proxy}' not valid, exiting function...")
@@ -102,248 +108,255 @@ class IndexProxy(object):
             self.logger_instance.warning(u'No keyword args sent to function, exiting function...')
             return 1
 
-        # construct url for api
-        url = f"http://{host}:{port}/api/v2.0/indexers/{index_site}/results/torznab/api?apikey={api_key}&t=search&cat={category}&q={search}&extended=1&maxage={limit}"
+        # define offset so we can loop over more results
+        offset = int(0)
+        while offset <= int(max_offset):
 
-        # download torznab results using requests
-        return_code, status_code, content = siphonator_tools_downloader.http_client(self.logger_instance, url=url, user_agent=user_agent, request_type="get", read_timeout=read_timeout)
+            # construct url for api
+            url = f"http://{host}:{port}/api/v2.0/indexers/{index_site}/results/torznab/api?apikey={api_key}&t=search&cat={category}&q={search}&extended=1&limit={limit}&offset={offset}"
 
-        try:
-
-            # parse xml formatted feed
-            site_feed_parse = xmltodict.parse(content, process_namespaces=True)
-            site_feed_parse = site_feed_parse["rss"]["channel"]["item"]
-
-        except (ValueError, TypeError, KeyError):
-
-            self.logger_instance.warning(f"Unable to process feed from index site '{index_site}'")
-            return 1
-
-        # this breaks down the rss feed page into tag sections
-        for node in site_feed_parse:
-
-            self.logger_instance.info(u"Resetting IMDb values for dict from previous run...")
-            self.result_dict.update({
-                'imdb_title': None,
-                'imdb_year': None,
-                'imdb_poster_url': None,
-                'imdb_trailer_url': None,
-                'imdb_plot_summary': None,
-                'imdb_plot_outline': None,
-                'imdb_rating': None,
-                'imdb_votes': None,
-                'imdb_title_type': None,
-                'imdb_running_time_in_minutes': None,
-                'imdb_genres_list': None,
-                'imdb_credits_director_list': None,
-                'imdb_credits_writer_list': None,
-                'imdb_credits_cast_list': None,
-                'imdb_credits_character_list': None,
-                'imdb_language_list': None,
-                'imdb_country_list': None,
-            })
+            # download torznab results using requests
+            return_code, status_code, content = siphonator_tools_downloader.http_client(self.logger_instance, url=url, user_agent=user_agent, request_type="get", read_timeout=read_timeout)
 
             try:
 
-                title = node["title"]
+                # parse xml formatted feed
+                site_feed_parse = xmltodict.parse(content, process_namespaces=True)
+                site_feed_parse = site_feed_parse["rss"]["channel"]["item"]
 
-            except (KeyError, TypeError, IndexError, AttributeError):
+            except (ValueError, TypeError, KeyError):
 
-                self.logger_instance.warning(f"Unable to identify title from index site '{index_site}'")
-                continue
+                self.logger_instance.warning(f"Unable to process feed from index site '{index_site}'")
+                return 1
 
-            self.logger_instance.debug(f"Checking if index title '{title}' is already in the sqlite database...")
+            # this breaks down the rss feed page into tag sections
+            for node in site_feed_parse:
 
-            db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-            read_database_simple_bool = db_sqlite_instance.read_database_simple('history', 'index_title', title)
+                self.logger_instance.info(u"Resetting IMDb values for dict from previous run...")
+                self.result_dict.update({
+                    'imdb_title': None,
+                    'imdb_year': None,
+                    'imdb_poster_url': None,
+                    'imdb_trailer_url': None,
+                    'imdb_plot_summary': None,
+                    'imdb_plot_outline': None,
+                    'imdb_rating': None,
+                    'imdb_votes': None,
+                    'imdb_title_type': None,
+                    'imdb_running_time_in_minutes': None,
+                    'imdb_genres_list': None,
+                    'imdb_credits_director_list': None,
+                    'imdb_credits_writer_list': None,
+                    'imdb_credits_cast_list': None,
+                    'imdb_credits_character_list': None,
+                    'imdb_language_list': None,
+                    'imdb_country_list': None,
+                })
 
-            if read_database_simple_bool:
+                try:
 
-                self.logger_instance.info(f"Index title '{title}' found in sqlite database using simple match, skipping movie")
-                continue
+                    title = node["title"]
 
-            else:
+                except (KeyError, TypeError, IndexError, AttributeError):
 
-                self.logger_instance.info(f"Index title '{title}' not found in sqlite database using simple match, performing adv sqlite match...")
-                read_database_adv_bool = db_sqlite_instance.read_database_adv('history', 'index_title', title)
-
-                if read_database_adv_bool:
-
-                    self.logger_instance.info(f"Index title '{title}' found in sqlite database using adv match, skipping movie")
+                    self.logger_instance.warning(f"Unable to identify title from index site '{index_site}'")
                     continue
 
-            self.logger_instance.debug(f"Index title '{title}' not in sqlite database, continuing...")
+                self.logger_instance.debug(f"Checking if index title '{title}' is already in the sqlite database...")
 
-            try:
-
-                torrent_url = node['enclosure']['@url']
-
-                # if torrent url looks like a magnet then raise error
-                if torrent_url.startswith('magnet'):
-                    raise TypeError
-
-            except (KeyError, TypeError, IndexError, AttributeError):
-
-                self.logger_instance.debug(f"Unable to determine torrent url from index site '{index_site}'")
-                torrent_url = None
-
-            try:
-
-                list_named_attributes = node['http://torznab.com/schemas/2015/feed:attr']
-
-            except TypeError:
-
-                self.logger_instance.info(f"Unable to process attributes from index site '{index_site}'")
-                continue
-
-            seeders = None
-            peers = None
-            magnet_url = None
-            imdbid = None
-
-            for i in list_named_attributes:
-
-                attribute_name = i['@name']
-
-                if "seeders" in attribute_name:
-
-                    seeders = i['@value']
-
-                if "peers" in attribute_name:
-
-                    peers = i['@value']
-
-                if "magnet" in attribute_name:
-
-                    magnet_url = i['@value']
-
-                if "imdb" in attribute_name:
-
-                    imdbid = i['@value']
-
-            if magnet_url is None and torrent_url is None:
-
-                self.logger_instance.info(f"No magnet or torrent url available, skipping processing for index title '{title}'...")
-                continue
-
-            try:
-
-                size = node["size"]
-                size_mb = int(size) // 1000000
-
-            except (KeyError, TypeError, IndexError, AttributeError):
-
-                size = None
-                size_mb = None
-
-            try:
-
-                comments = node["comments"]
-
-            except (KeyError, TypeError, IndexError, AttributeError):
-
-                comments = None
-
-            try:
-
-                pubdate = node["pubDate"]
-
-            except (KeyError, TypeError, IndexError, AttributeError):
-
-                pubdate = None
-
-            self.logger_instance.debug(f"Saving index details to dict for index title '{title}'...")
-            self.result_dict.update({
-                'index_title': title,
-                'torrent_url': torrent_url,
-                'index_size': size,
-                'index_size_mb': size_mb,
-                'index_details': comments,
-                'index_pubdate': pubdate,
-                'index_seeders': seeders,
-                'index_peers': peers,
-                'imdb_id': imdbid,
-                'magnet_url': magnet_url,
-                'category': category
-            })
-
-            tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-            self.result_dict = tools_various_instance.index_title_process(self.result_dict)
-
-            if self.result_dict.get('result') != 'failed':
-
-                self.logger_instance.info(u"Filtering movie based on index details...")
-                filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-                self.result_dict = filter_movies_instance.filter_index_movies()
-
-            else:
-
-                # write to database, need repeated instance due to changing self.result_dict
                 db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-                db_sqlite_instance.write_database()
-                continue
+                read_database_simple_bool = db_sqlite_instance.read_database_simple('history', 'index_title', title)
 
-            if self.result_dict.get('result') != 'failed':
+                if read_database_simple_bool:
 
-                # if imdbid is not found from index site (rarbg supplies tt number) then lookup
-                if imdbid is None:
+                    self.logger_instance.info(f"Index title '{title}' found in sqlite database using simple match, skipping movie")
+                    continue
 
-                    self.logger_instance.info(u"Searching for IMDb ID..")
-                    get_imdb_tt_number_instance = siphonator_search_all.SearchAll(self.logger_instance, self.result_dict, self.config_dict)
-                    self.result_dict = get_imdb_tt_number_instance.search()
+                else:
 
-            else:
+                    self.logger_instance.info(f"Index title '{title}' not found in sqlite database using simple match, performing adv sqlite match...")
+                    read_database_adv_bool = db_sqlite_instance.read_database_adv('history', 'index_title', title)
 
-                # write to database
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-                db_sqlite_instance.write_database()
-                continue
+                    if read_database_adv_bool:
 
-            if self.result_dict.get('result') != 'failed':
+                        self.logger_instance.info(f"Index title '{title}' found in sqlite database using adv match, skipping movie")
+                        continue
 
-                self.logger_instance.info(u"Getting movie details from IMDb...")
-                self.result_dict = siphonator_imdb_imdbpie.imdb_json_api(self.logger_instance, self.result_dict, self.config_dict)
+                self.logger_instance.debug(f"Index title '{title}' not in sqlite database, continuing...")
 
-            else:
+                try:
 
-                # write to database
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-                db_sqlite_instance.write_database()
-                continue
+                    torrent_url = node['enclosure']['@url']
 
-            if self.result_dict.get('result') != 'failed':
+                    # if torrent url looks like a magnet then raise error
+                    if torrent_url.startswith('magnet'):
+                        raise TypeError
 
-                self.logger_instance.info(u"Filtering movie based on IMDb details...")
-                filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-                self.result_dict = filter_movies_instance.filter_imdb_movies()
+                except (KeyError, TypeError, IndexError, AttributeError):
 
-            else:
+                    self.logger_instance.debug(f"Unable to determine torrent url from index site '{index_site}'")
+                    torrent_url = None
 
-                # write to database
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-                db_sqlite_instance.write_database()
-                continue
+                try:
 
-            if self.result_dict.get('result') != 'failed':
+                    list_named_attributes = node['http://torznab.com/schemas/2015/feed:attr']
 
-                self.result_dict.update({'result': 'success', 'result_details': u"Passed all Index and IMDb filters"})
+                except TypeError:
 
-                # write to database
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-                db_sqlite_instance.write_database()
+                    self.logger_instance.info(f"Unable to process attributes from index site '{index_site}'")
+                    continue
 
-                if self.config_dict['notification']['email']['enabled']:
+                seeders = None
+                peers = None
+                magnet_url = None
+                imdbid = None
 
-                    self.logger_instance.info(u"E-mail notification enabled, sending E-mail...")
-                    notification_email_instance = siphonator_notification_email.NotificationEmail(self.logger_instance, self.result_dict, self.config_dict)
-                    notification_email_instance.email_send()
+                for i in list_named_attributes:
 
-                torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, self.result_dict, self.config_dict)
-                torrent_client_instance.qbittorrent_add()
+                    attribute_name = i['@name']
 
-            else:
+                    if "seeders" in attribute_name:
 
-                # write to database
-                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-                db_sqlite_instance.write_database()
-                continue
+                        seeders = i['@value']
+
+                    if "peers" in attribute_name:
+
+                        peers = i['@value']
+
+                    if "magnet" in attribute_name:
+
+                        magnet_url = i['@value']
+
+                    if "imdb" in attribute_name:
+
+                        imdbid = i['@value']
+
+                if magnet_url is None and torrent_url is None:
+
+                    self.logger_instance.info(f"No magnet or torrent url available, skipping processing for index title '{title}'...")
+                    continue
+
+                try:
+
+                    size = node["size"]
+                    size_mb = int(size) // 1000000
+
+                except (KeyError, TypeError, IndexError, AttributeError):
+
+                    size = None
+                    size_mb = None
+
+                try:
+
+                    comments = node["comments"]
+
+                except (KeyError, TypeError, IndexError, AttributeError):
+
+                    comments = None
+
+                try:
+
+                    pubdate = node["pubDate"]
+
+                except (KeyError, TypeError, IndexError, AttributeError):
+
+                    pubdate = None
+
+                self.logger_instance.debug(f"Saving index details to dict for index title '{title}'...")
+                self.result_dict.update({
+                    'index_title': title,
+                    'torrent_url': torrent_url,
+                    'index_size': size,
+                    'index_size_mb': size_mb,
+                    'index_details': comments,
+                    'index_pubdate': pubdate,
+                    'index_seeders': seeders,
+                    'index_peers': peers,
+                    'imdb_id': imdbid,
+                    'magnet_url': magnet_url,
+                    'category': category
+                })
+
+                tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
+                self.result_dict = tools_various_instance.index_title_process(self.result_dict)
+
+                if self.result_dict.get('result') != 'Failed':
+
+                    self.logger_instance.info(u"Filtering movie based on index details...")
+                    filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                    self.result_dict = filter_movies_instance.filter_index_movies()
+
+                else:
+
+                    # write to database, need repeated instance due to changing self.result_dict
+                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                    db_sqlite_instance.write_database()
+                    continue
+
+                if self.result_dict.get('result') != 'Failed':
+
+                    # if imdbid is not found from index site (rarbg supplies tt number) then lookup
+                    if imdbid is None:
+
+                        self.logger_instance.info(u"Searching for IMDb ID..")
+                        get_imdb_tt_number_instance = siphonator_search_all.SearchAll(self.logger_instance, self.result_dict, self.config_dict)
+                        self.result_dict = get_imdb_tt_number_instance.search()
+
+                else:
+
+                    # write to database
+                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                    db_sqlite_instance.write_database()
+                    continue
+
+                if self.result_dict.get('result') != 'Failed':
+
+                    self.logger_instance.info(u"Getting movie details from IMDb...")
+                    self.result_dict = siphonator_imdb_imdbpie.imdb_json_api(self.logger_instance, self.result_dict, self.config_dict)
+
+                else:
+
+                    # write to database
+                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                    db_sqlite_instance.write_database()
+                    continue
+
+                if self.result_dict.get('result') != 'Failed':
+
+                    self.logger_instance.info(u"Filtering movie based on IMDb details...")
+                    filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                    self.result_dict = filter_movies_instance.filter_imdb_movies()
+
+                else:
+
+                    # write to database
+                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                    db_sqlite_instance.write_database()
+                    continue
+
+                if self.result_dict.get('result') != 'Failed':
+
+                    self.result_dict.update({'result': 'Passed', 'result_details': u"Passed all Index and IMDb filters"})
+
+                    # write to database
+                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                    db_sqlite_instance.write_database()
+
+                    if self.config_dict['notification']['email']['enabled']:
+
+                        self.logger_instance.info(u"E-mail notification enabled, sending E-mail...")
+                        notification_email_instance = siphonator_notification_email.NotificationEmail(self.logger_instance, self.result_dict, self.config_dict)
+                        notification_email_instance.email_send()
+
+                    torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, self.result_dict, self.config_dict)
+                    torrent_client_instance.qbittorrent_add()
+
+                else:
+
+                    # write to database
+                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                    db_sqlite_instance.write_database()
+                    continue
+
+            # increment offset by 100 (default number of results from jackett)
+            offset = offset+100

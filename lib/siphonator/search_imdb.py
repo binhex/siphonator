@@ -22,14 +22,14 @@ class SearchIMDB(object):
 
         except (AttributeError, ValueError):
 
-            self.result_dict.update({'result': 'failed', 'result_details': f"Failed to search IMDb for index title compare '{self.index_title_compare}'"})
+            self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to search IMDb for index title compare '{self.index_title_compare}'"})
             return self.result_dict
 
         # if resulting imdb json page is blank then continue
         if imdb_find_id_dict == {}:
 
             self.logger_instance.info(f"No match for movie title '{self.index_title_search}' on IMDb json")
-            self.result_dict.update({'result': 'failed', 'result_details': f"No match for movie title '{self.index_title_search}' on IMDb json"})
+            self.result_dict.update({'result': 'Failed', 'result_details': f"No match for movie title '{self.index_title_search}' on IMDb json"})
             return self.result_dict
 
         for imdb_find_id in imdb_find_id_dict:
@@ -98,8 +98,8 @@ class SearchIMDB(object):
             self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
             self.result_dict.update({'imdb_id': imdb_id})
 
-            self.result_dict.update({'result': 'success', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using IMDb search"})
+            self.result_dict.update({'result': 'Passed', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using IMDb search"})
             return self.result_dict
 
-        self.result_dict.update({'result': 'failed', 'result_details': f"Failed to identify movie '{self.index_title_search}' using IMDb search"})
+        self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to identify movie '{self.index_title_search}' using IMDb search"})
         return self.result_dict

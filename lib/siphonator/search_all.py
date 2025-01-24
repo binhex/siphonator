@@ -46,5 +46,5 @@ class SearchAll(object):
                         self.logger_instance.warning(u"Failed to identify ID from Google, no other methods currently defined")
                         return self.result_dict
 
-        self.result_dict.update({'result': 'success', 'result_details': u"Identified IMDb ID using search"})
+        self.result_dict.update({'result': 'Passed', 'result_details': u"Identified IMDb ID using search"})
         return self.result_dict

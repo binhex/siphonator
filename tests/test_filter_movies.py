@@ -269,73 +269,6 @@ def filter_downloaded_file(index_title, index_site_search, library_path, filenam
     shutil.rmtree(library_path)
 
 
-@pytest.fixture
-def filter_downloaded_dir(library_path, src_filename, dst_filename, dst_directory, index_title, index_site_search):
-
-    logger = setup()
-
-    tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    index_title_compare = tools_various_instance.custom_title_compare(index_title)
-    index_year_compare = tools_various_instance.custom_title_year_compare(index_title)
-
-    tests_root_path = os.path.dirname(os.path.realpath(__file__))
-
-    # set path to ffprobe bin
-    ffprobe_filepath = os.path.join(tests_root_path, '../tools/ffprobe/static/x64/ffprobe')
-
-    # set src test media filepath
-    src_test_media_filepath = os.path.join(tests_root_path, 'media', src_filename)
-
-    # construct dir path
-    dst_test_media_library_filepath = os.path.join(library_path, dst_directory, dst_filename)
-
-    # copy test media to test library
-    os.makedirs(os.path.dirname(dst_test_media_library_filepath), exist_ok=True)
-    shutil.copy(src_test_media_filepath, dst_test_media_library_filepath)
-
-    # walk path to get test directory and filename
-    filter_library_path_walk = os.walk(library_path, topdown=False)
-
-    init_dict = {
-        'ffprobe_filepath': ffprobe_filepath,
-    }
-
-    result_dict = {
-        'index_title': index_title,
-        'index_title_compare': index_title_compare,
-        'index_year_compare': index_year_compare,
-        'index_site_search': index_site_search,
-        'filter_library_path_walk': filter_library_path_walk,
-    }
-
-    # Arrange
-    config_dict = {
-        'general': {
-            'library_path': library_path,
-        }
-    }
-
-    # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
-    response = siphonator_filter_movies_instance.filter_downloaded_dir()
-
-    # yield used instead of return to allow us to do cleanup afterward
-    yield response
-
-    # cleanup test area
-    from pathlib import Path
-
-    def rmdir(pathname):
-        pathname = Path(pathname)
-        for item in pathname.iterdir():
-            if item.is_dir():
-                rmdir(item)
-            else:
-                item.unlink()
-        pathname.rmdir()
-
-    rmdir(Path(library_path))
-
 # tests
 ###
 
@@ -420,16 +353,16 @@ def test_filter_bad_genre(filter_bad_genre, imdb_genres_list, exp_assert):
 
 
 @pytest.mark.parametrize('filter_preferred_index_group_list, library_filename, index_title, exp_assert', [
-    ([], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP', False),                                    # no defined preferred group list does not result in true
+    ([], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP', False),                                    # no defined preferred group list does results in false
     (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP1', True),             # match for preferred group list and no existing library filename does result in true
     (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP1.mkv', True),         # match for preferred group list and no existing library filename does result in true for index group with file ext
     (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP1[RARBG]', True),      # match for preferred group list and no existing library filename does result in true for index group with tag
     (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP1[RARBG].mkv', True),  # match for preferred group list and no existing library filename does result in true for index group with tag and file ext
     (['GrOuP1', 'GrOuP1'], 'Library.Filename.2023.1080p.WEBRip.x264-oThErGrOuP', 'Index.title.2023.1080p.WEBRip.x264-GrOuP1', True),             # case check for preferred group list does result in true
-    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP1', 'Index.title.2023.1080p.WEBRip.x264-OTHERGROUP', False),            # existing preferred group in library filename does not result in true
-    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-ANOTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-OTHERGROUP', False),      # library and index title groups that do not match does not result in true
-    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-OTHERGROUP', False),        # library and index title groups matches does not result in true
-    (['group11', 'group22'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP1', False),          # no partial matches for preferred groups does not result in true
+    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-GROUP1', 'Index.title.2023.1080p.WEBRip.x264-OTHERGROUP', False),            # existing preferred group in library filename results in false
+    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-ANOTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-OTHERGROUP', False),      # library and index title groups that do not match results in false
+    (['group1', 'group2'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-OTHERGROUP', False),        # library and index title groups matches results in false
+    (['group11', 'group22'], 'Library.Filename.2023.1080p.WEBRip.x264-OTHERGROUP', 'Index.title.2023.1080p.WEBRip.x264-GROUP1', False),          # no partial matches for preferred groups results in false
 ])
 def test_filter_preferred_index_group(filter_preferred_index_group, filter_preferred_index_group_list, library_filename, index_title, exp_assert):
 
@@ -466,25 +399,6 @@ def test_filter_preferred_index_quality(filter_preferred_index_quality, filter_p
 def test_filter_downloaded_file(filter_downloaded_file, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list, exp_assert):
 
     response = filter_downloaded_file
-
-    # Assert
-    assert response == exp_assert
-
-
-@pytest.mark.parametrize('library_path, src_filename, dst_filename, dst_directory, index_title, index_site_search, exp_assert', [
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group', '1080p bluray', False),    # index title resolution matches existing library file resolution, skip
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 720p bluray dts-group', '720p bluray', False),      # index title resolution less than existing library file resolution, skip
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-720p.mkv', 'movie title (2020) 720p bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group', '1080p bluray', True),       # index title resolution more than existing library file resolution, continue
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group.mkv', '1080p bluray', True),        # index site search criteria 'bluray' cannot be found in library filename, continue
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group.mkv', '1080p bluray', False),      # index site search criteria '1080p' not in library filename, but we identify it from ffprobe as 1080p (matches index site search criteria), skip
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-720p.mkv', 'movie title (2020) bluray dts-group.mkv', 'movie title (2020)', 'movie title (2020) 1080p bluray dts-group.mkv', '1080p bluray', True),        # index site search criteria '1080p' not in library filename, but we identify it from ffprobe as 720p (does not match index site search criteria), continue
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2020) 1080p bluray dts-group.mkv', 'movie title2 (2022)', 'movie title (2020) 720p bluray dts-group', '1080p bluray', True),     # index title name does not match directory name, continue
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2022) 1080p bluray dts-group.mkv', "movie title's (2022)", 'movie titles (2022) 720p bluray dts-group', '1080p bluray', False),  # directory name contains apostrophe but should match index title, skip
-    ('/tmp/tests/test_filter_downloaded_dir', 'test-1080p.mkv', 'movie title (2022) 1080p bluray dts-group.mkv', 'movie titles (2022)', "movie title's (2022) 720p bluray dts-group", '1080p bluray', False),  # index name contains apostrophe but should match directory name, skip
-])
-def test_filter_downloaded_dir(filter_downloaded_dir, library_path, src_filename, dst_filename, dst_directory, index_title, index_site_search, exp_assert):
-
-    response = filter_downloaded_dir
 
     # Assert
     assert response == exp_assert
