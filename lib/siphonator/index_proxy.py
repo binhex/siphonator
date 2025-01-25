@@ -334,13 +334,9 @@ class IndexProxy(object):
                     db_sqlite_instance.write_database()
                     continue
 
-                if self.result_dict.get('result') != 'Failed':
+                if self.result_dict.get('result') == 'Passed':
 
-                    self.result_dict.update({'result': 'Passed', 'result_details': u"Passed all Index and IMDb filters"})
-
-                    # write to database
-                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-                    db_sqlite_instance.write_database()
+                    #self.result_dict.update({'result': 'Passed', 'result_details': u"Passed all Index and IMDb filters"})
 
                     if self.config_dict['notification']['email']['enabled']:
 
@@ -351,12 +347,10 @@ class IndexProxy(object):
                     torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, self.result_dict, self.config_dict)
                     torrent_client_instance.qbittorrent_add()
 
-                else:
-
-                    # write to database
-                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
-                    db_sqlite_instance.write_database()
-                    continue
+                # write to database
+                db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, self.result_dict, self.config_dict)
+                db_sqlite_instance.write_database()
+                continue
 
             # increment offset by 100 (default number of results from jackett)
             offset = offset+100
