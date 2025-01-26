@@ -35,9 +35,9 @@ def quality_score(index_title_year_to_end):
 
     # define scores for resolution, score increases as resolution increases
     resolution_score_dict = {
-        "(480p|sd)": int(10),
+        "(480p|sd|540p)": int(10),
         "(720p)": int(20),
-        "(1080p|hd)": int(30),
+        "(1080p)": int(30),
         "(2160p|4k|uhd)": int(40),
         "(8k)": int(50)
     }
@@ -45,10 +45,10 @@ def quality_score(index_title_year_to_end):
     # define score for source type, score increases as source type improves (higher bitrate)
     source_score_dict = {
         "(dvdrip)": int(10),
-        "(hdtv|web)": int(20),
+        "(hdtv)": int(20),
         "(web-dl|webdl|webrip)": int(30),
-        "(bdrip|hdrip|bluray)": int(40),
-        "(remux)": int(50)
+        "(bd|bdrip|hdrip|bluray)": int(40),
+        "(bdremux|remux)": int(50)
     }
 
     score = 0
