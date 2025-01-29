@@ -97,15 +97,15 @@ class Siphonator(object):
 
         # walk library path and store in results dict, note we save it as a list so we can re-use it (costly)
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-        filter_library_path_walk = list(tools_various_instance.library_path_walk(self.config_dict['general']['library_path']))
+        library_path_walk = list(tools_various_instance.library_path_walk(self.config_dict['general']['library_path']))
 
-        # begin definition of index dict to store imdb and index details
-        result_dict = ({
-            'filter_library_path_walk': filter_library_path_walk,
+        # add library walk to config dict
+        self.config_dict.update({
+            'library_path_walk': library_path_walk,
         })
 
         # create sqlite database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, result_dict, self.config_dict)
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict)
         db_sqlite_instance.create_database()
 
         # upgrade database if required
@@ -158,17 +158,16 @@ class Siphonator(object):
             # we may want to ignore certain index sites
             if index_site_lower in self.config_dict['index_site']['ignore_list']:
 
-                self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{self.config_dict['index_site']['ignore_list']}', skipping processing...")
+                self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{self.config_dict['index_site']['ignore_list']}'")
                 continue
 
             # loop over dict containing search criteria
             for index_site_dict in index_site_list_dict:
 
-                index_site_search = (index_site_dict['criteria'])
-                index_site_category = (index_site_dict['category'])
-                filter_minimum_size_mb = (index_site_dict['minimum_size_mb'])
-                filter_maximum_size_mb = (index_site_dict['maximum_size_mb'])
-                filter_minimum_bitrate_mb = (index_site_dict['minimum_bitrate_mb'])
+                # add index site to index site dict
+                index_site_dict.update({
+                    'index_site': index_site,
+                })
 
                 # get category overrides for specific index sites
                 override_category_dict = self.config_dict.get('index_site', {}).get('override_search', {}).get(index_site_lower, {})
@@ -182,18 +181,7 @@ class Siphonator(object):
                         index_site_category = get_index_site_category
                         self.logger_instance.debug(f"Override category found for index site '{index_site_lower}', category set to '{index_site_category}'")
 
-                # update dict with index site specific search criteria
-                result_dict.update({
-                    'index_site': index_site,
-                    'index_site_search': index_site_search,
-                    'index_site_category': index_site_category,
-                    'filter_minimum_size_mb': filter_minimum_size_mb,
-                    'filter_maximum_size_mb': filter_maximum_size_mb,
-                    'filter_minimum_bitrate_mb': filter_minimum_bitrate_mb
-                })
-
-                self.logger_instance.info(f"Processing index site '{index_site}' for search criteria '{index_site_search}' in category '{index_site_category}'...")
-                index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, self.init_dict, result_dict, self.config_dict)
+                index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, self.init_dict, self.config_dict, index_site_dict)
 
                 try:
                     index_site_instance.jackett()
@@ -201,7 +189,7 @@ class Siphonator(object):
                     self.logger_instance.error(u"IMDbPie having issues contacting IMDb")
 
         # compress (vacuum) database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, result_dict, self.config_dict)
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict)
         db_sqlite_instance.vacuum_database()
 
         # close database
@@ -360,4 +348,3 @@ if __name__ == '__main__':
 
             # cleanup pid file
             daemon.exit()
-logger_instance

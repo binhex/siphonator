@@ -8,11 +8,12 @@ import lib.siphonator.tools_various as siphonator_tools_various
 
 class FilterMovies(object):
 
-    def __init__(self, logger_instance, init_dict, result_dict, config_dict):
+    def __init__(self, logger_instance, init_dict, result_dict, config_dict, index_site_dict):
 
         self.init_dict = init_dict
         self.result_dict = result_dict
         self.config_dict = config_dict
+        self.index_site_dict = index_site_dict
         self.result_details_list = result_dict.get('result_details', [])
         self.logger_instance = logger_instance
         self.tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
@@ -277,7 +278,7 @@ class FilterMovies(object):
     def filter_size(self, size):
 
         index_size = self.result_dict.get('index_size')
-        filter_size_mb = self.result_dict.get(f'filter_{size}_size_mb')
+        filter_size_mb = self.index_site_dict.get(f'{size}_size_mb')
         function_name = siphonator_tools_various.get_function_name()
 
         if filter_size_mb is None:
@@ -344,7 +345,7 @@ class FilterMovies(object):
 
         index_size = self.result_dict.get('index_size')
         imdb_runtime_in_minutes = self.result_dict.get('imdb_running_time_in_minutes')
-        filter_minimum_bitrate_mb = self.result_dict.get('filter_minimum_bitrate_mb')
+        filter_minimum_bitrate_mb = self.index_site_dict.get('minimum_bitrate_mb')
         function_name = siphonator_tools_various.get_function_name()
 
         if filter_minimum_bitrate_mb is None:
@@ -488,7 +489,7 @@ class FilterMovies(object):
 
     def filter_downloaded_file(self):
 
-        filter_library_path_walk = self.result_dict.get('filter_library_path_walk')
+        filter_library_path_walk = self.config_dict.get('library_path_walk')
         library_path = self.config_dict['general']['library_path']
         index_title = self.result_dict.get('index_title')
         index_title_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(index_title)
@@ -555,7 +556,7 @@ class FilterMovies(object):
 
                     # if index title score is greater than library filename score then continue
                     if library_filename_score < index_title_score:
-                        result_details = f"Passed {function_name} - Index title '{index_title}' score {index_title_score} is greater than library filename score {library_filename_score}, continue processing..."
+                        result_details = f"Passed {function_name} - Index title '{index_title}' score {index_title_score} is greater than library filename score {library_filename_score}"
                         self.logger_instance.info(result_details)
                         self.result_dict.update({'result': u'Passed'})
                         self.result_details_list.append(result_details)
@@ -564,7 +565,7 @@ class FilterMovies(object):
 
                 # if preferred index group is not present in library file then continue
                 if self.filter_preferred_index_group(library_filename, index_title):
-                    result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred group and library filename {library_filename} does not, continue processing..."
+                    result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred group and library filename {library_filename} does not"
                     self.logger_instance.info(result_details)
                     self.result_dict.update({'result': u'Passed'})
                     self.result_details_list.append(result_details)
@@ -573,7 +574,7 @@ class FilterMovies(object):
 
                 # if preferred index quality is not present in library file then continue
                 if self.filter_preferred_index_quality(library_filename, index_title):
-                    result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_filename} does not, continue processing..."
+                    result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_filename} does not"
                     self.logger_instance.info(result_details)
                     self.result_dict.update({'result': u'Passed'})
                     self.result_details_list.append(result_details)
@@ -589,7 +590,7 @@ class FilterMovies(object):
                 return False
 
         # if index title not found in library path then continue
-        result_details = f"Passed {function_name} - Index title '{index_title}' does not exist in library path '{library_path}', continue processing..."
+        result_details = f"Passed {function_name} - Index title '{index_title}' does not exist in library path '{library_path}'"
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
         self.result_details_list.append(result_details)
@@ -669,7 +670,7 @@ class FilterMovies(object):
 
                             # if library filename title quality score is less than the index title then continue
                             if library_filename_score < index_title_score:
-                                result_details = f"Passed {function_name} - Index title '{index_title}' score {index_title_score} is greater than library filename {library_sub_file} score {library_filename_score}, continue processing..."
+                                result_details = f"Passed {function_name} - Index title '{index_title}' score {index_title_score} is greater than library filename {library_sub_file} score {library_filename_score}"
                                 self.logger_instance.info(result_details)
                                 self.result_dict.update({'result': u'Passed'})
                                 self.result_details_list.append(result_details)
@@ -678,7 +679,7 @@ class FilterMovies(object):
 
                         # if preferred group is present in index title or library file already exists with preferred group then continue
                         if self.filter_preferred_index_group(library_sub_file, index_title):
-                            result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_sub_file} does not, continue processing..."
+                            result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_sub_file} does not"
                             self.logger_instance.info(result_details)
                             self.result_dict.update({'result': u'Passed'})
                             self.result_details_list.append(result_details)
@@ -687,7 +688,7 @@ class FilterMovies(object):
 
                         # if preferred index quality is present in index title or library file then continue
                         if self.filter_preferred_index_quality(library_sub_file, index_title):
-                            result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_sub_file} does not, continue processing..."
+                            result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_sub_file} does not"
                             self.logger_instance.info(result_details)
                             self.result_dict.update({'result': u'Passed'})
                             self.result_details_list.append(result_details)
@@ -701,7 +702,7 @@ class FilterMovies(object):
                         self.result_dict.update({'result_details': self.result_details_list})
                         return False
 
-        result_details = f"Passed {function_name} - Index title '{index_title}' does not exist in library path '{library_path}', continue processing..."
+        result_details = f"Passed {function_name} - Index title '{index_title}' does not exist in library path '{library_path}'"
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
         self.result_details_list.append(result_details)
@@ -710,7 +711,7 @@ class FilterMovies(object):
 
     def filter_downloaded_file_search_criteria(self, library_filename, library_filepath):
 
-        index_site_search = self.result_dict.get('index_site_search')
+        index_site_search = self.index_site_dict.get('criteria')
         ffprobe_filepath = self.init_dict.get('ffprobe_filepath')
         index_site_search_list = index_site_search.split()
         library_filename_title_full_compare = self.tools_various_instance.custom_title_full_compare(library_filename)
@@ -1158,7 +1159,7 @@ class FilterMovies(object):
         index_title = self.result_dict.get('index_title')
         index_title_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(index_title)
         index_title_year_to_end_search_compare = self.tools_various_instance.custom_title_word_match_compare(index_title_year_to_end_compare)
-        index_site_search_result_dict = self.result_dict.get('index_site_search').lower()
+        index_site_search_result_dict = self.index_site_dict.get('criteria').lower()
         index_site_search_list = index_site_search_result_dict.split()
         function_name = siphonator_tools_various.get_function_name()
 

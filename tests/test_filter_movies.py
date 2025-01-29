@@ -36,8 +36,12 @@ def filter_bad_genre(imdb_genres_list):
         }
     }
 
+    # Arrange
+    index_site_dict = {
+    }
+
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_bad_genre()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -62,8 +66,12 @@ def filter_preferred_index_group(filter_preferred_index_group_list, library_file
         }
     }
 
+    # Arrange
+    index_site_dict = {
+    }
+
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_preferred_index_group(library_filename, index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -88,8 +96,12 @@ def filter_preferred_index_quality(filter_preferred_index_quality_list, library_
         }
     }
 
+    # Arrange
+    index_site_dict = {
+    }
+
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_preferred_index_quality(library_filename, index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -108,6 +120,7 @@ def filter_rating(imdb_rating):
     result_dict = {
         'imdb_rating': imdb_rating,
     }
+
     # Arrange
     config_dict = {
         'filters': {
@@ -115,10 +128,15 @@ def filter_rating(imdb_rating):
             'genre_minimum_rating_dict': None,
         }
     }
+
+    # Arrange
+    index_site_dict = {
+    }
+
     override_genre_dict = {}
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_rating(override_genre_dict)
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -137,6 +155,7 @@ def filter_bad_index_title(index_title, filter_bad_index_title_list):
     result_dict = {
         'index_title': index_title,
     }
+
     # Arrange
     config_dict = {
         'filters': {
@@ -144,8 +163,12 @@ def filter_bad_index_title(index_title, filter_bad_index_title_list):
         }
     }
 
+    # Arrange
+    index_site_dict = {
+    }
+
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_bad_index_title()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -172,8 +195,12 @@ def filter_bad_movie_title(filter_bad_movie_title_list):
         }
     }
 
+    # Arrange
+    index_site_dict = {
+    }
+
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_bad_movie_title()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -207,8 +234,12 @@ def filter_override_genre(imdb_genres_list, override_genre, override_genre_minim
         }
     }
 
+    # Arrange
+    index_site_dict = {
+    }
+
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_override_genre()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -234,7 +265,7 @@ def filter_downloaded_file(index_title, index_site_search, library_path, filenam
     open(library_filepath, mode='a').close()
 
     # walk path to get test directory and filename
-    filter_library_path_walk = os.walk(library_path, topdown=False)
+    library_path_walk = os.walk(library_path, topdown=False)
 
     init_dict = {
         'ffprobe_filepath': '',
@@ -245,7 +276,6 @@ def filter_downloaded_file(index_title, index_site_search, library_path, filenam
         'index_title_compare': index_title_compare,
         'index_year_compare': index_year_compare,
         'index_site_search': index_site_search,
-        'filter_library_path_walk': filter_library_path_walk,
     }
     # Arrange
     config_dict = {
@@ -255,11 +285,16 @@ def filter_downloaded_file(index_title, index_site_search, library_path, filenam
         'filters': {
             'preferred_index_group_list': filter_preferred_index_group_list,
             'preferred_index_quality_list': filter_preferred_index_quality_list,
-        }
+        },
+        'library_path_walk': library_path_walk,
+    }
+
+    # Arrange
+    index_site_dict = {
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_downloaded_file()
 
     # yield used instead of return to allow us to do cleanup afterward

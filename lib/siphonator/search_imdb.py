@@ -108,7 +108,7 @@ class SearchIMDB(object):
             self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
             self.result_dict.update({'imdb_id': imdb_id})
 
-            result_details = f"Passed {function_name} - Found IMDb ID for movie '{self.index_title_search}' using IMDb search"
+            result_details = f"Passed {function_name} - Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using IMDb search"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Passed'})
             self.result_details_list.append(result_details)

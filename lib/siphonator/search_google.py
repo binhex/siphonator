@@ -109,7 +109,7 @@ class SearchGoogle(object):
         self.logger_instance.debug(f"IMDb URL is '{imdb_url}'")
         self.result_dict.update({'imdb_id': imdb_id})
 
-        result_details = f"Passed {function_name} - Found IMDb ID for movie '{self.index_title_search}' using Google search"
+        result_details = f"Passed {function_name} - Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using Google search"
         self.logger_instance.debug(result_details)
         self.result_dict.update({'result': u'Passed'})
         self.result_details_list.append(result_details)

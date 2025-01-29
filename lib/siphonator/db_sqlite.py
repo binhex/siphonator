@@ -5,12 +5,11 @@ import lib.siphonator.tools_various as siphonator_tools_various
 
 class DbSqlite(object):
 
-    def __init__(self, logger_instance, init_dict, result_dict, config_dict):
+    def __init__(self, logger_instance, init_dict, result_dict=None):
 
         self.logger_instance = logger_instance
         self.init_dict = init_dict
         self.result_dict = result_dict
-        self.config_dict = config_dict
         self.db_version = init_dict['db_version']
         self.db_filepath = init_dict['db_filepath']
 
