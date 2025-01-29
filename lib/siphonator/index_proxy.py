@@ -29,6 +29,8 @@ class IndexProxy(object):
     # out return_code, status_code, content
     def jackett(self):
 
+        function_name = siphonator_tools_various.get_function_name()
+
         if self.result_dict is not None:
 
             self.result_dict.update({'search_site': self.search_site})
@@ -150,7 +152,12 @@ class IndexProxy(object):
                     'imdb_credits_cast_list': None,
                     'imdb_credits_character_list': None,
                     'imdb_language_list': None,
-                    'imdb_country_list': None,
+                    'imdb_country_list': None
+                })
+
+                self.logger_instance.info(u"Resetting result details for dict from previous run...")
+                self.result_dict.update({
+                    'result_details': []
                 })
 
                 try:
@@ -336,7 +343,12 @@ class IndexProxy(object):
 
                 if self.result_dict.get('result') == 'Passed':
 
-                    #self.result_dict.update({'result': 'Passed', 'result_details': u"Passed all Index and IMDb filters"})
+                    result_details = f"Passed {function_name} - Passed all Index and IMDb filters"
+                    self.logger_instance.info(result_details)
+                    result_details_list = self.result_dict.get('result_details')
+                    self.result_dict.update({'result': u'Passed'})
+                    result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': result_details_list})
 
                     if self.config_dict['notification']['email']['enabled']:
 

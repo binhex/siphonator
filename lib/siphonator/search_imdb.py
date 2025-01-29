@@ -11,9 +11,12 @@ class SearchIMDB(object):
         self.index_title_search = result_dict.get('index_title_search', None)
         self.index_title_compare = result_dict.get('index_title_compare', None)
         self.index_year_compare = result_dict.get('index_year_compare', None)
+        self.result_details_list = result_dict.get('result_details', [])
         self.logger_instance = logger_instance
 
     def find_imdb_id_imdb(self):
+
+        function_name = siphonator_tools_various.get_function_name()
 
         imdb_instance = imdbpie.Imdb()
         try:
@@ -22,14 +25,21 @@ class SearchIMDB(object):
 
         except (AttributeError, ValueError):
 
-            self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to search IMDb for index title compare '{self.index_title_compare}'"})
+            result_details = f"Failed {function_name} - Failed to search IMDb for index title compare '{self.index_title_compare}'"
+            self.logger_instance.warning(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
         # if resulting imdb json page is blank then continue
         if imdb_find_id_dict == {}:
 
-            self.logger_instance.info(f"No match for movie title '{self.index_title_search}' on IMDb json")
-            self.result_dict.update({'result': 'Failed', 'result_details': f"No match for movie title '{self.index_title_search}' on IMDb json"})
+            result_details = f"Failed {function_name} - No match for movie title '{self.index_title_search}' on IMDb json"
+            self.logger_instance.warning(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
         for imdb_find_id in imdb_find_id_dict:
@@ -98,8 +108,16 @@ class SearchIMDB(object):
             self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
             self.result_dict.update({'imdb_id': imdb_id})
 
-            self.result_dict.update({'result': 'Passed', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using IMDb search"})
+            result_details = f"Passed {function_name} - Found IMDb ID for movie '{self.index_title_search}' using IMDb search"
+            self.logger_instance.warning(result_details)
+            self.result_dict.update({'result': u'Passed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
-        self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to identify movie '{self.index_title_search}' using IMDb search"})
+        result_details = f"Failed {function_name} - Failed to identify movie '{self.index_title_search}' using IMDb search"
+        self.logger_instance.warning(result_details)
+        self.result_dict.update({'result': u'Failed'})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return self.result_dict

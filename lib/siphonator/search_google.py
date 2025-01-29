@@ -13,6 +13,7 @@ class SearchGoogle(object):
         self.index_title_compare = result_dict.get('index_title_compare', None)
         self.index_title_full_compare = result_dict.get('index_title_full_compare', None)
         self.index_year_compare = result_dict.get('index_year_compare', None)
+        self.result_details_list = result_dict.get('result_details', [])
         self.logger_instance = logger_instance
 
     def find_imdb_id_google(self):
@@ -20,9 +21,15 @@ class SearchGoogle(object):
         # TODO note the timeout does not seem to work well and the search can get stuck, see https://github.com/Nv7-GitHub/googlesearch/issues/34
         google_find_id_gen = googlesearch.search(f"imdb {self.index_title_search} ({self.index_year_compare})", advanced=True, sleep_interval=5, num_results=1, timeout=10)
 
+        function_name = siphonator_tools_various.get_function_name()
+
         if not google_find_id_gen:
 
-            self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to search Google for index title compare '{self.index_title_compare}'"})
+            result_details = f"Failed {function_name} - Failed to search Google for index title compare '{self.index_title_compare}'"
+            self.logger_instance.debug(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
         try:
@@ -32,7 +39,11 @@ class SearchGoogle(object):
 
         except StopIteration:
 
-            self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to return results from Google for index title compare '{self.index_title_compare}'"})
+            result_details = f"Failed {function_name} - Failed to return results from Google for index title compare '{self.index_title_compare}'"
+            self.logger_instance.debug(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
         imdb_title = google_find_id_dict.title
@@ -41,7 +52,11 @@ class SearchGoogle(object):
         # if title or url is none then return
         if not imdb_title or not imdb_url:
 
-            self.result_dict.update({'result': 'Failed', 'result_details': f"Failed to return IMDb title or URL from Google for index title compare '{self.index_title_compare}'"})
+            result_details = f"Failed {function_name} - Failed to return IMDb title or URL from Google for index title compare '{self.index_title_compare}'"
+            self.logger_instance.debug(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
         # find imdb title
@@ -56,8 +71,11 @@ class SearchGoogle(object):
         # check imdb title match index title
         if imdb_title_compare not in self.index_title_compare:
 
-            self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'")
-            self.result_dict.update({'result': 'Failed', 'result_details': f"IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'"})
+            result_details = f"Failed {function_name} - IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'"
+            self.logger_instance.debug(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
         self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' matches index title compare '{self.index_title_compare}'")
@@ -65,8 +83,11 @@ class SearchGoogle(object):
         # check imdb title year matches index title year
         if self.index_year_compare not in imdb_title:
 
-            self.logger_instance.debug(f"IMDb title '{imdb_title}' does not contain index year compare '{self.index_year_compare}'")
-            self.result_dict.update({'result': 'Failed', 'result_details': f"IMDb title '{imdb_title}' does not contain index year compare '{self.index_year_compare}'"})
+            result_details = f"Failed {function_name} - IMDb title '{imdb_title}' does not contain index year compare '{self.index_year_compare}'"
+            self.logger_instance.debug(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
         self.logger_instance.debug(f"IMDb title '{imdb_title}' does contain index year compare '{self.index_year_compare}'")
@@ -76,14 +97,21 @@ class SearchGoogle(object):
 
         if not imdb_id_search:
 
-            self.logger_instance.debug(f"IMDb URL '{imdb_url}' from Google search does not contain IMDb ID")
-            self.result_dict.update({'result': 'Failed', 'result_details': f"IMDb URL '{imdb_url}' from Google search does not contain IMDb ID"})
+            result_details = f"Failed {function_name} - IMDb URL '{imdb_url}' from Google search does not contain IMDb ID"
+            self.logger_instance.debug(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
         imdb_id = imdb_id_search.group()
         self.logger_instance.debug(f"IMDb ID is '{imdb_id}'")
         self.logger_instance.debug(f"IMDb URL is '{imdb_url}'")
-
         self.result_dict.update({'imdb_id': imdb_id})
-        self.result_dict.update({'result': 'Passed', 'result_details': f"Found IMDb ID for movie '{self.index_title_search}' using Google search"})
+
+        result_details = f"Passed {function_name} - Found IMDb ID for movie '{self.index_title_search}' using Google search"
+        self.logger_instance.debug(result_details)
+        self.result_dict.update({'result': u'Passed'})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return self.result_dict

@@ -113,7 +113,7 @@ class ToolsVarious(object):
 
         except FileNotFoundError:
 
-            self.logger_instance.info(u"ffprobe missing or not on path")
+            self.logger_instance.debug(u"ffprobe missing or not on path")
             return None
 
         stream_width = video_streams['streams'][0]['width']
@@ -373,11 +373,17 @@ class ToolsVarious(object):
             self.logger_instance.warning(u'No kwargs sent to function')
             return None
 
+        result_details_list = result_dict.get('result_details', [])
+        function_name = get_function_name()
+
         index_title = result_dict.get('index_title', None)
         if index_title is None:
 
-            self.logger_instance.warning(f"Index title not found in dictionary '{result_dict}'")
-            result_dict.update({'result': 'Failed', 'result_details': 'Index title not found'})
+            result_details = f"Failed {function_name} - Index title not found"
+            self.logger_instance.warning(result_details)
+            result_dict.update({'result': u'Failed'})
+            result_details_list.append(result_details)
+            result_dict.update({'result_details': result_details_list})
             return result_dict
 
         self.logger_instance.debug(f"Index title is '{index_title}'")
@@ -385,56 +391,74 @@ class ToolsVarious(object):
         index_title_full_compare = self.custom_title_full_compare(index_title)
         if index_title_full_compare is None:
 
-            self.logger_instance.debug(f"Cannot identify index title compare from index title '{index_title}' using regex")
-            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify index title compare from index title'})
+            result_details = f"Failed {function_name} - Cannot identify index title compare from index title"
+            self.logger_instance.warning(result_details)
+            result_dict.update({'result': u'Failed'})
+            result_details_list.append(result_details)
+            result_dict.update({'result_details': result_details_list})
             return result_dict
 
-        self.logger_instance.info(f"Index title full compare is '{index_title_full_compare}'")
+        self.logger_instance.debug(f"Index title full compare is '{index_title_full_compare}'")
 
         index_title_compare = self.custom_title_compare(index_title)
         if index_title_compare is None:
 
-            self.logger_instance.debug(f"Cannot identify compare title from index title '{index_title}' using regex")
-            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify compare title from index title'})
+            result_details = f"Failed {function_name} - Cannot identify compare title from index title"
+            self.logger_instance.warning(result_details)
+            result_dict.update({'result': u'Failed'})
+            result_details_list.append(result_details)
+            result_dict.update({'result_details': result_details_list})
             return result_dict
 
-        self.logger_instance.info(f"Index title compare is '{index_title_compare}'")
+        self.logger_instance.debug(f"Index title compare is '{index_title_compare}'")
 
         index_title_search = self.custom_title_search(index_title)
         if index_title_search is None:
 
-            self.logger_instance.info(f"Cannot identify search title from index title '{index_title}' using regex '{self.index_title_search_regex}'")
-            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify search title from index title'})
+            result_details = f"Failed {function_name} - Cannot identify search title from index title"
+            self.logger_instance.warning(result_details)
+            result_dict.update({'result': u'Failed'})
+            result_details_list.append(result_details)
+            result_dict.update({'result_details': result_details_list})
             return result_dict
 
-        self.logger_instance.info(f"Index title search is '{index_title_search}'")
+        self.logger_instance.debug(f"Index title search is '{index_title_search}'")
 
         index_title_year_to_end_compare = self.custom_title_year_to_end_compare(index_title)
         if index_title_year_to_end_compare is None:
 
-            self.logger_instance.info(f"Cannot identify year to end from index title '{index_title}' using regex '{self.index_title_year_to_end_regex}'")
-            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify year to end from index title'})
+            result_details = f"Failed {function_name} - Cannot identify year to end from index title"
+            self.logger_instance.warning(result_details)
+            result_dict.update({'result': u'Failed'})
+            result_details_list.append(result_details)
+            result_dict.update({'result_details': result_details_list})
             return result_dict
 
-        self.logger_instance.info(f"Index year to end is '{index_title_year_to_end_compare}'")
+        self.logger_instance.debug(f"Index year to end is '{index_title_year_to_end_compare}'")
 
         index_year_compare = self.custom_title_year_compare(index_title)
         if index_year_compare is None:
 
-            self.logger_instance.info(f"Cannot identify year compare from index title '{index_title}' using regex '{self.index_title_year_regex}'")
-            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify year compare from index title'})
+            result_details = f"Failed {function_name} - Cannot identify year compare from index title"
+            self.logger_instance.warning(result_details)
+            result_dict.update({'result': u'Failed'})
+            result_details_list.append(result_details)
+            result_dict.update({'result_details': result_details_list})
             return result_dict
 
-        self.logger_instance.info(f"Index title year compare is '{index_year_compare}'")
+        self.logger_instance.debug(f"Index title year compare is '{index_year_compare}'")
 
         index_title_and_year_compare = self.custom_title_and_year_compare(index_title)
         if index_title_and_year_compare is None:
 
-            self.logger_instance.info(f"Cannot identify index title and year compare from index title '{index_title}'")
-            result_dict.update({'result': 'Failed', 'result_details': 'Cannot identify index title and year compare from index title'})
+            result_details = f"Failed {function_name} - Cannot identify index title and year compare from index title"
+            self.logger_instance.warning(result_details)
+            result_dict.update({'result': u'Failed'})
+            result_details_list.append(result_details)
+            result_dict.update({'result_details': result_details_list})
             return result_dict
 
-        self.logger_instance.info(f"Index title and year compare is '{index_title_and_year_compare}'")
+        self.logger_instance.debug(f"Index title and year compare is '{index_title_and_year_compare}'")
 
         result_dict.update({
             'index_title_compare': index_title_compare,
@@ -442,9 +466,12 @@ class ToolsVarious(object):
             'index_year_compare': index_year_compare,
             'index_title_search': index_title_search,
             'index_title_year_to_end_compare': index_title_year_to_end_compare,
-            'index_title_and_year_compare': index_title_and_year_compare,
-            'result': 'Passed',
-            'result_details': 'Identified title and year from index title'
+            'index_title_and_year_compare': index_title_and_year_compare
         })
 
+        result_details = f"Passed {function_name} - Identified title and year from index title"
+        self.logger_instance.info(result_details)
+        result_dict.update({'result': u'Passed'})
+        result_details_list.append(result_details)
+        result_dict.update({'result_details': result_details_list})
         return result_dict

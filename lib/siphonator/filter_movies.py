@@ -13,12 +13,14 @@ class FilterMovies(object):
         self.init_dict = init_dict
         self.result_dict = result_dict
         self.config_dict = config_dict
+        self.result_details_list = result_dict.get('result_details', [])
         self.logger_instance = logger_instance
         self.tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
 
     def filter_index_movies(self):
 
         self.result_dict.update({'result': 'Failed'})
+
         function_name = siphonator_tools_various.get_function_name()
 
         filter_index_title_search_result = self.filter_index_title_search_check()
@@ -56,8 +58,7 @@ class FilterMovies(object):
         else:
             return self.result_dict
 
-        result_details = f"Passed {function_name} - Index title '{self.result_dict.get('index_title')}'"
-        self.logger_instance.debug(result_details)
+        self.logger_instance.debug(f"Passed {function_name} - Index title '{self.result_dict.get('index_title')}'")
         self.result_dict.update({'result': 'Passed'})
 
         return self.result_dict
@@ -116,8 +117,7 @@ class FilterMovies(object):
                             if not filter_votes_result:
                                 return self.result_dict
 
-        result_details = f"Passed {function_name} - Index title '{self.result_dict.get('index_title')}'"
-        self.logger_instance.debug(result_details)
+        self.logger_instance.debug(f"Passed {function_name} - Index title '{self.result_dict.get('index_title')}'")
         self.result_dict.update({'result': 'Passed'})
 
         return self.result_dict
@@ -132,7 +132,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - IMDb genre not found, skipping filter genre rating"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return None
 
         override_genre_dict = {}
@@ -169,7 +170,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - No IMDb minimum rating defined, assuming above threshold"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         if imdb_rating is None:
@@ -177,7 +179,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - No IMDb rating available to filter on, assuming below threshold"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         # if override genre dict is not empty then proceed
@@ -194,7 +197,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - IMDb rating defined as '{filter_minimum_rating}' is greater than the maximum value of 10.0, assuming above threshold"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         filter_minimum_rating_dec = Decimal(filter_minimum_rating)
@@ -203,7 +207,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - IMDb rating '{imdb_rating}' equal to/above threshold '{filter_minimum_rating}'"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         else:
@@ -211,7 +216,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - IMDb rating '{imdb_rating}' below threshold '{filter_minimum_rating}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
     def filter_votes(self, override_genre_dict):
@@ -225,7 +231,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - No IMDb minimum votes defined, skipping votes check"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         if imdb_votes is None:
@@ -233,7 +240,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - No IMDb votes available to filter on, assuming below threshold"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         # if override genre dict is not empty then proceed
@@ -253,7 +261,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - IMDb votes '{imdb_votes}' equal to/above threshold '{filter_minimum_votes}'"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         else:
@@ -261,7 +270,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - IMDb votes '{imdb_votes}' below threshold '{filter_minimum_votes}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
     def filter_size(self, size):
@@ -275,7 +285,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - '{size.capitalize()}' size not defined, skipping maximum size check"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         if index_size is None:
@@ -283,7 +294,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - No Index size available to filter on, assuming below threshold"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         imdb_size_int_mb = int(index_size) // 1000000
@@ -295,7 +307,8 @@ class FilterMovies(object):
                 result_details = f"Passed {function_name} - Index size '{imdb_size_int_mb}' (MB) is within '{size}' size threshold '{filter_size_mb}' (MB)"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Passed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return True
 
             else:
@@ -303,7 +316,8 @@ class FilterMovies(object):
                 result_details = f"Failed {function_name} - Index size '{imdb_size_int_mb}' (MB) not within '{size}' size threshold '{filter_size_mb}' (MB)"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return False
 
         if size == "maximum":
@@ -313,7 +327,8 @@ class FilterMovies(object):
                 result_details = f"Passed {function_name} - Index size '{imdb_size_int_mb}' (MB) is within '{size}' size threshold '{filter_size_mb}' (MB)"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Passed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return True
 
             else:
@@ -321,7 +336,8 @@ class FilterMovies(object):
                 result_details = f"Failed {function_name} - Index size '{imdb_size_int_mb}' (MB) not within '{size}' size threshold '{filter_size_mb}' (MB)"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return False
 
     def filter_bitrate(self):
@@ -336,7 +352,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - No minimum bitrate defined, assuming above threshold"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         if index_size is None:
@@ -344,7 +361,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - No Index size available to filter on, assuming below threshold"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         if imdb_runtime_in_minutes is None:
@@ -352,7 +370,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - No movie runtime available to filter on, assuming below threshold"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         index_size_int_mb = int(index_size)//1000000
@@ -364,7 +383,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - Index bitrate '{imdb_bitrate_int_mb}' (MB/min) equal to/above minimum bitrate threshold '{filter_minimum_bitrate_mb}' (MB/min)"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         else:
@@ -372,7 +392,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - Index bitrate '{imdb_bitrate_int_mb}' (MB/min) below minimum bitrate threshold '{filter_minimum_bitrate_mb}' (MB/min)"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
     def filter_year(self):
@@ -386,7 +407,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - No minimum movie year defined, assuming above threshold"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         if index_year_compare is None:
@@ -394,7 +416,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - No movie year available to filter on, assuming below threshold"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         index_year_compare_int = int(index_year_compare)
@@ -405,7 +428,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - Movie year '{index_year_compare}' equal to/above minimum year threshold '{filter_minimum_year}'"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         else:
@@ -413,7 +437,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - Movie year '{index_year_compare}' below minimum year threshold '{filter_minimum_year}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
     def filter_runtime(self):
@@ -427,7 +452,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - No minimum runtime defined, assuming above threshold"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         if imdb_runtime_in_minutes is None:
@@ -435,7 +461,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - No movie runtime available to filter on, assuming below threshold"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         imdb_runtime_int_mins = int(imdb_runtime_in_minutes)
@@ -446,7 +473,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - Movie runtime '{imdb_runtime_int_mins}' (mins) equal to/above minimum runtime threshold '{filter_minimum_runtime_mins_int}' (mins)"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         else:
@@ -454,7 +482,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - Movie runtime '{imdb_runtime_int_mins}' (mins) below minimum runtime threshold '{filter_minimum_runtime_mins_int}' (mins)"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
     def filter_downloaded_file(self):
@@ -472,7 +501,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - No library path defined, assuming movie is not present in library"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         self.logger_instance.debug(f"Index title compare is '{index_title_compare}'")
@@ -528,7 +558,8 @@ class FilterMovies(object):
                         result_details = f"Passed {function_name} - Index title '{index_title}' score {index_title_score} is greater than library filename score {library_filename_score}, continue processing..."
                         self.logger_instance.info(result_details)
                         self.result_dict.update({'result': u'Passed'})
-                        self.result_dict.update({'result_details': result_details})
+                        self.result_details_list.append(result_details)
+                        self.result_dict.update({'result_details': self.result_details_list})
                         return True
 
                 # if preferred index group is not present in library file then continue
@@ -536,7 +567,8 @@ class FilterMovies(object):
                     result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred group and library filename {library_filename} does not, continue processing..."
                     self.logger_instance.info(result_details)
                     self.result_dict.update({'result': u'Passed'})
-                    self.result_dict.update({'result_details': result_details})
+                    self.result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': self.result_details_list})
                     return True
 
                 # if preferred index quality is not present in library file then continue
@@ -544,21 +576,24 @@ class FilterMovies(object):
                     result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_filename} does not, continue processing..."
                     self.logger_instance.info(result_details)
                     self.result_dict.update({'result': u'Passed'})
-                    self.result_dict.update({'result_details': result_details})
+                    self.result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': self.result_details_list})
                     return True
 
                 # if index title found in library path then skip
                 result_details = f"Failed {function_name} - Index title '{index_title}' already exists in library file '{library_filename}', skipping movie"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return False
 
         # if index title not found in library path then continue
         result_details = f"Passed {function_name} - Index title '{index_title}' does not exist in library path '{library_path}', continue processing..."
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return True
 
     def filter_downloaded_dir(self):
@@ -637,7 +672,8 @@ class FilterMovies(object):
                                 result_details = f"Passed {function_name} - Index title '{index_title}' score {index_title_score} is greater than library filename {library_sub_file} score {library_filename_score}, continue processing..."
                                 self.logger_instance.info(result_details)
                                 self.result_dict.update({'result': u'Passed'})
-                                self.result_dict.update({'result_details': result_details})
+                                self.result_details_list.append(result_details)
+                                self.result_dict.update({'result_details': self.result_details_list})
                                 return True
 
                         # if preferred group is present in index title or library file already exists with preferred group then continue
@@ -645,7 +681,8 @@ class FilterMovies(object):
                             result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_sub_file} does not, continue processing..."
                             self.logger_instance.info(result_details)
                             self.result_dict.update({'result': u'Passed'})
-                            self.result_dict.update({'result_details': result_details})
+                            self.result_details_list.append(result_details)
+                            self.result_dict.update({'result_details': self.result_details_list})
                             return True
 
                         # if preferred index quality is present in index title or library file then continue
@@ -653,19 +690,22 @@ class FilterMovies(object):
                             result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_sub_file} does not, continue processing..."
                             self.logger_instance.info(result_details)
                             self.result_dict.update({'result': u'Passed'})
-                            self.result_dict.update({'result_details': result_details})
+                            self.result_details_list.append(result_details)
+                            self.result_dict.update({'result_details': self.result_details_list})
                             return True
 
                         result_details = f"Failed {function_name} - Index title '{index_title}' already exists in library file '{library_sub_file}', skipping movie"
                         self.logger_instance.warning(result_details)
                         self.result_dict.update({'result': u'Failed'})
-                        self.result_dict.update({'result_details': result_details})
+                        self.result_details_list.append(result_details)
+                        self.result_dict.update({'result_details': self.result_details_list})
                         return False
 
         result_details = f"Passed {function_name} - Index title '{index_title}' does not exist in library path '{library_path}', continue processing..."
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return True
 
     def filter_downloaded_file_search_criteria(self, library_filename, library_filepath):
@@ -693,7 +733,8 @@ class FilterMovies(object):
                         result_details = f"Failed {function_name} - Unable to determine resolution from ffprobe for library file '{library_filename}'"
                         self.logger_instance.info(result_details)
                         self.result_dict.update({'result': u'Failed'})
-                        self.result_dict.update({'result_details': result_details})
+                        self.result_details_list.append(result_details)
+                        self.result_dict.update({'result_details': self.result_details_list})
                         return False
 
                     self.logger_instance.debug(f"Library file resolution identified as '{library_filepath_height_resolution_numeric}' for library file '{library_filename}'")
@@ -704,7 +745,8 @@ class FilterMovies(object):
                         result_details = f"Failed {function_name} - Library file resolution '{library_filepath_height_resolution_numeric}' is less than resolution for index title '{index_site_search_item_resolution_numeric}'"
                         self.logger_instance.info(result_details)
                         self.result_dict.update({'result': u'Failed'})
-                        self.result_dict.update({'result_details': result_details})
+                        self.result_details_list.append(result_details)
+                        self.result_dict.update({'result_details': self.result_details_list})
                         return False
 
                 else:
@@ -712,13 +754,15 @@ class FilterMovies(object):
                     result_details = f"Failed {function_name} - Unable to determine missing index site search item '{index_site_search_item}' from library filename '{library_filename}'"
                     self.logger_instance.info(result_details)
                     self.result_dict.update({'result': u'Failed'})
-                    self.result_dict.update({'result_details': result_details})
+                    self.result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': self.result_details_list})
                     return False
 
         result_details = f"Passed {function_name} - Index site search criteria '{index_site_search_list}' found in library filename '{library_filename}'"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Passed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return True
 
     def filter_bad_genre(self):
@@ -732,7 +776,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - No bad genre(s) defined, skipping bad genre check"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         if imdb_genres_list is None:
@@ -740,7 +785,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - No IMDb genre(s) found, skipping bad genre check"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         imdb_genres_list_lower = [x.lower() for x in imdb_genres_list]
@@ -753,13 +799,15 @@ class FilterMovies(object):
                 result_details = f"Failed {function_name} - IMDb genre(s) '{imdb_genres_list_lower}' match bad genre(s) list '{filter_bad_genre_list_lower}', skipping movie"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return False
 
         result_details = f"Passed {function_name} - IMDb genre(s) '{imdb_genres_list_lower}' does NOT match any of the bad genre(s) '{filter_bad_genre_list_lower}'"
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return True
 
     def filter_bad_index_title(self):
@@ -772,7 +820,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - No bad index title keywords defined, skipping bad index title keyword check"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         # get bad index title compare using tools various
@@ -790,13 +839,15 @@ class FilterMovies(object):
                 result_details = f"Failed {function_name} - Index title '{index_title_year_to_end_compare}' contains bad title keyword '{filter_bad_title}', skipping movie"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return False
 
         result_details = f"Passed {function_name} - Index title '{index_title_year_to_end_compare}' does NOT contain bad title keyword(s) '{filter_bad_title_list}'"
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return True
 
     def filter_bad_movie_title(self):
@@ -809,7 +860,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - No bad movie titles defined, skipping bad movie title check"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         index_title_and_year_compare = self.result_dict.get('index_title_and_year_compare')
@@ -824,13 +876,15 @@ class FilterMovies(object):
                 result_details = f"Failed {function_name} - Index title '{index_title_and_year_compare}' contains bad movie title '{filter_bad_movie_title_full_compare}', skipping movie"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return False
 
         result_details = f"Index title '{index_title_and_year_compare}' does NOT match any bad movie titles in list"
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return True
 
     def filter_bad_index_type(self):
@@ -844,13 +898,15 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - Index title '{index_title}' contains tv season or episode string match for regex, skipping movie"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         result_details = f"Passed {function_name} - Index title '{index_title}' does NOT contains tv season or episode string match"
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return True
 
     def filter_good_language_country(self, filter_type):
@@ -864,7 +920,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - Filter for '{filter_type}' not defined, skipping '{filter_type}' checks"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         if imdb_list is None:
@@ -872,7 +929,8 @@ class FilterMovies(object):
             result_details = f"Passed {function_name} - IMDb '{filter_type}' not found, assuming '{filter_type}' is OK"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return True
 
         imdb_lower_list = [x.lower() for x in imdb_list]
@@ -885,13 +943,15 @@ class FilterMovies(object):
                 result_details = f"Passed {function_name} - IMDb '{filter_type}' list '{imdb_lower_list}' is in good '{filter_type}' list '{filter_lower_list}'"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Passed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return True
 
         result_details = f"Failed {function_name} - IMDb '{filter_type}' list '{imdb_lower_list}' is not in good '{filter_type}' list '{filter_lower_list}'"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Failed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return False
 
     def filter_preferred_index_group(self, library_filename, index_title):
@@ -904,7 +964,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - No preferred index groups defined, skipping preferred index group check"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         filter_preferred_index_group_lower_list = [x.lower() for x in filter_preferred_index_group_list]
@@ -922,7 +983,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - Library filename group '{library_filename_group}' is in preferred index group list '{filter_preferred_index_group_lower_list}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         # if index title group is not in preferred index group list then return False (not preferred group)
@@ -931,13 +993,15 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - Index title group '{index_title_group}' is not in preferred index group list '{filter_preferred_index_group_lower_list}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         result_details = f"Passed {function_name} - Index title group '{index_title_group}' is in preferred index group list '{filter_preferred_index_group_lower_list}' and library filename group '{library_filename_group}' is not preferred, ignoring existing library file."
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return True
 
     def filter_preferred_index_quality(self, library_filename, index_title):
@@ -950,7 +1014,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - No preferred index quality defined, skipping preferred index quality check"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         library_filename_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(library_filename)
@@ -978,7 +1043,8 @@ class FilterMovies(object):
                     result_details = f"Failed {function_name} - Library filename '{library_filename}' contains preferred quality keyword '{filter_preferred_index_quality}'"
                     self.logger_instance.warning(result_details)
                     self.result_dict.update({'result': u'Failed'})
-                    self.result_dict.update({'result_details': result_details})
+                    self.result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': self.result_details_list})
                     return False
 
                 else:
@@ -986,13 +1052,15 @@ class FilterMovies(object):
                     result_details = f"Passed {function_name} - Index title '{index_title}' does include keyword from preferred index quality list '{filter_preferred_index_quality_list}' and library filename '{library_filename}' does not contain keyword from preferred quality list, ignoring existing library file,"
                     self.logger_instance.info(result_details)
                     self.result_dict.update({'result': u'Passed'})
-                    self.result_dict.update({'result_details': result_details})
+                    self.result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': self.result_details_list})
                     return True
 
         result_details = f"Failed {function_name} - Index title '{index_title}' does not contain any keywords from the preferred quality list '{filter_preferred_index_quality_list}'"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Failed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return False
 
     def filter_override_person(self, filter_type):
@@ -1006,7 +1074,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - Filter for '{filter_type}' not defined, skipping '{filter_type}' checks"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         if imdb_list is None:
@@ -1014,7 +1083,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - IMDb '{filter_type}' not found, assuming '{filter_type}' is OK"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         imdb_lower_list = [x.lower() for x in imdb_list]
@@ -1027,13 +1097,15 @@ class FilterMovies(object):
                 result_details = f"Passed {function_name} - IMDb '{filter_type}' list '{imdb_list}' is in good '{filter_type}' list '{filter_list}', skipping votes and rating checks"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Passed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return True
 
         result_details = f"Failed {function_name} - IMDb '{filter_type}' list '{imdb_list}' is not in good '{filter_type}' list '{filter_list}'"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Failed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return False
 
     def filter_override_movie_title(self):
@@ -1047,7 +1119,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - Override movie title not defined, assuming movie title is not in override list"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         if index_title_and_year_compare is None:
@@ -1055,7 +1128,8 @@ class FilterMovies(object):
             result_details = f"Failed {function_name} - Index title and year for comparison not found, assuming movie title is not in override list"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
-            self.result_dict.update({'result_details': result_details})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
             return False
 
         for filter_override_movie_title in filter_override_movie_title_list:
@@ -1068,13 +1142,15 @@ class FilterMovies(object):
                 result_details = f"Passed {function_name} - Index title '{index_title_and_year_compare}' contains override movie title '{filter_override_movie_title_compare}'"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Passed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return True
 
         result_details = f"Failed {function_name} - Index title '{index_title_and_year_compare}' does NOT match any override movie titles in list"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Failed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return False
 
     def filter_index_title_search_check(self):
@@ -1094,11 +1170,13 @@ class FilterMovies(object):
                 result_details = f"Failed {function_name} - Index title '{index_title_year_to_end_compare}' does not contain search criteria keyword '{index_site_search}', skipping movie"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
-                self.result_dict.update({'result_details': result_details})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
                 return False
 
         result_details = f"Passed {function_name} - Index title '{index_title_year_to_end_compare}' does contain all search criteria keyword(s) '{index_site_search_result_dict}'"
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
-        self.result_dict.update({'result_details': result_details})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
         return True

@@ -1,5 +1,6 @@
 import imdbpie
 import re
+import lib.siphonator.tools_various as siphonator_tools_various
 
 # TODO once we have all imdb details in the database then any index title that matches an existing processed title can use the same imdb details without the need to contact imdb
 
@@ -7,7 +8,7 @@ import re
 def imdb_json_api(logger_instance, result_dict, config_dict):
 
     result_dict = result_dict
-    config_dict = config_dict
+    result_details_list = result_dict.get('result_details', [])
     credits_cast_list = []
     credits_director_list = []
     credits_writer_list = []
@@ -18,21 +19,28 @@ def imdb_json_api(logger_instance, result_dict, config_dict):
 
     imdb_id = result_dict.get('imdb_id')
     logger_instance.info(f"Getting title attributes for movie with IMDb ID '{imdb_id}'...")
+    function_name = siphonator_tools_various.get_function_name()
 
     try:
         imdb_instance = imdbpie.Imdb()
 
     except OSError:
-        logger_instance.warning(u"Cannot connect to IMDb")
-        result_dict.update({'result': 'Failed', 'result_details': u"Cannot connect to IMDb"})
+        result_details = f"Failed {function_name} - Cannot connect to IMDb"
+        logger_instance.warning(result_details)
+        result_dict.update({'result': u'Failed'})
+        result_details_list.append(result_details)
+        result_dict.update({'result_details': result_details_list})
         return result_dict
 
     try:
         imdb_get_title_dict = imdb_instance.get_title(str(imdb_id))
 
     except ValueError:
-        logger_instance.warning(f"Invalid IMDb id '{imdb_id}'")
-        result_dict.update({'result': 'Failed', 'result_details': f"Invalid IMDb id '{imdb_id}'"})
+        result_details = f"Failed {function_name} - Invalid IMDb id '{imdb_id}'"
+        logger_instance.warning(result_details)
+        result_dict.update({'result': u'Failed'})
+        result_details_list.append(result_details)
+        result_dict.update({'result_details': result_details_list})
         return result_dict
 
     imdb_get_title_genres_dict = imdb_instance.get_title_genres(str(imdb_id))
@@ -211,5 +219,10 @@ def imdb_json_api(logger_instance, result_dict, config_dict):
         'imdb_country_list': country_origins_list,
     })
 
-    result_dict.update({'result': 'Passed', 'result_details': u"Identified IMDb metadata using IMDbPie"})
+    result_details = f"Passed {function_name} - Identified IMDb metadata using IMDbPie"
+    logger_instance.warning(result_details)
+    result_dict.update({'result': u'Passed'})
+    result_details_list.append(result_details)
+    result_dict.update({'result_details': result_details_list})
+
     return result_dict
