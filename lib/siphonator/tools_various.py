@@ -38,15 +38,15 @@ def quality_score(index_title_year_to_end):
         "(480p|sd|540p)": int(10),
         "(720p)": int(20),
         "(1080p)": int(30),
-        "(2160p|4k|uhd)": int(40),
+        "(2160p|4k)": int(40),
         "(8k)": int(50)
     }
 
     # define score for source type, score increases as source type improves (higher bitrate)
     source_score_dict = {
         "(dvdrip)": int(10),
-        "(hdtv)": int(20),
-        "(web-dl|webdl|webrip)": int(30),
+        "(hdtv|webrip)": int(20),
+        "(web-dl|webdl)": int(30),
         "(bd|bdrip|hdrip|bluray)": int(40),
         "(bdremux|remux)": int(50)
     }
@@ -54,14 +54,14 @@ def quality_score(index_title_year_to_end):
     score = 0
     score_dicts = [resolution_score_dict, source_score_dict]
 
-    # iterate over resolution and source dicts
+    # iterate over resolution and score dicts
     for score_dict in score_dicts:
 
         # Iterate over the key-value pairs
         for key, value in score_dict.items():
 
             # search for key name for resolution, if found add score value to score
-            if re.search(fr'[_\-.\s]{key}[_\-.\s]|^{key}[_\-.\s]', index_title_year_to_end, re.IGNORECASE):
+            if re.search(fr'[_\-.\s(]{key}[_\-.\s)]|^{key}[_\-.\s)]', index_title_year_to_end, re.IGNORECASE):
                 score += value
 
     # return final score
@@ -144,23 +144,25 @@ class ToolsVarious(object):
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
+        # get resolution from string using regex
         resolution_string_search = re.search(self.index_title_resolution_regex, custom_title)
+
         if resolution_string_search:
 
-            resolution = resolution_string_search.group(0)
+            resolution_string = resolution_string_search.group(0)
 
-            # return numeric value for int comparison
-            numeric_filter = filter(str.isdigit, resolution)
-            resolution_numeric = "".join(numeric_filter)
+            # get numeric value only, strip interlace 'i', or progressive 'p'
+            resolution_numeric_list = re.findall('\d+', resolution_string)
+
+            # convert list to string
+            resolution_numeric = ''.join(str(x) for x in resolution_numeric_list)
 
         else:
 
-            resolution = None
             resolution_numeric = None
 
-        self.logger_instance.debug(f"Resolution from string '{custom_title}' is '{resolution}'")
-        self.logger_instance.debug(f"Numeric resolution from string '{custom_title}' is '{resolution_numeric}'")
-        return resolution, resolution_numeric
+        self.logger_instance.debug(f"Resolution from string '{custom_title}' is '{resolution_numeric}'")
+        return resolution_numeric
 
     def custom_title_sqlite(self, custom_title):
 

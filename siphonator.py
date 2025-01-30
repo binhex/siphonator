@@ -95,7 +95,7 @@ class Siphonator(object):
         current_time = siphonator_tools_various.current_time()
         self.logger_instance.info(f"Processing started at '{current_time}'")
 
-        # walk library path and store in results dict, note we save it as a list so we can re-use it (costly)
+        # walk library path and store in cnfig dict, note we save it as a list so we can re-use it (costly)
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
         library_path_walk = list(tools_various_instance.library_path_walk(self.config_dict['general']['library_path']))
 

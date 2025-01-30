@@ -49,17 +49,25 @@ class FilterMovies(object):
             return self.result_dict
 
         filter_downloaded_file_result = self.filter_downloaded_file()
-        # if true (file does not exist in library) then check directory
-        if filter_downloaded_file_result:
-            filter_downloaded_dir_result = self.filter_downloaded_dir()
-            # if false (file does exist in library) then return (failed)
-            if not filter_downloaded_dir_result:
-                return self.result_dict
-        # if false (file does exist in library) then return (failed)
-        else:
+
+        # if return is string 'override' then return dict as passed (continue)
+        if filter_downloaded_file_result == None:
             return self.result_dict
 
+        # if file does exist (false) then return dict as failed (skip movie)
+        if not filter_downloaded_file_result:
+            return self.result_dict
+
+        # if file does not exist in library (true) then verify by checking for directory
+        if filter_downloaded_file_result:
+            filter_downloaded_dir_result = self.filter_downloaded_dir()
+
+            # if file does exist (false) then return dict as failed (skip movie)
+            if not filter_downloaded_dir_result:
+                return self.result_dict
+
         self.logger_instance.debug(f"Passed {function_name} - Index title '{self.result_dict.get('index_title')}'")
+        # TODO required line below?? check each function
         self.result_dict.update({'result': 'Passed'})
 
         return self.result_dict
@@ -504,7 +512,7 @@ class FilterMovies(object):
             self.result_dict.update({'result': u'Passed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
-            return True
+            return
 
         self.logger_instance.debug(f"Index title compare is '{index_title_compare}'")
         self.logger_instance.debug(f"Index year compare is '{index_year_compare}'")
@@ -561,7 +569,7 @@ class FilterMovies(object):
                         self.result_dict.update({'result': u'Passed'})
                         self.result_details_list.append(result_details)
                         self.result_dict.update({'result_details': self.result_details_list})
-                        return True
+                        return
 
                 # if preferred index group is not present in library file then continue
                 if self.filter_preferred_index_group(library_filename, index_title):
@@ -570,7 +578,7 @@ class FilterMovies(object):
                     self.result_dict.update({'result': u'Passed'})
                     self.result_details_list.append(result_details)
                     self.result_dict.update({'result_details': self.result_details_list})
-                    return True
+                    return
 
                 # if preferred index quality is not present in library file then continue
                 if self.filter_preferred_index_quality(library_filename, index_title):
@@ -579,7 +587,7 @@ class FilterMovies(object):
                     self.result_dict.update({'result': u'Passed'})
                     self.result_details_list.append(result_details)
                     self.result_dict.update({'result_details': self.result_details_list})
-                    return True
+                    return
 
                 # if index title found in library path then skip
                 result_details = f"Failed {function_name} - Index title '{index_title}' already exists in library file '{library_filename}', skipping movie"
@@ -599,7 +607,7 @@ class FilterMovies(object):
 
     def filter_downloaded_dir(self):
 
-        filter_library_path_walk = self.result_dict.get('filter_library_path_walk')
+        filter_library_path_walk = self.config_dict.get('library_path_walk')
         library_path = self.config_dict['general']['library_path']
         index_title = self.result_dict.get('index_title')
         index_title_compare = self.result_dict.get('index_title_compare')
@@ -719,47 +727,52 @@ class FilterMovies(object):
 
         for index_site_search_item in index_site_search_list:
 
-            if index_site_search_item not in library_filename_title_full_compare:
+            if index_site_search_item in library_filename_title_full_compare:
+                continue
 
-                index_site_search_item_resolution, index_site_search_item_resolution_numeric = self.tools_various_instance.resolution_from_string(index_site_search_item)
+            # if index_site_search_item that is missing is resolution then use ffprobe to work out it
+            index_site_search_item_numeric_string = self.tools_various_instance.resolution_from_string(index_site_search_item)
+            if index_site_search_item_numeric_string:
 
-                # check if missing index site search item from library filename is resolution e.g. '1080p' (only item we can calculate, else assume file is missing from library)
-                if index_site_search_item_resolution is not None:
+                # get resolution of library file by analysing file using ffprobe
+                library_filepath_height_resolution_numeric = self.tools_various_instance.resolution_from_ffprobe(library_filepath, ffprobe_filepath)
 
-                    # get resolution of library file by analysing file using ffprobe
-                    library_filepath_height_resolution_numeric = self.tools_various_instance.resolution_from_ffprobe(library_filepath, ffprobe_filepath)
+                if library_filepath_height_resolution_numeric is None:
 
-                    if library_filepath_height_resolution_numeric is None:
-
-                        result_details = f"Failed {function_name} - Unable to determine resolution from ffprobe for library file '{library_filename}'"
-                        self.logger_instance.info(result_details)
-                        self.result_dict.update({'result': u'Failed'})
-                        self.result_details_list.append(result_details)
-                        self.result_dict.update({'result_details': self.result_details_list})
-                        return False
-
-                    self.logger_instance.debug(f"Library file resolution identified as '{library_filepath_height_resolution_numeric}' for library file '{library_filename}'")
-
-                    # if integer of library filename resolution numeric is less than integer of index title resolution numeric then continue
-                    if int(library_filepath_height_resolution_numeric) < int(index_site_search_item_resolution_numeric):
-
-                        result_details = f"Failed {function_name} - Library file resolution '{library_filepath_height_resolution_numeric}' is less than resolution for index title '{index_site_search_item_resolution_numeric}'"
-                        self.logger_instance.info(result_details)
-                        self.result_dict.update({'result': u'Failed'})
-                        self.result_details_list.append(result_details)
-                        self.result_dict.update({'result_details': self.result_details_list})
-                        return False
-
-                else:
-
-                    result_details = f"Failed {function_name} - Unable to determine missing index site search item '{index_site_search_item}' from library filename '{library_filename}'"
+                    result_details = f"Failed {function_name} - Unable to determine resolution from ffprobe for library file '{library_filename}'"
                     self.logger_instance.info(result_details)
                     self.result_dict.update({'result': u'Failed'})
                     self.result_details_list.append(result_details)
                     self.result_dict.update({'result_details': self.result_details_list})
                     return False
 
-        result_details = f"Passed {function_name} - Index site search criteria '{index_site_search_list}' found in library filename '{library_filename}'"
+                else:
+
+                    self.logger_instance.debug(f"Library filename resolution identified as '{str(library_filepath_height_resolution_numeric)}' for library file '{library_filename}'")
+                    if int(library_filepath_height_resolution_numeric) == int(index_site_search_item_numeric_string):
+
+                        self.logger_instance.debug(f"Index search term resolution '{index_site_search_item_numeric_string}' and library filename resolution '{library_filepath_height_resolution_numeric}' match")
+                        continue
+
+                    else:
+
+                        result_details = f"Failed {function_name} - Index search term resolution '{index_site_search_item_numeric_string}' and library filename resolution '{library_filepath_height_resolution_numeric}' do not match"
+                        self.logger_instance.info(result_details)
+                        self.result_dict.update({'result': u'Failed'})
+                        self.result_details_list.append(result_details)
+                        self.result_dict.update({'result_details': self.result_details_list})
+                        return False
+
+            else:
+
+                result_details = f"Failed {function_name} - Index search term '{index_site_search_item}' is missing from library filename '{library_filename_title_full_compare}'"
+                self.logger_instance.info(result_details)
+                self.result_dict.update({'result': u'Failed'})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
+                return False
+
+        result_details = f"Passed {function_name} - Index search criteria '{index_site_search_list}' found in library filename '{library_filename}'"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Passed'})
         self.result_details_list.append(result_details)

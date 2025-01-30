@@ -56,6 +56,10 @@ class NotificationEmail(object):
 **Queue Status:** {queue_status}<br/><br/>
 **Release:** [{index_title}]({index_details})<br/><br/>
 **Size:** {index_size_mb} MB
+<details>
+    <summary>Click to view/hide result details</summary>
+    <p>This is the content of the collapsible section. You can put any HTML content here, such as text, images, or links.</p>
+</details>
         """
 
         nmdmail.send(
