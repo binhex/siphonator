@@ -31,6 +31,7 @@ def get_function_name():
     return function_name
 
 
+# TODO add to class so we can add in logging
 def quality_score(index_title_year_to_end):
 
     # define scores for resolution, score increases as resolution increases
@@ -42,17 +43,30 @@ def quality_score(index_title_year_to_end):
         "(8k)": int(50)
     }
 
+    # define scores for video quality, score increases as video quality increases
+    video_score_dict = {
+        "(hdr10)": int(10),
+        "(dv)": int(20)
+    }
+
+    # define scores for audio quality, score increases as audio quality increases
+    audio_score_dict = {
+        "(dts)": int(10),
+        "(dts-hd|dtshd|true-hd|truehd)": int(20),
+        "(dts-x|dtsx)": int(30)
+    }
+
     # define score for source type, score increases as source type improves (higher bitrate)
     source_score_dict = {
         "(dvdrip)": int(10),
         "(hdtv|webrip)": int(20),
         "(web-dl|webdl)": int(30),
-        "(bd|bdrip|hdrip|bluray)": int(40),
+        "(bd|bdrip|hdrip|bluray|blu-ray)": int(40),
         "(bdremux|remux)": int(50)
     }
 
     score = 0
-    score_dicts = [resolution_score_dict, source_score_dict]
+    score_dicts = [resolution_score_dict, video_score_dict, audio_score_dict, source_score_dict]
 
     # iterate over resolution and score dicts
     for score_dict in score_dicts:
