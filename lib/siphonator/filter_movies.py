@@ -471,7 +471,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return False
 
-    def filter_downloaded(self, root, library_filename):
+    def filter_downloaded(self, root, library_filename, downloaded_type):
 
         # TODO this is a kludge, can we do better?
         # only check video container formats
@@ -481,9 +481,12 @@ class FilterMovies(object):
         # get full path to library filename
         library_files_abs_filepath = os.path.join(root, library_filename)
 
-        # if index year and title does not exist in library filename then continue
-        if self.filter_downloaded_year_and_title_check(library_filename, 'file'):
-            return True
+        # do not check for dir, as dir name used for year and title
+        if downloaded_type == 'file':
+
+            # if index year and title does not exist in library filename then continue
+            if self.filter_downloaded_year_and_title_check(library_filename):
+                return True
 
         # if library filename does not contain all search criteria then continue
         if self.filter_downloaded_file_search_criteria(library_filename, library_files_abs_filepath):
@@ -521,7 +524,7 @@ class FilterMovies(object):
 
             for library_filename in files:
 
-                if not self.filter_downloaded(root, library_filename):
+                if not self.filter_downloaded(root, library_filename, 'file'):
                     result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
                     self.logger_instance.info(result_details)
                     self.result_dict.update({'result': u'Failed'})
@@ -587,7 +590,7 @@ class FilterMovies(object):
 
                     for library_filename in sub_files:
 
-                        if not self.filter_downloaded(sub_root, library_filename):
+                        if not self.filter_downloaded(sub_root, library_filename, 'dir'):
                             result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
                             self.logger_instance.info(result_details)
                             self.result_dict.update({'result': u'Failed'})
@@ -604,7 +607,7 @@ class FilterMovies(object):
 
     # True = filename not present in library
     # False = filename is present in library
-    def filter_downloaded_year_and_title_check(self, library_filename, type_check):
+    def filter_downloaded_year_and_title_check(self, library_filename):
 
         index_title_compare = self.result_dict.get('index_title_compare')
         index_year_compare = self.result_dict.get('index_year_compare')
@@ -622,16 +625,13 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return True
 
-        # if file then do attempt to match index title and year to library filename
-        if type_check == 'file':
+        # if library title not in index title then library file does not exist, return true
+        if library_title_compare not in index_title_compare:
+            return True
 
-            # if library title not in index title then library file does not exist, return true
-            if library_title_compare not in index_title_compare:
-                return True
-
-            # if library year compare not in index year then library file does not exist, return true
-            if library_year_compare not in index_year_compare:
-                return True
+        # if library year compare not in index year then library file does not exist, return true
+        if library_year_compare not in index_year_compare:
+            return True
 
         # index title exists in library
         result_details = f"Failed {function_name} - Library title compare {library_title_compare} and year {library_year_compare} found in index title compare {index_title_compare} and year {index_year_compare}"
