@@ -648,7 +648,7 @@ class FilterMovies(object):
         library_filename_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(library_file)
         function_name = siphonator_tools_various.get_function_name()
 
-        # if library filename year to end is not none (maybe mangled) then calculate ad compare score
+        # if library filename year to end is not none (maybe mangled) then calculate and compare score
         if library_filename_year_to_end_compare is not None:
 
             # calculate scores for index title and library filename
@@ -657,39 +657,36 @@ class FilterMovies(object):
             self.logger_instance.debug(f"Library filename quality score is '{library_filename_score}'")
             self.logger_instance.debug(f"Index title quality score is '{index_title_score}'")
 
-            # if library filename title quality score is less than the index title then continue
-            if library_filename_score < index_title_score:
-                result_details = f"Passed {function_name} - Index title '{index_title}' score {index_title_score} is greater than library filename {library_file} score {library_filename_score}"
+            if library_filename_score > index_title_score:
+                result_details = f"Failed {function_name} - Index title '{index_title}' score {index_title_score} is less than library filename {library_file} score {library_filename_score}"
                 self.logger_instance.info(result_details)
-                self.result_dict.update({'result': u'Passed'})
+                self.result_dict.update({'result': u'Failed'})
                 self.result_details_list.append(result_details)
                 self.result_dict.update({'result_details': self.result_details_list})
-                return True
+                return False
 
-        # if preferred group is present in index title or library file already exists with preferred group then continue
-        if self.filter_preferred_index_group(library_file, index_title):
-            result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_file} does not"
+        if not self.filter_preferred_index_group(library_file, index_title):
+            result_details = f"Failed {function_name} - Index title '{index_title}' does not contain preferred index group, or library filename already contains preferred index group"
             self.logger_instance.info(result_details)
-            self.result_dict.update({'result': u'Passed'})
+            self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
-            return True
+            return False
 
-        # if preferred index quality is present in index title or library file then continue
-        if self.filter_preferred_index_quality(library_file, index_title):
-            result_details = f"Passed {function_name} - Index title '{index_title}' contains preferred index quality and library filename {library_file} does not"
+        if not self.filter_preferred_index_quality(library_file, index_title):
+            result_details = f"Failed {function_name} - Index title '{index_title}' does not contain preferred index quality, or library filename already contains preferred index quality"
             self.logger_instance.info(result_details)
-            self.result_dict.update({'result': u'Passed'})
+            self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
-            return True
+            return False
 
-        result_details = f"Failed {function_name} - Index title '{index_title}' already exists in library file '{library_file}', skipping movie"
+        result_details = f"Passed {function_name} - Index title '{index_title}' passed all overrides for library file '{library_file}'"
         self.logger_instance.warning(result_details)
-        self.result_dict.update({'result': u'Failed'})
+        self.result_dict.update({'result': u'Passed'})
         self.result_details_list.append(result_details)
         self.result_dict.update({'result_details': self.result_details_list})
-        return False
+        return True
 
     def filter_downloaded_file_search_criteria(self, library_filename, library_filepath):
 
