@@ -44,13 +44,9 @@ class FilterMovies(object):
         if not filter_bad_movie_title_result:
             return self.result_dict
 
-        filter_downloaded_file_result = self.filter_downloaded_file()
-        if not filter_downloaded_file_result:
+        filter_downloaded_iterate_files_result = self.filter_downloaded_iterate_files()
+        if not filter_downloaded_iterate_files_result:
             return self.result_dict
-        else:
-            filter_downloaded_dir_result = self.filter_downloaded_dir()
-            if not filter_downloaded_dir_result:
-                return self.result_dict
 
         return self.result_dict
 
@@ -471,51 +467,12 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return False
 
-    def filter_downloaded(self, root, library_filename, downloaded_type):
-
-        # TODO this is a kludge, can we do better?
-        # only check video container formats
-        if not library_filename.lower().endswith(('.mkv', '.mp4', '.avi')):
-            return True
-
-        # get full path to library filename
-        library_files_abs_filepath = os.path.join(root, library_filename)
-
-        # do not check for dir, as dir name used for year and title
-        if downloaded_type == 'file':
-
-            # if index year and title does not exist in library filename then continue
-            if self.filter_downloaded_year_and_title_check(library_filename):
-                return True
-
-        # if library filename does not contain all search criteria then continue
-        if self.filter_downloaded_file_search_criteria(library_filename, library_files_abs_filepath):
-            return True
-
-        # if index title does not contain any overrides (special editions, higher quality or preferred group) then continue
-        if self.filter_downloaded_overrides(library_filename):
-            return True
-
-        # index title exists in library
-        return False
-
     def filter_downloaded_file(self):
 
         filter_library_path_walk = self.config_dict.get('library_path_walk')
-        library_path = self.config_dict['general']['library_path']
-        index_title = self.result_dict.get('index_title')
         index_title_compare = self.result_dict.get('index_title_compare')
         index_year_compare = self.result_dict.get('index_year_compare')
-        function_name = siphonator_tools_various.get_function_name()
-
-        if filter_library_path_walk is None:
-
-            result_details = f"Passed {function_name} - No library path defined, assuming movie is not present in library"
-            self.logger_instance.info(result_details)
-            self.result_dict.update({'result': u'Passed'})
-            self.result_details_list.append(result_details)
-            self.result_dict.update({'result_details': self.result_details_list})
-            return True
+        identify_walk_files_filepath_list = []
 
         self.logger_instance.debug(f"Index title compare is '{index_title_compare}'")
         self.logger_instance.debug(f"Index year compare is '{index_year_compare}'")
@@ -524,37 +481,23 @@ class FilterMovies(object):
 
             for library_filename in files:
 
-                if not self.filter_downloaded(root, library_filename, 'file'):
-                    result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
-                    self.logger_instance.info(result_details)
-                    self.result_dict.update({'result': u'Failed'})
-                    self.result_details_list.append(result_details)
-                    self.result_dict.update({'result_details': self.result_details_list})
-                    return False
+                # if index year and title does not exist in library filename then continue
+                if self.filter_downloaded_year_and_title_check(library_filename):
+                    continue
 
-        result_details = f"Passed {function_name} - Index title '{index_title}' does not exist in library path '{library_path}'"
-        self.logger_instance.info(result_details)
-        self.result_dict.update({'result': u'Passed'})
-        self.result_details_list.append(result_details)
-        self.result_dict.update({'result_details': self.result_details_list})
-        return True
+                # get full path to library filename
+                library_files_abs_filepath = os.path.join(root, library_filename)
+
+                identify_walk_files_filepath_list.append(library_files_abs_filepath)
+
+        return {'identify_walk_files_filepath_list': identify_walk_files_filepath_list}
 
     def filter_downloaded_dir(self):
 
         filter_library_path_walk = self.config_dict.get('library_path_walk')
-        library_path = self.config_dict['general']['library_path']
-        index_title = self.result_dict.get('index_title')
         index_title_compare = self.result_dict.get('index_title_compare')
         index_year_compare = self.result_dict.get('index_year_compare')
-        function_name = siphonator_tools_various.get_function_name()
-
-        if filter_library_path_walk is None:
-            result_details = f"Passed {function_name} - No library path defined, assuming movie is not present in library"
-            self.logger_instance.info(result_details)
-            self.result_dict.update({'result': u'Passed'})
-            self.result_details_list.append(result_details)
-            self.result_dict.update({'result_details': self.result_details_list})
-            return True
+        identify_walk_files_filepath_list = []
 
         self.logger_instance.debug(f"Index title compare is '{index_title_compare}'")
         self.logger_instance.debug(f"Index year compare is '{index_year_compare}'")
@@ -571,12 +514,12 @@ class FilterMovies(object):
                 if library_dir_year_compare is None:
                     continue
 
-                # if library directory title compare not in index title then continue
-                if library_dirs_title_compare not in index_title_compare:
-                    continue
-
                 # if library directory year compare not in index title then continue
                 if library_dir_year_compare not in index_year_compare:
+                    continue
+
+                # if library directory title compare not in index title then continue
+                if library_dirs_title_compare not in index_title_compare:
                     continue
 
                 # construct absolute library path
@@ -590,23 +533,34 @@ class FilterMovies(object):
 
                     for library_filename in sub_files:
 
-                        if not self.filter_downloaded(sub_root, library_filename, 'dir'):
-                            result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
-                            self.logger_instance.info(result_details)
-                            self.result_dict.update({'result': u'Failed'})
-                            self.result_details_list.append(result_details)
-                            self.result_dict.update({'result_details': self.result_details_list})
-                            return False
+                        # get full path to library filename
+                        library_files_abs_filepath = os.path.join(sub_root, library_filename)
 
-        result_details = f"Passed {function_name} - Index title '{index_title}' does not exist in library path '{library_path}'"
-        self.logger_instance.info(result_details)
-        self.result_dict.update({'result': u'Passed'})
-        self.result_details_list.append(result_details)
-        self.result_dict.update({'result_details': self.result_details_list})
-        return True
+                        identify_walk_files_filepath_list.append(library_files_abs_filepath)
 
-    # True = filename not present in library
-    # False = filename is present in library
+        return {'identify_walk_dirs_filepath_list': identify_walk_files_filepath_list}
+
+    def filter_downloaded(self, library_filepath):
+
+        # get filename and path from filepath
+        library_filename = os.path.basename(library_filepath)
+
+        # TODO this is a kludge, can we do better?
+        # only check video container formats
+        if not library_filename.lower().endswith(('.mkv', '.mp4', '.avi')):
+            return True
+
+        # if library filename does not contain all search criteria then continue
+        if self.filter_downloaded_file_search_criteria(library_filename, library_filepath):
+            return True
+
+        # if index title does not contain any overrides (special editions, higher quality or preferred group) then continue
+        if self.filter_downloaded_overrides(library_filename):
+            return True
+
+        # index title exists in library
+        return False
+
     def filter_downloaded_year_and_title_check(self, library_filename):
 
         index_title_compare = self.result_dict.get('index_title_compare')
@@ -749,6 +703,66 @@ class FilterMovies(object):
         self.result_details_list.append(result_details)
         self.result_dict.update({'result_details': self.result_details_list})
         return False
+
+    def filter_downloaded_iterate_files(self):
+
+        identify_walk_files_filepath_dict = self.filter_downloaded_file()
+        library_filepath_list = identify_walk_files_filepath_dict['identify_walk_files_filepath_list']
+        function_name = siphonator_tools_various.get_function_name()
+        index_title = self.result_dict.get('index_title')
+        library_path = self.config_dict['general']['library_path']
+        filter_library_path_walk = self.config_dict.get('library_path_walk')
+
+        if filter_library_path_walk is None:
+
+            result_details = f"Passed {function_name} - No library path defined, assuming movie is not present in library"
+            self.logger_instance.info(result_details)
+            self.result_dict.update({'result': u'Passed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
+            return True
+
+        # if identify_walk_files_filepath_dict value is not empty then get filepaths from files
+        if library_filepath_list:
+
+            for library_filepath in library_filepath_list:
+                result = self.filter_downloaded(library_filepath)
+
+                if not result:
+
+                    result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
+                    self.logger_instance.info(result_details)
+                    self.result_dict.update({'result': u'Failed'})
+                    self.result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': self.result_details_list})
+                    return False
+
+        else:
+
+            identify_walk_dirs_filepath_dict = self.filter_downloaded_dir()
+            library_filepath_list = identify_walk_dirs_filepath_dict['identify_walk_dirs_filepath_list']
+
+            # if identify_walk_dirs_filepath_dict value is not empty then get filepaths from files
+            if library_filepath_list:
+
+                for library_filepath in library_filepath_list:
+                    result = self.filter_downloaded(library_filepath)
+
+                    if not result:
+
+                        result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
+                        self.logger_instance.info(result_details)
+                        self.result_dict.update({'result': u'Failed'})
+                        self.result_details_list.append(result_details)
+                        self.result_dict.update({'result_details': self.result_details_list})
+                        return False
+
+        result_details = f"Passed {function_name} - Index title '{index_title}' does not exist in library path '{library_path}'"
+        self.logger_instance.info(result_details)
+        self.result_dict.update({'result': u'Passed'})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
+        return True
 
     def filter_bad_genre(self):
 
