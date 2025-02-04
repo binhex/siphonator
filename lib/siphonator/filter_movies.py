@@ -713,36 +713,10 @@ class FilterMovies(object):
         library_path = self.config_dict['general']['library_path']
         filter_library_path_walk = self.config_dict.get('library_path_walk')
 
-        if filter_library_path_walk is None:
+        # if libray path is defined (not None) then process, else return True
+        if filter_library_path_walk is not None:
 
-            result_details = f"Passed {function_name} - No library path defined, assuming movie is not present in library"
-            self.logger_instance.info(result_details)
-            self.result_dict.update({'result': u'Passed'})
-            self.result_details_list.append(result_details)
-            self.result_dict.update({'result_details': self.result_details_list})
-            return True
-
-        # if identify_walk_files_filepath_dict value is not empty then get filepaths from files
-        if library_filepath_list:
-
-            for library_filepath in library_filepath_list:
-                result = self.filter_downloaded(library_filepath)
-
-                if not result:
-
-                    result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
-                    self.logger_instance.info(result_details)
-                    self.result_dict.update({'result': u'Failed'})
-                    self.result_details_list.append(result_details)
-                    self.result_dict.update({'result_details': self.result_details_list})
-                    return False
-
-        else:
-
-            identify_walk_dirs_filepath_dict = self.filter_downloaded_dir()
-            library_filepath_list = identify_walk_dirs_filepath_dict['identify_walk_dirs_filepath_list']
-
-            # if identify_walk_dirs_filepath_dict value is not empty then get filepaths from files
+            # if identify_walk_files_filepath_dict value is not empty then get filepaths from files
             if library_filepath_list:
 
                 for library_filepath in library_filepath_list:
@@ -756,6 +730,26 @@ class FilterMovies(object):
                         self.result_details_list.append(result_details)
                         self.result_dict.update({'result_details': self.result_details_list})
                         return False
+
+            else:
+
+                identify_walk_dirs_filepath_dict = self.filter_downloaded_dir()
+                library_filepath_list = identify_walk_dirs_filepath_dict['identify_walk_dirs_filepath_list']
+
+                # if identify_walk_dirs_filepath_dict value is not empty then get filepaths from files
+                if library_filepath_list:
+
+                    for library_filepath in library_filepath_list:
+                        result = self.filter_downloaded(library_filepath)
+    
+                        if not result:
+
+                            result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
+                            self.logger_instance.info(result_details)
+                            self.result_dict.update({'result': u'Failed'})
+                            self.result_details_list.append(result_details)
+                            self.result_dict.update({'result_details': self.result_details_list})
+                            return False
 
         result_details = f"Passed {function_name} - Index title '{index_title}' does not exist in library path '{library_path}'"
         self.logger_instance.info(result_details)
