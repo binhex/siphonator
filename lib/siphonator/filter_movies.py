@@ -648,6 +648,7 @@ class FilterMovies(object):
         ffprobe_filepath = self.init_dict.get('ffprobe_filepath')
         index_site_search_list = index_site_search.split()
         library_filename_title_full_compare = self.tools_various_instance.custom_title_full_compare(library_filename)
+        library_filename_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(library_filename)
         function_name = siphonator_tools_various.get_function_name()
 
         for index_site_search_item in index_site_search_list:
@@ -656,37 +657,47 @@ class FilterMovies(object):
                 continue
 
             # if index_site_search_item that is missing is resolution then use ffprobe to work out it
-            index_site_search_item_numeric_string = self.tools_various_instance.resolution_from_string(index_site_search_item)
-            if index_site_search_item_numeric_string:
+            index_site_search_resolution_string = self.tools_various_instance.resolution_from_string(index_site_search_item)
+            if index_site_search_resolution_string:
 
-                # get resolution of library file by analysing file using ffprobe
-                library_filepath_height_resolution_numeric = self.tools_various_instance.resolution_from_ffprobe(library_filepath, ffprobe_filepath)
+                # attempt to identify resolution from library filename
+                library_filename_resolution_string = self.tools_various_instance.resolution_from_string(library_filename_year_to_end_compare)
 
-                if library_filepath_height_resolution_numeric is None:
+                # if we cannot identify resolution from library filename then use ffprobe
+                if not library_filename_resolution_string:
 
-                    result_details = f"Passed {function_name} - Unable to determine resolution from ffprobe for library file '{library_filename}'"
-                    self.logger_instance.info(result_details)
-                    self.result_dict.update({'result': u'Passed'})
-                    self.result_details_list.append(result_details)
-                    self.result_dict.update({'result_details': self.result_details_list})
-                    return True
+                    # get resolution of library file by analysing file using ffprobe
+                    library_filename_resolution_string = self.tools_various_instance.resolution_from_ffprobe(library_filepath, ffprobe_filepath)
 
-                else:
+                    if library_filename_resolution_string is None:
 
-                    self.logger_instance.debug(f"Library filename resolution identified as '{str(library_filepath_height_resolution_numeric)}' for library file '{library_filename}'")
-                    if int(library_filepath_height_resolution_numeric) == int(index_site_search_item_numeric_string):
-
-                        self.logger_instance.debug(f"Index search term resolution '{index_site_search_item_numeric_string}' and library filename resolution '{library_filepath_height_resolution_numeric}' match")
-                        continue
-
-                    else:
-
-                        result_details = f"Passed {function_name} - Index search term resolution '{index_site_search_item_numeric_string}' and library filename resolution '{library_filepath_height_resolution_numeric}' do not match"
+                        result_details = f"Passed {function_name} - Unable to determine resolution from ffprobe for library file '{library_filename}'"
                         self.logger_instance.info(result_details)
                         self.result_dict.update({'result': u'Passed'})
                         self.result_details_list.append(result_details)
                         self.result_dict.update({'result_details': self.result_details_list})
                         return True
+
+                    else:
+
+                        self.logger_instance.debug(f"Library filename resolution identified as '{str(library_filename_resolution_string)}' using ffprobe for library file '{library_filename}'")
+                        if int(library_filename_resolution_string) == int(index_site_search_resolution_string):
+
+                            self.logger_instance.debug(f"Index search term resolution '{index_site_search_resolution_string}' and library filename resolution '{library_filename_resolution_string}' match")
+                            continue
+
+                        else:
+
+                            result_details = f"Passed {function_name} - Index search term resolution '{index_site_search_resolution_string}' and library filename resolution '{library_filename_resolution_string}' do not match"
+                            self.logger_instance.info(result_details)
+                            self.result_dict.update({'result': u'Passed'})
+                            self.result_details_list.append(result_details)
+                            self.result_dict.update({'result_details': self.result_details_list})
+                            return True
+
+                else:
+
+                    self.logger_instance.debug(f"Library filename resolution identified as '{str(library_filename_resolution_string)}' from filename for library file '{library_filename}'")
 
             else:
 
@@ -741,7 +752,7 @@ class FilterMovies(object):
 
                     for library_filepath in library_filepath_list:
                         result = self.filter_downloaded(library_filepath)
-    
+
                         if not result:
 
                             result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
@@ -1154,8 +1165,6 @@ class FilterMovies(object):
         index_site_search_result_dict = self.index_site_dict.get('criteria').lower()
         index_site_search_list = index_site_search_result_dict.split()
         function_name = siphonator_tools_various.get_function_name()
-
-        self.logger_instance.debug(f"Index title search criteria check is '{index_title_year_to_end_compare}'")
 
         for index_site_search in index_site_search_list:
 
