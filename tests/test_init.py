@@ -33,16 +33,22 @@ class TestsInit(object):
         db_path = os.path.normpath(db_path)
         self.db_filepath = os.path.join(db_path, u"siphonator.db")
 
+        # set folder path for ffprobe files
+        ffprobe_path = os.path.join(app_root_path, 'tools/ffprobe/static/x64')
+        self.ffprobe_filepath = os.path.join(ffprobe_path, 'ffprobe')
+
         # set folder path for log files
         logs_path = os.path.join(app_root_path, u"logs")
         logs_path = os.path.normpath(logs_path)
         self.logs_filepath = os.path.join(logs_path, u"siphonator.log")
 
-    def create_logger(self):
+    def setup(self):
+
+        ffprobe_filepath = self.ffprobe_filepath
 
         # setup logging
         log_level = self.config_yaml['general']['log_level']
         logger = siphonator_tools_logging.app_logging(log_level, self.logs_filepath)
         logger_create_instance = logger.get('logger')
 
-        return logger_create_instance
+        return ffprobe_filepath, logger_create_instance

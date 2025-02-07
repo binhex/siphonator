@@ -8,20 +8,16 @@ import test_init
 # to run tests from command line use 'python -m pytest --verbose'
 
 
-def setup():
-
-    test_init_instance = test_init.TestsInit()
-    logger = test_init_instance.create_logger()
-    return logger
-
-
 @pytest.fixture
 def filter_bad_genre(imdb_genres_list):
 
-    logger = setup()
+    # Setup
+    test_init_instance = test_init.TestsInit()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
+    # Arrange
     init_dict = {
-        'ffprobe_filepath': '',
+        'ffprobe_filepath': ffprobe_filepath,
     }
 
     # Arrange
@@ -51,12 +47,15 @@ def filter_bad_genre(imdb_genres_list):
 @pytest.fixture
 def filter_preferred_index_group(filter_preferred_index_group_list, library_filename, index_title):
 
-    logger = setup()
+    # Setup
+    test_init_instance = test_init.TestsInit()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
+    # Arrange
     init_dict = {
-        'ffprobe_filepath': '',
+        'ffprobe_filepath': ffprobe_filepath,
     }
-
+    # Arrange
     result_dict = {}
 
     # Arrange
@@ -81,13 +80,19 @@ def filter_preferred_index_group(filter_preferred_index_group_list, library_file
 @pytest.fixture
 def filter_preferred_index_quality(filter_preferred_index_quality_list, library_filename, index_title):
 
-    logger = setup()
+    # Setup
+    test_init_instance = test_init.TestsInit()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
+    # Arrange
     init_dict = {
-        'ffprobe_filepath': '',
+        'ffprobe_filepath': ffprobe_filepath,
     }
 
-    result_dict = []
+    # Arrange
+    result_dict = {
+        'result_details': [],
+    }
 
     # Arrange
     config_dict = {
@@ -111,12 +116,16 @@ def filter_preferred_index_quality(filter_preferred_index_quality_list, library_
 @pytest.fixture
 def filter_rating(imdb_rating):
 
-    logger = setup()
+    # get setup
+    test_init_instance = test_init.TestsInit()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
+    # Arrange
     init_dict = {
-        'ffprobe_filepath': '',
+        'ffprobe_filepath': ffprobe_filepath,
     }
 
+    # Arrange
     result_dict = {
         'imdb_rating': imdb_rating,
     }
@@ -133,6 +142,7 @@ def filter_rating(imdb_rating):
     index_site_dict = {
     }
 
+    # Arrange
     override_genre_dict = {}
 
     # Act
@@ -146,12 +156,16 @@ def filter_rating(imdb_rating):
 @pytest.fixture
 def filter_bad_index_title(index_title, filter_bad_index_title_list):
 
-    logger = setup()
+    # Setup
+    test_init_instance = test_init.TestsInit()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
+    # Arrange
     init_dict = {
-        'ffprobe_filepath': '',
+        'ffprobe_filepath': ffprobe_filepath,
     }
 
+    # Arrange
     result_dict = {
         'index_title': index_title,
     }
@@ -178,12 +192,16 @@ def filter_bad_index_title(index_title, filter_bad_index_title_list):
 @pytest.fixture
 def filter_bad_movie_title(filter_bad_movie_title_list):
 
-    logger = setup()
+    # Setup
+    test_init_instance = test_init.TestsInit()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
+    # Arrange
     init_dict = {
-        'ffprobe_filepath': '',
+        'ffprobe_filepath': ffprobe_filepath,
     }
 
+    # Arrange
     result_dict = {
         'index_title_and_year_compare': 'badmovie2020',
     }
@@ -210,12 +228,16 @@ def filter_bad_movie_title(filter_bad_movie_title_list):
 @pytest.fixture
 def filter_override_genre(imdb_genres_list, override_genre, override_genre_minimum_rating, override_genre_minimum_votes):
 
-    logger = setup()
+    # Setup
+    test_init_instance = test_init.TestsInit()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
+    # Arrange
     init_dict = {
-        'ffprobe_filepath': '',
+        'ffprobe_filepath': ffprobe_filepath,
     }
 
+    # Arrange
     result_dict = {
         'imdb_genres_list': imdb_genres_list,
     }
@@ -247,9 +269,11 @@ def filter_override_genre(imdb_genres_list, override_genre, override_genre_minim
 
 
 @pytest.fixture
-def filter_downloaded_file(index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list):
+def filter_downloaded_iterate_files(index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list):
 
-    logger = setup()
+    # Setup
+    test_init_instance = test_init.TestsInit()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
     index_title_compare = tools_various_instance.custom_title_compare(index_title)
@@ -267,16 +291,18 @@ def filter_downloaded_file(index_title, index_site_search, library_path, filenam
     # walk path to get test directory and filename
     library_path_walk = os.walk(library_path, topdown=False)
 
+    # Arrange
     init_dict = {
-        'ffprobe_filepath': '',
+        'ffprobe_filepath': ffprobe_filepath,
     }
 
+    # Arrange
     result_dict = {
         'index_title': index_title,
         'index_title_compare': index_title_compare,
         'index_year_compare': index_year_compare,
-        'index_site_search': index_site_search,
     }
+
     # Arrange
     config_dict = {
         'general': {
@@ -291,11 +317,12 @@ def filter_downloaded_file(index_title, index_site_search, library_path, filenam
 
     # Arrange
     index_site_dict = {
+        'criteria': index_site_search,
     }
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
-    response = siphonator_filter_movies_instance.filter_downloaded_file()
+    response = siphonator_filter_movies_instance.filter_downloaded_iterate_files()
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -425,15 +452,18 @@ def test_filter_preferred_index_quality(filter_preferred_index_quality, filter_p
 
 
 @pytest.mark.parametrize('index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list, exp_assert', [
-    ('movie title (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], False),            # movie does exist in library
-    ('movie title (2020) 1080p bluray dts-group', '720p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),              # movie does exist in library, but search criteria are not found in filename
-    ('movie title (2030) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),             # movie does not exist in library, index title year different
-    ('movie title (2020) 1080p bluray dts-preferredgroup', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),    # movie does exist in library, but preferred index group found
-    ('movie title (2020) 1080p bluray remastered dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),  # movie does exist in library, but preferred index quality found
+    ('movie title (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], False),                                          # index title matches library file, do not download (False)
+    ('movie title (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dtshd-group.mkv', ['preferredgroup'], ['remastered'], False),                                        # index title matches library file, but score is lower for index title, skip
+    ('movie title (2020) 1080p bluray dtshd-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                         # index title matches library file, but score is higher for index title, download
+    ('movie title (2020) 1080p bluray dts-group', '720p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                            # index title found in library, but search criteria does not match library filename
+    ('movie title (2030) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                           # index title not found in library, index title year different
+    ('movie title (2020) 1080p bluray dts-preferredgroup', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                  # index title exists in library, but preferred index group found
+    ('movie title (2020) 1080p bluray dts-preferredgroup1', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-preferredgroup2.mkv', ['preferredgroup1', 'preferredgroup2'], ['remastered'], False),  # index title contains preferred group and library file contains preferred group, do not download (False)
+    ('movie title (2020) 1080p bluray remastered dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                # index title found in library, but preferred quality found for index title
 ])
-def test_filter_downloaded_file(filter_downloaded_file, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list, exp_assert):
+def test_filter_downloaded_iterate_files(filter_downloaded_iterate_files, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list, exp_assert):
 
-    response = filter_downloaded_file
+    response = filter_downloaded_iterate_files
 
     # Assert
     assert response == exp_assert
