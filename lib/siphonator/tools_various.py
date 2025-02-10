@@ -43,19 +43,6 @@ def quality_score(index_title_year_to_end):
         "(8k)": int(50)
     }
 
-    # define scores for video quality, score increases as video quality increases
-    video_score_dict = {
-        "(hdr10)": int(10),
-        "(dv)": int(20)
-    }
-
-    # define scores for audio quality, score increases as audio quality increases
-    audio_score_dict = {
-        "(dts)": int(10),
-        "(dts-hd|dtshd|true-hd|truehd)": int(20),
-        "(dts-x|dtsx)": int(30)
-    }
-
     # define score for source type, score increases as source type improves (higher bitrate)
     source_score_dict = {
         "(dvdrip)": int(10),
@@ -65,8 +52,15 @@ def quality_score(index_title_year_to_end):
         "(bdremux|remux)": int(50)
     }
 
+    # define scores for audio quality, score increases as audio quality increases
+    audio_score_dict = {
+        "(dts)": int(10),
+        "(dts-hd|dtshd|true-hd|truehd)": int(20),
+        "(dts-x|dtsx)": int(30)
+    }
+
     score = 0
-    score_dicts = [resolution_score_dict, video_score_dict, audio_score_dict, source_score_dict]
+    score_dicts = [resolution_score_dict, audio_score_dict, source_score_dict]
 
     # iterate over resolution and score dicts
     for score_dict in score_dicts:

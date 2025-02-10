@@ -34,7 +34,11 @@ class NotificationEmail(object):
         index_title = self.result_dict.get('index_title')
         index_details = self.result_dict.get('index_details')
         index_size_mb = self.result_dict.get('index_size_mb')
+        result_details_list = self.result_dict.get('result_details')
         torrent_client_add_paused_bool = self.config_dict['torrent_client']['qbittorrent']['add_paused']
+
+        # Convert the result details list to an HTML unordered list
+        result_details = "<ul>\n" + "\n".join(f"<li>{item}</li>" for item in result_details_list) + "\n</ul>"
 
         imdb_plot = self.result_dict.get('imdb_plot_outline')
         if imdb_plot is None:
@@ -55,7 +59,8 @@ class NotificationEmail(object):
 **Genres:** {imdb_genres}<br/><br/>
 **Queue Status:** {queue_status}<br/><br/>
 **Release:** [{index_title}]({index_details})<br/><br/>
-**Size:** {index_size_mb} MB
+**Size:** {index_size_mb} MB<br/><br/>
+**Result Details:** {result_details}
         """
 
         nmdmail.send(

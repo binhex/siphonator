@@ -586,7 +586,7 @@ class FilterMovies(object):
             return True
 
         # index title in library, skip download
-        result_details = f"Failed {function_name} - Index title compare {index_title_compare} and year {index_year_compare} found in Library title compare {library_title_compare} and year {library_year_compare}"
+        result_details = f"Failed {function_name} - Index title compare '{index_title_compare}' and year '{index_year_compare}' found in Library title compare '{library_title_compare}' and year '{library_year_compare}'"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Failed'})
         self.result_details_list.append(result_details)
@@ -611,7 +611,7 @@ class FilterMovies(object):
 
             if library_filename_score > index_title_score:
 
-                result_details = f"Failed {function_name} - Index title '{index_title}' score {index_title_score} is less than library filename {library_file} score {library_filename_score}"
+                result_details = f"Failed {function_name} - Index title '{index_title}' score '{index_title_score}' is less than library filename '{library_file}' score '{library_filename_score}'"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Failed'})
                 self.result_details_list.append(result_details)
@@ -656,7 +656,7 @@ class FilterMovies(object):
             index_title_score = siphonator_tools_various.quality_score(index_title_year_to_end_compare)
 
             if library_filename_score < index_title_score:
-                result_details = f"Passed {function_name} - Index title '{index_title}' score {index_title_score} is greater than library filename {library_file} score {library_filename_score}"
+                result_details = f"Passed {function_name} - Index title '{index_title}' score '{index_title_score}' is greater than library filename '{library_file}' score '{library_filename_score}'"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Passed'})
                 self.result_details_list.append(result_details)
@@ -782,7 +782,7 @@ class FilterMovies(object):
 
                     if not result:
 
-                        result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
+                        result_details = f"Failed {function_name} - Index title '{index_title}' does exist in library path '{library_path}'"
                         self.logger_instance.info(result_details)
                         self.result_dict.update({'result': u'Failed'})
                         self.result_details_list.append(result_details)
@@ -803,7 +803,7 @@ class FilterMovies(object):
 
                         if not result:
 
-                            result_details = f"Failed {function_name} - Index title {index_title} does exist in library path {library_path}"
+                            result_details = f"Failed {function_name} - Index title '{index_title}' does exist in library path '{library_path}'"
                             self.logger_instance.info(result_details)
                             self.result_dict.update({'result': u'Failed'})
                             self.result_details_list.append(result_details)
