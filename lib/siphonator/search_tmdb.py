@@ -32,7 +32,7 @@ class SearchTMDB(object):
 
         if return_code != 0:
 
-            result_details = f"Failed {function_name} - Site feed download failed for TMDb"
+            result_details = f"Failed: {function_name}: Site feed download failed for TMDb"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -52,7 +52,7 @@ class SearchTMDB(object):
         # if resulting tmdb json page is blank then continue
         if tmdb_find_id_json == {}:
 
-            result_details = f"Failed {function_name} - No match for movie title '{self.index_title_search}' on TMDb json"
+            result_details = f"Failed: {function_name}: No match for movie title '{self.index_title_search}' on TMDb json"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -106,7 +106,7 @@ class SearchTMDB(object):
 
             except (IndexError, KeyError, TypeError):
 
-                result_details = f"Failed {function_name} - Site feed download failed for TMDb"
+                result_details = f"Failed: {function_name}: Site feed download failed for TMDb"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
                 self.result_details_list.append(result_details)
@@ -124,7 +124,7 @@ class SearchTMDB(object):
 
             if return_code != 0:
 
-                result_details = f"Failed {function_name} - Site feed download failed for TMDb"
+                result_details = f"Failed: {function_name}: Site feed download failed for TMDb"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
                 self.result_details_list.append(result_details)
@@ -137,7 +137,7 @@ class SearchTMDB(object):
 
             except (ValueError, TypeError, KeyError):
 
-                result_details = f"Failed {function_name} - Site feed download failed for TMDb"
+                result_details = f"Failed: {function_name}: Site feed download failed for TMDb"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
                 self.result_details_list.append(result_details)
@@ -146,7 +146,7 @@ class SearchTMDB(object):
 
             if tmdb_find_tt_json is None or tmdb_find_tt_json == {}:
 
-                result_details = f"Failed {function_name} - Site feed download failed for TMDb"
+                result_details = f"Failed: {function_name}: Site feed download failed for TMDb"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
                 self.result_details_list.append(result_details)
@@ -160,7 +160,7 @@ class SearchTMDB(object):
 
             except (IndexError, KeyError, TypeError):
 
-                result_details = f"Failed {function_name} - Site feed download failed for TMDb"
+                result_details = f"Failed: {function_name}: Site feed download failed for TMDb"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
                 self.result_details_list.append(result_details)
@@ -169,7 +169,7 @@ class SearchTMDB(object):
 
             if imdb_id is None or imdb_id == "":
 
-                result_details = f"Failed {function_name} - Site feed download failed for TMDb"
+                result_details = f"Failed: {function_name}: Site feed download failed for TMDb"
                 self.logger_instance.warning(result_details)
                 self.result_dict.update({'result': u'Failed'})
                 self.result_details_list.append(result_details)
@@ -179,14 +179,14 @@ class SearchTMDB(object):
             self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
             self.result_dict.update({'imdb_id': imdb_id})
 
-            result_details = f"Passed {function_name} - Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using TMDb search"
+            result_details = f"Passed: {function_name}: Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using TMDb search"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Passed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
-        result_details = f"Failed {function_name} - Failed to identify movie '{self.index_title_search}' using TMDb search"
+        result_details = f"Failed: {function_name}: Failed to identify movie '{self.index_title_search}' using TMDb search"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Failed'})
         self.result_details_list.append(result_details)

@@ -25,7 +25,7 @@ class SearchGoogle(object):
 
         if not google_find_id_gen:
 
-            result_details = f"Failed {function_name} - Failed to search Google for index title compare '{self.index_title_compare}'"
+            result_details = f"Failed: {function_name}: Failed to search Google for index title compare '{self.index_title_compare}'"
             self.logger_instance.debug(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -39,7 +39,7 @@ class SearchGoogle(object):
 
         except StopIteration:
 
-            result_details = f"Failed {function_name} - Failed to return results from Google for index title compare '{self.index_title_compare}'"
+            result_details = f"Failed: {function_name}: Failed to return results from Google for index title compare '{self.index_title_compare}'"
             self.logger_instance.debug(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -52,7 +52,7 @@ class SearchGoogle(object):
         # if title or url is none then return
         if not imdb_title or not imdb_url:
 
-            result_details = f"Failed {function_name} - Failed to return IMDb title or URL from Google for index title compare '{self.index_title_compare}'"
+            result_details = f"Failed: {function_name}: Failed to return IMDb title or URL from Google for index title compare '{self.index_title_compare}'"
             self.logger_instance.debug(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -71,7 +71,7 @@ class SearchGoogle(object):
         # check imdb title match index title
         if imdb_title_compare not in self.index_title_compare:
 
-            result_details = f"Failed {function_name} - IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'"
+            result_details = f"Failed: {function_name}: IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'"
             self.logger_instance.debug(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -83,7 +83,7 @@ class SearchGoogle(object):
         # check imdb title year matches index title year
         if self.index_year_compare not in imdb_title:
 
-            result_details = f"Failed {function_name} - IMDb title '{imdb_title}' does not contain index year compare '{self.index_year_compare}'"
+            result_details = f"Failed: {function_name}: IMDb title '{imdb_title}' does not contain index year compare '{self.index_year_compare}'"
             self.logger_instance.debug(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -97,7 +97,7 @@ class SearchGoogle(object):
 
         if not imdb_id_search:
 
-            result_details = f"Failed {function_name} - IMDb URL '{imdb_url}' from Google search does not contain IMDb ID"
+            result_details = f"Failed: {function_name}: IMDb URL '{imdb_url}' from Google search does not contain IMDb ID"
             self.logger_instance.debug(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -109,7 +109,7 @@ class SearchGoogle(object):
         self.logger_instance.debug(f"IMDb URL is '{imdb_url}'")
         self.result_dict.update({'imdb_id': imdb_id})
 
-        result_details = f"Passed {function_name} - Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using Google search"
+        result_details = f"Passed: {function_name}: Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using Google search"
         self.logger_instance.debug(result_details)
         self.result_dict.update({'result': u'Passed'})
         self.result_details_list.append(result_details)

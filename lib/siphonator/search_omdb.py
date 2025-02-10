@@ -32,7 +32,7 @@ class SearchOMDb(object):
 
         if return_code != 0:
 
-            result_details = f"Failed {function_name} - Site feed download failed for OMDb"
+            result_details = f"Failed: {function_name}: Site feed download failed for OMDb"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -52,7 +52,7 @@ class SearchOMDb(object):
         # if resulting tmdb json page is blank then continue
         if omdb_find_id_json is None or omdb_find_id_json == {}:
 
-            result_details = f"Failed {function_name} - Empty json returned from OMDb for index title search '{self.index_title_search}'"
+            result_details = f"Failed: {function_name}: Empty json returned from OMDb for index title search '{self.index_title_search}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -65,7 +65,7 @@ class SearchOMDb(object):
 
         except (IndexError, KeyError, TypeError):
 
-            result_details = f"Failed {function_name} - No title key in json for OMDb for index title search '{self.index_title_search}'"
+            result_details = f"Failed: {function_name}: No title key in json for OMDb for index title search '{self.index_title_search}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -78,7 +78,7 @@ class SearchOMDb(object):
 
         except (IndexError, KeyError, TypeError):
 
-            result_details = f"Failed {function_name} -No year key in json for OMDb for index title search '{self.index_title_search}'"
+            result_details = f"Failed: {function_name}:No year key in json for OMDb for index title search '{self.index_title_search}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -91,7 +91,7 @@ class SearchOMDb(object):
 
         if omdb_title_compare not in self.index_title_compare:
 
-            result_details = f"Failed {function_name} - Failed to identify movie title '{self.index_title_search}' using OMDb search"
+            result_details = f"Failed: {function_name}: Failed to identify movie title '{self.index_title_search}' using OMDb search"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -105,7 +105,7 @@ class SearchOMDb(object):
 
         if int(omdb_release_year) != int(self.index_year_compare):
 
-            result_details = f"Failed {function_name} - Failed to identify movie year '{self.index_title_search}' using OMDb search"
+            result_details = f"Failed: {function_name}: Failed to identify movie year '{self.index_title_search}' using OMDb search"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -121,7 +121,7 @@ class SearchOMDb(object):
 
         except (IndexError, KeyError, TypeError):
 
-            result_details = f"Failed {function_name} - Cannot find IMDbID for movie using OMDb"
+            result_details = f"Failed: {function_name}: Cannot find IMDbID for movie using OMDb"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -130,7 +130,7 @@ class SearchOMDb(object):
 
         if imdb_id is None or imdb_id == "":
 
-            result_details = f"Failed {function_name} - IMDb ID is None, unable to identify valid value using OMDb"
+            result_details = f"Failed: {function_name}: IMDb ID is None, unable to identify valid value using OMDb"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -140,7 +140,7 @@ class SearchOMDb(object):
         self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
         self.result_dict.update({'imdb_id': imdb_id})
 
-        result_details = f"Passed {function_name} - Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using OMDb search"
+        result_details = f"Passed: {function_name}: Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using OMDb search"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Passed'})
         self.result_details_list.append(result_details)

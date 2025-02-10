@@ -37,8 +37,16 @@ class NotificationEmail(object):
         result_details_list = self.result_dict.get('result_details')
         torrent_client_add_paused_bool = self.config_dict['torrent_client']['qbittorrent']['add_paused']
 
-        # Convert the result details list to an HTML unordered list
-        result_details = "<ul>\n" + "\n".join(f"<li>{item}</li>" for item in result_details_list) + "\n</ul>"
+        # loop over result details list and format for html output
+        result_details = "<ul>"
+        for item in result_details_list:
+            parts = item.split(": ", 2)  # Split into three parts
+            if len(parts) == 3:
+                main_part, sub_part, detail_part = parts
+                result_details += f"<li>{main_part}: {sub_part}<ul><li>{detail_part}</li></ul></li>"
+            else:
+                result_details += f"<li>{item}</li>"
+        result_details += "</ul>"
 
         imdb_plot = self.result_dict.get('imdb_plot_outline')
         if imdb_plot is None:

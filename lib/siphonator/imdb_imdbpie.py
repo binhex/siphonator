@@ -25,7 +25,7 @@ def imdb_json_api(logger_instance, result_dict, config_dict):
         imdb_instance = imdbpie.Imdb()
 
     except OSError:
-        result_details = f"Failed {function_name} - Cannot connect to IMDb"
+        result_details = f"Failed: {function_name}: Cannot connect to IMDb"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)
@@ -36,7 +36,7 @@ def imdb_json_api(logger_instance, result_dict, config_dict):
         imdb_get_title_dict = imdb_instance.get_title(str(imdb_id))
 
     except ValueError:
-        result_details = f"Failed {function_name} - Invalid IMDb id '{imdb_id}'"
+        result_details = f"Failed: {function_name}: Invalid IMDb id '{imdb_id}'"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)
@@ -219,8 +219,8 @@ def imdb_json_api(logger_instance, result_dict, config_dict):
         'imdb_country_list': country_origins_list,
     })
 
-    result_details = f"Passed {function_name} - Identified IMDb metadata using IMDbPie"
-    logger_instance.warning(result_details)
+    result_details = f"Passed: {function_name}: Identified IMDb metadata using IMDbPie"
+    logger_instance.info(result_details)
     result_dict.update({'result': u'Passed'})
     result_details_list.append(result_details)
     result_dict.update({'result_details': result_details_list})

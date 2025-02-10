@@ -45,10 +45,10 @@ def quality_score(index_title_year_to_end):
 
     # define score for source type, score increases as source type improves (higher bitrate)
     source_score_dict = {
-        "(dvdrip)": int(10),
-        "(hdtv|webrip)": int(20),
-        "(web-dl|webdl)": int(30),
-        "(bd|bdrip|hdrip|bluray|blu-ray)": int(40),
+        "(dvdrip|webrip)": int(10),
+        "(hdtv)": int(20),
+        "(web-dl|webdl|hdrip)": int(30),
+        "(bd|bdrip|bluray|blu-ray)": int(40),
         "(bdremux|remux)": int(50)
     }
 
@@ -389,7 +389,7 @@ class ToolsVarious(object):
         index_title = result_dict.get('index_title', None)
         if index_title is None:
 
-            result_details = f"Failed {function_name} - Index title not found"
+            result_details = f"Failed: {function_name}: Index title not found"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
             result_details_list.append(result_details)
@@ -401,7 +401,7 @@ class ToolsVarious(object):
         index_title_full_compare = self.custom_title_full_compare(index_title)
         if index_title_full_compare is None:
 
-            result_details = f"Failed {function_name} - Cannot identify index title compare from index title"
+            result_details = f"Failed: {function_name}: Cannot identify index title compare from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
             result_details_list.append(result_details)
@@ -413,7 +413,7 @@ class ToolsVarious(object):
         index_title_compare = self.custom_title_compare(index_title)
         if index_title_compare is None:
 
-            result_details = f"Failed {function_name} - Cannot identify compare title from index title"
+            result_details = f"Failed: {function_name}: Cannot identify compare title from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
             result_details_list.append(result_details)
@@ -425,7 +425,7 @@ class ToolsVarious(object):
         index_title_search = self.custom_title_search(index_title)
         if index_title_search is None:
 
-            result_details = f"Failed {function_name} - Cannot identify search title from index title"
+            result_details = f"Failed: {function_name}: Cannot identify search title from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
             result_details_list.append(result_details)
@@ -437,7 +437,7 @@ class ToolsVarious(object):
         index_title_year_to_end_compare = self.custom_title_year_to_end_compare(index_title)
         if index_title_year_to_end_compare is None:
 
-            result_details = f"Failed {function_name} - Cannot identify year to end from index title"
+            result_details = f"Failed: {function_name}: Cannot identify year to end from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
             result_details_list.append(result_details)
@@ -449,7 +449,7 @@ class ToolsVarious(object):
         index_year_compare = self.custom_title_year_compare(index_title)
         if index_year_compare is None:
 
-            result_details = f"Failed {function_name} - Cannot identify year compare from index title"
+            result_details = f"Failed: {function_name}: Cannot identify year compare from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
             result_details_list.append(result_details)
@@ -461,7 +461,7 @@ class ToolsVarious(object):
         index_title_and_year_compare = self.custom_title_and_year_compare(index_title)
         if index_title_and_year_compare is None:
 
-            result_details = f"Failed {function_name} - Cannot identify index title and year compare from index title"
+            result_details = f"Failed: {function_name}: Cannot identify index title and year compare from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
             result_details_list.append(result_details)
@@ -479,7 +479,7 @@ class ToolsVarious(object):
             'index_title_and_year_compare': index_title_and_year_compare
         })
 
-        result_details = f"Passed {function_name} - Identified title and year from index title"
+        result_details = f"Passed: {function_name}: Identified title and year from index title"
         self.logger_instance.info(result_details)
         result_dict.update({'result': u'Passed'})
         result_details_list.append(result_details)

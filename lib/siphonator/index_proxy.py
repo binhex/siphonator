@@ -313,7 +313,7 @@ class IndexProxy(object):
 
                 if result_dict.get('result') == 'Passed':
 
-                    result_details = f"Passed {function_name} - Passed all Index and IMDb filters"
+                    result_details = f"Passed: {function_name}: Passed all Index and IMDb filters"
                     self.logger_instance.info(result_details)
                     result_details_list = result_dict.get('result_details')
                     result_dict.update({'result': u'Passed'})

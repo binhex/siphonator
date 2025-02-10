@@ -25,7 +25,7 @@ class SearchIMDB(object):
 
         except (AttributeError, ValueError):
 
-            result_details = f"Failed {function_name} - Failed to search IMDb for index title compare '{self.index_title_compare}'"
+            result_details = f"Failed: {function_name}: Failed to search IMDb for index title compare '{self.index_title_compare}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -35,7 +35,7 @@ class SearchIMDB(object):
         # if resulting imdb json page is blank then continue
         if imdb_find_id_dict == {}:
 
-            result_details = f"Failed {function_name} - No match for movie title '{self.index_title_search}' on IMDb json"
+            result_details = f"Failed: {function_name}: No match for movie title '{self.index_title_search}' on IMDb json"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -108,14 +108,14 @@ class SearchIMDB(object):
             self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
             self.result_dict.update({'imdb_id': imdb_id})
 
-            result_details = f"Passed {function_name} - Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using IMDb search"
+            result_details = f"Passed: {function_name}: Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using IMDb search"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Passed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
-        result_details = f"Failed {function_name} - Failed to identify movie '{self.index_title_search}' using IMDb search"
+        result_details = f"Failed: {function_name}: Failed to identify movie '{self.index_title_search}' using IMDb search"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Failed'})
         self.result_details_list.append(result_details)
