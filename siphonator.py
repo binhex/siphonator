@@ -226,6 +226,40 @@ if __name__ == '__main__':
 
     app_root_path = os.path.dirname(os.path.realpath(__file__))
 
+    # TODO switch to this format.
+    # parser = argparse.ArgumentParser(description="Secrets Factory")
+    # parser.add_argument(
+    #     "-s",
+    #     "--store-type",
+    #     type=str,
+    #     choices=["file", "aws"],
+    #     default="file",
+    #     help="Type of secret store to use",
+    # )
+    # parser.add_argument(
+    #     "-p",
+    #     "--secrets-dir",
+    #     type=str,
+    #     default=AnalyzeDeploymentToolingPath.get_secrets_path(),
+    #     help="Directory to store secrets",
+    # )
+    # parser.add_argument(
+    #     "-o",
+    #     "--override",
+    #     action="store_true",
+    #     help="Override existing secrets",
+    # )
+    # parser.add_argument(
+    #     "-e",
+    #     "--env-type",
+    #     type=str,
+    #     choices=["pre-prod", "config-dev", "con-des-only", "connectors"],
+    #     default="config-dev",
+    #     help="Type of environment to generate secrets for",
+    # )
+    #
+    # args = parser.parse_args()
+
     # setup argparse description and usage, also increase spacing for help to 50
     commandline_parser = ArgparseCustom(prog="Siphonator", description="Welcome to %(prog)s - Coded by binhex." + app_version, usage="%(prog)s [--help] [--config <path>] [--logs <path>] [--pidfile <path>] [--daemon] [--version]", formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=50))
 
