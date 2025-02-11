@@ -52,6 +52,10 @@ class FilterMovies(object):
 
     def filter_imdb_movies(self):
 
+        filter_good_imdb_title_type_result = self.filter_good_imdb_title_type()
+        if not filter_good_imdb_title_type_result:
+            return self.result_dict
+
         filter_bad_genre_result = self.filter_bad_genre()
         if not filter_bad_genre_result:
             return self.result_dict
@@ -767,6 +771,7 @@ class FilterMovies(object):
         library_path = self.config_dict['general']['library_path']
         filter_library_path_walk = self.config_dict.get('library_path_walk')
 
+        # constructs a list of library filenames that match the index title and year
         identify_walk_files_filepath_dict = self.filter_downloaded_file()
         library_filepath_list = identify_walk_files_filepath_dict['identify_walk_files_filepath_list']
 
@@ -791,6 +796,7 @@ class FilterMovies(object):
 
             else:
 
+                # constructs a list of library filenames that exist in a directory that match the index title and year
                 identify_walk_dirs_filepath_dict = self.filter_downloaded_dir()
                 library_filepath_list = identify_walk_dirs_filepath_dict['identify_walk_dirs_filepath_list']
 
@@ -961,6 +967,41 @@ class FilterMovies(object):
         self.result_dict.update({'result_details': self.result_details_list})
         return True
 
+    def filter_good_imdb_title_type(self):
+
+        imdb_title_type_lower = self.result_dict.get('imdb_title_type').lower()
+        filter_good_imdb_title_type_list = self.config_dict["filters"][f"good_imdb_title_type"]
+
+        function_name = siphonator_tools_various.get_function_name()
+
+        if filter_good_imdb_title_type_list is None:
+
+            result_details = f"Passed: {function_name}: No good IMDb types defined, skipping good IMDb type check"
+            self.logger_instance.info(result_details)
+            self.result_dict.update({'result': u'Passed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
+            return True
+
+        # convert list from config to lowercase
+        filter_good_imdb_title_type_list_lower = [element.lower() for element in filter_good_imdb_title_type_list]
+
+        if imdb_title_type_lower not in filter_good_imdb_title_type_list_lower:
+
+            result_details = f"Failed: {function_name}: IMDb title type '{imdb_title_type_lower}' is not in IMDb good title type '{filter_good_imdb_title_type_list_lower}', skipping movie"
+            self.logger_instance.warning(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
+            return False
+
+        result_details = f"Passed: {function_name}: IMDb title type '{imdb_title_type_lower}' is in IMDb good title type '{filter_good_imdb_title_type_list_lower}'"
+        self.logger_instance.info(result_details)
+        self.result_dict.update({'result': u'Passed'})
+        self.result_details_list.append(result_details)
+        self.result_dict.update({'result_details': self.result_details_list})
+        return True
+
     def filter_good_language_country(self, filter_type):
 
         imdb_list = self.result_dict.get(f'imdb_{filter_type}_list')
@@ -1123,7 +1164,7 @@ class FilterMovies(object):
 
         if filter_list is None:
 
-            result_details = f"Failed: {function_name}: Filter for '{filter_type}' not defined, skipping '{filter_type}' checks"
+            result_details = f"Failed: {function_name}: Filter override_{filter_type}_list not defined, skipping IMDb override {filter_type} checks"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -1132,7 +1173,7 @@ class FilterMovies(object):
 
         if imdb_list is None:
 
-            result_details = f"Failed: {function_name}: IMDb '{filter_type}' not found, assuming '{filter_type}' is OK"
+            result_details = f"Failed: {function_name}: IMDb {filter_type} not found, assuming IMDb override {filter_type} not present"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -1146,14 +1187,14 @@ class FilterMovies(object):
 
             if filter_lower_item in imdb_lower_list:
 
-                result_details = f"Passed: {function_name}: IMDb '{filter_type}' list '{imdb_list}' is in good '{filter_type}' list '{filter_list}', skipping votes and rating checks"
+                result_details = f"Passed: {function_name}: IMDb {filter_type} list '{imdb_lower_list}' is in filter override_{filter_type}_list '{filter_lower_list}', skipping votes and rating checks"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Passed'})
                 self.result_details_list.append(result_details)
                 self.result_dict.update({'result_details': self.result_details_list})
                 return True
 
-        result_details = f"Failed: {function_name}: IMDb '{filter_type}' list '{imdb_list}' is not in good '{filter_type}' list '{filter_list}'"
+        result_details = f"Failed: {function_name}: IMDb {filter_type} list '{imdb_lower_list}' is not in override_{filter_type}_list '{filter_lower_list}'"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Failed'})
         self.result_details_list.append(result_details)
