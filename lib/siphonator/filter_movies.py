@@ -546,22 +546,6 @@ class FilterMovies(object):
 
         return {'identify_walk_dirs_filepath_list': identify_walk_files_filepath_list}
 
-    def filter_downloaded(self, library_filepath):
-
-        # get filename and path from filepath
-        library_filename = os.path.basename(library_filepath)
-
-        # if library filename does not contain all search criteria then return True (download)
-        if self.filter_downloaded_file_search_criteria(library_filename, library_filepath):
-            return True
-
-        # if index title does contain any overrides (special editions, higher quality or preferred group) then return True (download)
-        if self.filter_downloaded_overrides(library_filename):
-            return True
-
-        # index title exists in library
-        return False
-
     def filter_downloaded_year_and_title_check(self, library_filename):
 
         index_title_compare = self.result_dict.get('index_title_compare')
@@ -642,73 +626,52 @@ class FilterMovies(object):
         self.result_dict.update({'result_details': self.result_details_list})
         return False
 
-    def filter_downloaded_file_search_criteria(self, library_filename, library_filepath):
+    def filter_downloaded_library_file_resolution(self, library_filename, library_filepath):
 
-        index_site_search = self.index_site_dict.get('criteria')
         ffprobe_filepath = self.init_dict.get('ffprobe_filepath')
-        index_site_search_list = index_site_search.split()
-        library_filename_title_full_compare = self.tools_various_instance.custom_title_full_compare(library_filename)
         library_filename_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(library_filename)
         function_name = siphonator_tools_various.get_function_name()
 
-        for index_site_search_item in index_site_search_list:
+        # attempt to identify resolution from library filename
+        library_filename_resolution_string = self.tools_various_instance.resolution_from_string(library_filename_year_to_end_compare)
 
-            if index_site_search_item in library_filename_title_full_compare:
-                continue
+        # if we cannot identify resolution from library filename then use ffprobe
+        if not library_filename_resolution_string:
 
-            index_site_search_resolution_string = self.tools_various_instance.resolution_from_string(index_site_search_item)
+            # get resolution of library file by analysing file using ffprobe
+            library_filename_resolution_string = self.tools_various_instance.resolution_from_ffprobe(library_filepath, ffprobe_filepath)
 
-            # if index_site_search_item that is missing is not resolution then download
-            if not index_site_search_resolution_string:
+            if library_filename_resolution_string is None:
 
-                result_details = f"Passed: {function_name}: Index search term '{index_site_search_item}' is missing from library filename '{library_filename_title_full_compare}'"
+                result_details = f"Passed: {function_name}: Unable to determine resolution from filename or ffprobe for library file '{library_filename}'"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Passed'})
                 self.result_details_list.append(result_details)
                 self.result_dict.update({'result_details': self.result_details_list})
-                return True
+                return None
 
-            # attempt to identify resolution from library filename
-            library_filename_resolution_string = self.tools_various_instance.resolution_from_string(library_filename_year_to_end_compare)
-
-            # if we cannot identify resolution from library filename then use ffprobe
-            if not library_filename_resolution_string:
-
-                # get resolution of library file by analysing file using ffprobe
-                library_filename_resolution_string = self.tools_various_instance.resolution_from_ffprobe(library_filepath, ffprobe_filepath)
-
-                if library_filename_resolution_string is None:
-
-                    result_details = f"Passed: {function_name}: Unable to determine resolution from filename or ffprobe for library file '{library_filename}'"
-                    self.logger_instance.info(result_details)
-                    self.result_dict.update({'result': u'Passed'})
-                    self.result_details_list.append(result_details)
-                    self.result_dict.update({'result_details': self.result_details_list})
-                    return True
-
-            self.logger_instance.debug(f"Library filename resolution identified as '{str(library_filename_resolution_string)}' using filename/ffprobe for library file '{library_filename}'")
-
-            # if index search resolution is less than the library filename resolution then skip
-            if int(index_site_search_resolution_string) < int(library_filename_resolution_string):
-
-                result_details = f"Failed: {function_name}: Index search term resolution '{index_site_search_resolution_string}' is less than library filename resolution '{library_filename_resolution_string}'"
-                self.logger_instance.info(result_details)
-                self.result_dict.update({'result': u'Failed'})
-                self.result_details_list.append(result_details)
-                self.result_dict.update({'result_details': self.result_details_list})
-                return False
-
-        result_details = f"Failed: {function_name}: All index search criteria '{index_site_search_list}' found in library filename '{library_filename}'"
-        self.logger_instance.info(result_details)
-        self.result_dict.update({'result': u'Failed'})
-        self.result_details_list.append(result_details)
-        self.result_dict.update({'result_details': self.result_details_list})
-        return False
+        self.logger_instance.debug(f"Library filename resolution identified as '{str(library_filename_resolution_string)}' using filename/ffprobe for library file '{library_filename}'")
+        return library_filename_resolution_string
 
     def filter_downloaded_iterate_files(self):
 
         function_name = siphonator_tools_various.get_function_name()
         index_title = self.result_dict.get('index_title')
+        index_title_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(index_title)
+
+        # get index title resolution from index title
+        index_title_resolution_string = self.tools_various_instance.resolution_from_string(index_title_year_to_end_compare)
+
+        # if the index title resolution cannot be identified from index title then skip
+        if not index_title_resolution_string:
+
+            result_details = f"Failed: {function_name}: Index title '{index_title}' does not contain resolution"
+            self.logger_instance.info(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
+            return False
+
         library_path = self.config_dict['general']['library_path']
         filter_library_path_walk = self.config_dict.get('library_path_walk')
 
@@ -725,13 +688,33 @@ class FilterMovies(object):
 
                 for library_filepath in library_filepath_list:
 
-                    # if filter_downloaded returns True then library filename does not contain search criteria or index title contains overrides (special editions, higher quality or preferred group) (download)
-                    # if filter_downloaded returns False then index title exists in library (skip)
-                    result = self.filter_downloaded(library_filepath)
+                    # get filename and path from filepath
+                    library_filename = os.path.basename(library_filepath)
 
-                    if not result:
+                    # get library filename resolution from filename or ffprobe
+                    library_file_resolution_string = self.filter_downloaded_library_file_resolution(library_filename, library_filepath)
 
-                        result_details = f"Failed: {function_name}: Index title '{index_title}' does exist in library path '{library_path}'"
+                    # if the library file resolution cannot be identified via filename or ffprobe then continue
+                    if not library_file_resolution_string:
+                        continue
+
+                    # if the resolution in index title matches library file then check for overrides
+                    if int(index_title_resolution_string) == int(library_file_resolution_string):
+
+                        # if index title does not contain any overrides (special editions, higher quality or preferred group) then return False (skip)
+                        if not self.filter_downloaded_overrides(library_filename):
+
+                            result_details = f"Failed: {function_name}: Index title '{index_title}' does not contain overrides for library filename '{library_filename}'"
+                            self.logger_instance.info(result_details)
+                            self.result_dict.update({'result': u'Failed'})
+                            self.result_details_list.append(result_details)
+                            self.result_dict.update({'result_details': self.result_details_list})
+                            return False
+
+                    # if index resolution is less than library file then skip
+                    elif int(index_title_resolution_string) < int(library_file_resolution_string):
+
+                        result_details = f"Failed: {function_name}: Index title '{index_title}' resolution {index_title_resolution_string} is less than library filename '{library_filename}' resolution {library_file_resolution_string}"
                         self.logger_instance.info(result_details)
                         self.result_dict.update({'result': u'Failed'})
                         self.result_details_list.append(result_details)
@@ -749,20 +732,40 @@ class FilterMovies(object):
 
                     for library_filepath in library_filepath_list:
 
-                        # if filter_downloaded returns True then library filename does not contain search criteria or index title contains overrides (special editions, higher quality or preferred group) (download)
-                        # if filter_downloaded returns False then index title exists in library (skip)
-                        result = self.filter_downloaded(library_filepath)
+                        # get filename and path from filepath
+                        library_filename = os.path.basename(library_filepath)
 
-                        if not result:
+                        # get library filename resolution from filename or ffprobe
+                        library_file_resolution_string = self.filter_downloaded_library_file_resolution(library_filename, library_filepath)
 
-                            result_details = f"Failed: {function_name}: Index title '{index_title}' does exist in library path '{library_path}'"
+                        # if the library file resolution cannot be identified via filename or ffprobe then continue
+                        if not library_file_resolution_string:
+                            continue
+
+                        # if the resolution in index title matches library file then check for overrides
+                        if int(index_title_resolution_string) == int(library_file_resolution_string):
+
+                            # if index title does not contain any overrides (special editions, higher quality or preferred group) then return False (skip)
+                            if not self.filter_downloaded_overrides(library_filename):
+
+                                result_details = f"Failed: {function_name}: Index title '{index_title}' does not contain overrides for library filename '{library_filename}'"
+                                self.logger_instance.info(result_details)
+                                self.result_dict.update({'result': u'Failed'})
+                                self.result_details_list.append(result_details)
+                                self.result_dict.update({'result_details': self.result_details_list})
+                                return False
+
+                        # if index resolution is less than library file then skip
+                        elif int(index_title_resolution_string) < int(library_file_resolution_string):
+
+                            result_details = f"Failed: {function_name}: Index title '{index_title}' resolution {index_title_resolution_string} is less than library filename '{library_filename}' resolution {library_file_resolution_string}"
                             self.logger_instance.info(result_details)
                             self.result_dict.update({'result': u'Failed'})
                             self.result_details_list.append(result_details)
                             self.result_dict.update({'result_details': self.result_details_list})
                             return False
 
-        result_details = f"Passed: {function_name}: Index title '{index_title}' does not exist in library path '{library_path}'"
+        result_details = f"Passed: {function_name}: Index title '{index_title}' contains overrides or does not exist in library path '{library_path}'"
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
         self.result_details_list.append(result_details)

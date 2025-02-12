@@ -8,7 +8,6 @@ import inspect
 
 
 def current_time():
-
     # datetime object containing current date and time
     run_current_date_and_time = datetime.datetime.now()
 
@@ -18,7 +17,6 @@ def current_time():
 
 
 def get_function_name():
-
     # Get the current frame
     current_frame = inspect.currentframe()
 
@@ -36,11 +34,11 @@ def quality_score(index_title_year_to_end):
 
     # define scores for resolution, score increases as resolution increases
     resolution_score_dict = {
-        "(480p|sd|540p)": int(10),
-        "(720p)": int(20),
-        "(1080p)": int(30),
-        "(2160p|4k)": int(40),
-        "(8k)": int(50)
+        "(480|540)": int(10),
+        "(720)": int(20),
+        "(1080)": int(30),
+        "(2160)": int(40),
+        "(4320)": int(50)
     }
 
     # define score for source type, score increases as source type improves (higher bitrate)
@@ -62,13 +60,13 @@ def quality_score(index_title_year_to_end):
     score = 0
     score_dicts = [resolution_score_dict, audio_score_dict, source_score_dict]
 
-    # iterate over resolution and score dicts
+    # iterate over audio and source dicts
     for score_dict in score_dicts:
 
         # Iterate over the key-value pairs
         for key, value in score_dict.items():
 
-            # search for key name for resolution, if found add score value to score
+            # search for key names, if found add score value to score
             if re.search(fr'[_\-.\s(]{key}[_\-.\s)]|^{key}[_\-.\s)]', index_title_year_to_end, re.IGNORECASE):
                 score += value
 
@@ -77,7 +75,6 @@ def quality_score(index_title_year_to_end):
 
 
 def pretty_print_yaml(yaml_string):
-
     print(yaml.dump(yaml_string, allow_unicode=True, default_flow_style=False))
 
 
@@ -148,7 +145,6 @@ class ToolsVarious(object):
     def resolution_from_string(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -175,7 +171,6 @@ class ToolsVarious(object):
     def custom_title_sqlite(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -188,7 +183,6 @@ class ToolsVarious(object):
     def custom_title_compare(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -201,7 +195,6 @@ class ToolsVarious(object):
     def custom_title_search(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -215,17 +208,17 @@ class ToolsVarious(object):
     def custom_bad_keyword_search(self, custom_title, filter_bad_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
         if filter_bad_title is None:
-
             self.logger_instance.warning(u'No filter_bad_title sent to function')
             return None
 
         filter_bad_title_lower = filter_bad_title.lower()
-        filter_bad_title_lower_search = re.search(rf'{self.index_title_bad_keyword_regex}{filter_bad_title_lower}{self.index_title_bad_keyword_regex}|{self.index_title_bad_keyword_regex}{filter_bad_title_lower}$', custom_title)
+        filter_bad_title_lower_search = re.search(
+            rf'{self.index_title_bad_keyword_regex}{filter_bad_title_lower}{self.index_title_bad_keyword_regex}|{self.index_title_bad_keyword_regex}{filter_bad_title_lower}$',
+            custom_title)
 
         return filter_bad_title_lower_search
 
@@ -236,17 +229,18 @@ class ToolsVarious(object):
             return None
 
         custom_title_strip = re.sub(self.index_title_remove_website_regex, '', custom_title).lower()
-        custom_title_strip = re.sub(self.index_title_remove_square_brackets_and_content_regex, '', custom_title_strip).lower()
+        custom_title_strip = re.sub(self.index_title_remove_square_brackets_and_content_regex, '',
+                                    custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_separators_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_non_ascii_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_bad_words_regex, '', custom_title_strip).lower()
-        custom_title_strip = re.sub(self.index_title_remove_invalid_windows_filename_chars_regex, '', custom_title_strip).lower()
+        custom_title_strip = re.sub(self.index_title_remove_invalid_windows_filename_chars_regex, '',
+                                    custom_title_strip).lower()
         return custom_title_strip
 
     def custom_title_word_match_compare(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -260,7 +254,6 @@ class ToolsVarious(object):
     def custom_title_full_compare(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -271,7 +264,6 @@ class ToolsVarious(object):
     def custom_title_year_to_end_compare(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -292,7 +284,6 @@ class ToolsVarious(object):
     def custom_title_remove_year_to_end_compare(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -302,7 +293,6 @@ class ToolsVarious(object):
     def custom_title_group_compare(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -321,7 +311,6 @@ class ToolsVarious(object):
     def custom_title_year_compare(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -348,7 +337,6 @@ class ToolsVarious(object):
     def custom_title_and_year_compare(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
@@ -361,11 +349,11 @@ class ToolsVarious(object):
     def custom_title_tv_season_episode(self, custom_title):
 
         if custom_title is None:
-
             self.logger_instance.warning(u'No custom_title sent to function')
             return None
 
-        custom_title_tv_season_episode_search = bool(re.search(self.index_title_identify_tv_season_or_episode_regex, custom_title.lower()))
+        custom_title_tv_season_episode_search = bool(
+            re.search(self.index_title_identify_tv_season_or_episode_regex, custom_title.lower()))
 
         # if search matches regex then return boolean, we do not care about the match only that it did match
         if custom_title_tv_season_episode_search:
@@ -379,7 +367,6 @@ class ToolsVarious(object):
     def index_title_process(self, result_dict):
 
         if result_dict is None:
-
             self.logger_instance.warning(u'No kwargs sent to function')
             return None
 
@@ -388,7 +375,6 @@ class ToolsVarious(object):
 
         index_title = result_dict.get('index_title', None)
         if index_title is None:
-
             result_details = f"Failed: {function_name}: Index title not found"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
@@ -400,7 +386,6 @@ class ToolsVarious(object):
 
         index_title_full_compare = self.custom_title_full_compare(index_title)
         if index_title_full_compare is None:
-
             result_details = f"Failed: {function_name}: Cannot identify index title compare from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
@@ -412,7 +397,6 @@ class ToolsVarious(object):
 
         index_title_compare = self.custom_title_compare(index_title)
         if index_title_compare is None:
-
             result_details = f"Failed: {function_name}: Cannot identify compare title from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
@@ -424,7 +408,6 @@ class ToolsVarious(object):
 
         index_title_search = self.custom_title_search(index_title)
         if index_title_search is None:
-
             result_details = f"Failed: {function_name}: Cannot identify search title from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
@@ -436,7 +419,6 @@ class ToolsVarious(object):
 
         index_title_year_to_end_compare = self.custom_title_year_to_end_compare(index_title)
         if index_title_year_to_end_compare is None:
-
             result_details = f"Failed: {function_name}: Cannot identify year to end from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
@@ -448,7 +430,6 @@ class ToolsVarious(object):
 
         index_year_compare = self.custom_title_year_compare(index_title)
         if index_year_compare is None:
-
             result_details = f"Failed: {function_name}: Cannot identify year compare from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
@@ -460,7 +441,6 @@ class ToolsVarious(object):
 
         index_title_and_year_compare = self.custom_title_and_year_compare(index_title)
         if index_title_and_year_compare is None:
-
             result_details = f"Failed: {function_name}: Cannot identify index title and year compare from index title"
             self.logger_instance.warning(result_details)
             result_dict.update({'result': u'Failed'})
