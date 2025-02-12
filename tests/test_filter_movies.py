@@ -38,7 +38,7 @@ def filter_bad_genre(imdb_genres_list):
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
-    response = siphonator_filter_movies_instance.filter_bad_genre()
+    response = siphonator_filter_movies_instance.filter_imdb_bad_genre()
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -71,7 +71,7 @@ def filter_preferred_index_group(filter_preferred_index_group_list, library_file
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
-    response = siphonator_filter_movies_instance.filter_preferred_index_group(library_filename, index_title)
+    response = siphonator_filter_movies_instance.filter_index_preferred_group(library_filename, index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -107,7 +107,7 @@ def filter_preferred_index_quality(filter_preferred_index_quality_list, library_
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
-    response = siphonator_filter_movies_instance.filter_preferred_index_quality(library_filename, index_title)
+    response = siphonator_filter_movies_instance.filter_index_preferred_quality(library_filename, index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -147,7 +147,7 @@ def filter_rating(imdb_rating):
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
-    response = siphonator_filter_movies_instance.filter_rating(override_genre_dict)
+    response = siphonator_filter_movies_instance.filter_imdb_rating(override_genre_dict)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -183,7 +183,7 @@ def filter_bad_index_title(index_title, filter_bad_index_title_list):
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
-    response = siphonator_filter_movies_instance.filter_bad_index_title()
+    response = siphonator_filter_movies_instance.filter_index_bad_keyword()
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -219,7 +219,7 @@ def filter_bad_movie_title(filter_bad_movie_title_list):
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
-    response = siphonator_filter_movies_instance.filter_bad_movie_title()
+    response = siphonator_filter_movies_instance.filter_imdb_bad_title()
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -262,7 +262,7 @@ def filter_override_genre(imdb_genres_list, override_genre, override_genre_minim
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
-    response = siphonator_filter_movies_instance.filter_override_genre()
+    response = siphonator_filter_movies_instance.filter_imdb_override_genre()
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -322,7 +322,7 @@ def filter_downloaded_iterate_files(index_title, index_site_search, library_path
 
     # Act
     siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
-    response = siphonator_filter_movies_instance.filter_downloaded_iterate_files()
+    response = siphonator_filter_movies_instance.filter_library_iterate_files()
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
