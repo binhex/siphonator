@@ -32,26 +32,17 @@ import lib.siphonator.tools_downloader as siphonator_tools_downloader
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
 
-def set_paths(config_param, relative_path):
+def create_path(path):
 
-    full_path = os.path.join(app_root_path, relative_path)
+    if not os.path.exists(path):
 
-    if args[config_param]:
+        try:
+            os.makedirs(path)
+        except OSError as e:
+            print(f"Error creating path '{path}', error is '{e}'")
+            return False
 
-        if not os.path.exists(args[relative_path]):
-
-            try:
-                os.makedirs(args[relative_path])
-            except OSError as e:
-                print(f"Error setting '--{config_param}' path to '{args[relative_path]}', error is '{e}', using default location '{full_path}'")
-            else:
-                full_path = args[config_param]
-
-        else:
-
-            full_path = args[config_param]
-
-    return full_path
+    return True
 
 
 class Siphonator(object):
@@ -216,6 +207,8 @@ if __name__ == '__main__':
     db_version = int(4)
     user_agent = f"Siphonator/{app_version}; https://github.com/binhex/siphonator"
 
+    app_root_path = os.path.dirname(os.path.realpath(__file__))
+
     # custom argparse to redirect user to help if unknown argument specified
     class ArgparseCustom(argparse.ArgumentParser):
 
@@ -224,83 +217,100 @@ if __name__ == '__main__':
             self.print_help()
             sys.exit(2)
 
-    app_root_path = os.path.dirname(os.path.realpath(__file__))
+    parser = ArgparseCustom(
+        prog=f"Siphonator v{app_version}",
+        description="Welcome to %(prog)s - Coded by binhex.",
+        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=100)
+    )
 
-    # TODO switch to this format.
-    # parser = argparse.ArgumentParser(description="Secrets Factory")
-    # parser.add_argument(
-    #     "-s",
-    #     "--store-type",
-    #     type=str,
-    #     choices=["file", "aws"],
-    #     default="file",
-    #     help="Type of secret store to use",
-    # )
-    # parser.add_argument(
-    #     "-p",
-    #     "--secrets-dir",
-    #     type=str,
-    #     default=AnalyzeDeploymentToolingPath.get_secrets_path(),
-    #     help="Directory to store secrets",
-    # )
-    # parser.add_argument(
-    #     "-o",
-    #     "--override",
-    #     action="store_true",
-    #     help="Override existing secrets",
-    # )
-    # parser.add_argument(
-    #     "-e",
-    #     "--env-type",
-    #     type=str,
-    #     choices=["pre-prod", "config-dev", "con-des-only", "connectors"],
-    #     default="config-dev",
-    #     help="Type of environment to generate secrets for",
-    # )
-    #
-    # args = parser.parse_args()
+    parser.add_argument(
+        "-lp",
+        "--log-path",
+        type=str,
+        default=os.path.join(app_root_path, 'logs'),
+        help="Specify path to store application log files, defaults to '%(default)s'",
+    )
+    parser.add_argument(
+        "-ll",
+        "--log-level",
+        type=str,
+        default='INFO',
+        choices=["DEBUG", "INFO", "WARN", "ERROR"],
+        help="Specify logging level, defaults to '%(default)s'",
+    )
+    parser.add_argument(
+        "-pp",
+        "--pid-path",
+        type=str,
+        default=os.path.join(app_root_path, 'pid'),
+        help="Specify path to store pid file, defaults to '%(default)s'",
+    )
+    parser.add_argument(
+        "-cp",
+        "--config-path",
+        type=str,
+        default=os.path.join(app_root_path, 'configs'),
+        help="Specify path to store config file, defaults to '%(default)s'",
+    )
+    parser.add_argument(
+        "-dp",
+        "--db-path",
+        type=str,
+        default=os.path.join(app_root_path, 'db'),
+        help="Specify path to store database file, defaults to '%(default)s'",
+    )
+    parser.add_argument(
+        "-fp",
+        "--ffprobe-path",
+        type=str,
+        default=os.path.join(app_root_path, 'tools/ffprobe/static/x64'),
+        help="Specify path to ffprobe binary file, defaults to '%(default)s'",
+    )
+    parser.add_argument(
+        "-t",
+        "--test",
+        action="store_true",
+        help="Run tests",
+    )
+    parser.add_argument(
+        "-d",
+        "--daemon",
+        action="store_true",
+        help="Run as background daemonized process",
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="store_true",
+        help="Display version",
+    )
 
-    # setup argparse description and usage, also increase spacing for help to 50
-    commandline_parser = ArgparseCustom(prog="Siphonator", description="Welcome to %(prog)s - Coded by binhex." + app_version, usage="%(prog)s [--help] [--config <path>] [--logs <path>] [--pidfile <path>] [--daemon] [--version]", formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=50))
+    # get arguments
+    args = parser.parse_args()
 
-    # add argparse command line flags
-    commandline_parser.add_argument(u"--test", action=u"store_true", help=u"run tests")
-    commandline_parser.add_argument(u"--logs", metavar=u"<path>", help=u"specify path for log files e.g. --logs /opt/siphonator/logs/")
-    commandline_parser.add_argument(u"--configs", metavar=u"<path>", help=u"specify path for config file e.g. --configs /opt/siphonator/config/")
-    commandline_parser.add_argument(u"--db", metavar=u"<path>", help=u"specify path for sqlite database e.g. --db /opt/siphonator/db/")
-    commandline_parser.add_argument(u"--ffprobe", metavar=u"<path>", help=u"specify path for ffprobe binary e.g. --ffprobe /usr/lib/ffprobe/")
-    commandline_parser.add_argument(u"--pid", metavar=u"<path>", help=u"specify path to pidfile e.g. --pid /var/run/siphonator/")
-    commandline_parser.add_argument(u"--daemon", action=u"store_true", help=u"run as background daemonized process")
-    commandline_parser.add_argument(u"--version", action=u"version", version=app_version)
+    # create path if it doesn't exist and set filepath
+    create_path(args.ffprobe_path)
+    ffprobe_filepath = os.path.join(args.ffprobe_path, 'ffprobe')
 
-    # save arguments in dictionary
-    args = vars(commandline_parser.parse_args())
-
-    # run tests
-    if args['test']:
-
-        return_code = pytest.main(["--verbose"])
-        exit(return_code)
-
-    # set path using app location or if specified use argument path
-    ffprobe_path = set_paths('ffprobe', 'tools/ffprobe/static/x64')
-    ffprobe_filepath = os.path.join(ffprobe_path, 'ffprobe')
-
-    # set path using app location or if specified use argument path
-    log_path = set_paths('logs', 'logs')
+    # create path if it doesn't exist and set filepath
+    log_path = args.log_path
+    create_path(log_path)
     logs_filepath = os.path.join(log_path, 'siphonator.log')
 
-    # set path using app location or if specified use argument path
-    db_path = set_paths('db', 'db')
+    # create path if it doesn't exist and set filepath
+    db_path = args.db_path
+    create_path(db_path)
     db_filepath = os.path.join(db_path, 'siphonator.db')
 
-    # set path using app location or if specified use argument path
-    pid_path = set_paths('pid', 'pid')
-    pid_filepath = os.path.join(pid_path, 'process.pid')
+    # create path if it doesn't exist and set filepath
+    pid_path = args.pid_path
+    create_path(pid_path)
+    pid_filepath = os.path.join(pid_path, 'siphonator.pid')
 
-    # set path using app location or if specified use argument path
-    config_path = set_paths('configs', 'configs')
-    config_filepath = os.path.join(config_path, 'config.yml')
+    # create path if it doesn't exist and set filepath
+    config_path = args.config_path
+    create_path(config_path)
+    config_filepath = os.path.join(args.config_path, 'config.yml')
 
     # define initial settings in dict
     main_init_dict = ({
@@ -339,7 +349,7 @@ if __name__ == '__main__':
     # siphonator_config.verify_config(logger_create_instance, main_init_dict, main_config_dict)
 
     # if daemon cli flag defined
-    if args['daemon']:
+    if args.daemon:
 
         daemon_mode = 'background'
 
@@ -352,6 +362,12 @@ if __name__ == '__main__':
 
         # force daemon mode to foreground as windows cannot run daemonized
         daemon_mode = 'foreground'
+
+    # run tests
+    if args.test:
+
+        return_code = pytest.main(["--verbose"])
+        exit(return_code)
 
     # setup scheduler
     schedule_mode = main_config_dict['general']['schedule_mode'].lower()

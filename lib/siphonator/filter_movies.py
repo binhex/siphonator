@@ -548,22 +548,18 @@ class FilterMovies(object):
 
     def filter_library_year_and_title(self, library_filename):
 
-        index_title_compare = self.result_dict.get('index_title_compare')
         index_year_compare = self.result_dict.get('index_year_compare')
         function_name = siphonator_tools_various.get_function_name()
 
-        library_title_compare = self.tools_various_instance.custom_title_compare(library_filename)
         library_year_compare = self.tools_various_instance.custom_title_year_compare(library_filename)
-
-        # if we cannot determine the library title to compare then library file does not exist, return true
-        if library_title_compare is None:
-
-            result_details = f"Passed: {function_name}: Library title compare is None, library file does not exist"
-            self.logger_instance.info(result_details)
-            self.result_dict.update({'result': u'Passed'})
-            self.result_details_list.append(result_details)
-            self.result_dict.update({'result_details': self.result_details_list})
+        if library_year_compare is None:
             return True
+
+        library_title_compare = self.tools_various_instance.custom_title_compare(library_filename)
+        if library_title_compare is None:
+            return True
+
+        index_title_compare = self.result_dict.get('index_title_compare')
 
         # if index title not in library title then movie does not exist, download
         if library_title_compare not in index_title_compare:
@@ -602,6 +598,14 @@ class FilterMovies(object):
                 self.result_details_list.append(result_details)
                 self.result_dict.update({'result_details': self.result_details_list})
                 return True
+
+            elif library_filename_score > index_title_score:
+                result_details = f"Failed: {function_name}: Index title '{index_title}' score '{index_title_score}' is less than library filename '{library_file}' score '{library_filename_score}'"
+                self.logger_instance.warning(result_details)
+                self.result_dict.update({'result': u'Failed'})
+                self.result_details_list.append(result_details)
+                self.result_dict.update({'result_details': self.result_details_list})
+                return False
 
         if self.filter_index_preferred_group(library_file, index_title):
             result_details = f"Passed: {function_name}: Index title '{index_title}' does contain preferred index group, and library filename does not contain preferred index group"

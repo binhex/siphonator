@@ -29,7 +29,6 @@ def get_function_name():
     return function_name
 
 
-# TODO add to class so we can add in logging
 def quality_score(index_title_year_to_end):
 
     # define scores for resolution, score increases as resolution increases
@@ -94,7 +93,7 @@ class ToolsVarious(object):
         self.index_title_remove_invalid_windows_filename_chars_regex = r'\?|<|>|:|\"|\/|\\|\||\*'
         self.index_title_resolution_regex = r'\d{3,4}p'
         self.index_title_year_to_end_regex = r'([\s\.\-_\[])(\(?\d{4}\)?)([^pi]).*'
-        self.index_title_year_regex = r'^([\.\-_\s\(\):\'\,\[])?(\()?(\d{4})(\))?'
+        self.index_title_year_regex = r'^([​\.\-_\s\(\):\'\,\[])?(\()?(\d{4})(\))?'
         self.index_title_group_regex = r'([a-zA-Z0-9]+)(\)?)(\[[a-zA-Z0-9]+\])?(\.[a-z0-9]{3})?(\[[a-zA-Z0-9]+\])?$'
         self.index_title_identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
         self.index_title_bad_keyword_regex = r'[\s._,\-()\[\]]'

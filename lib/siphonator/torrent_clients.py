@@ -38,7 +38,29 @@ class TorrentClients(object):
 
                 self.logger_instance.warning(f"qBittorrent login failed for username '{username}' with error '{e}'")
 
-    # TODO search and identify if existing movie already paused/downloading/downloaded
+    # feature - check qbittorrent status, if incoming port working (internet connection ok) and if torrent not stopped then look at whether stalled, if stalled for X minutes (defined in config) then delete (torrent or torrent + data, defined in config)
+    def qbittorrent_monitor_stalled_torrents(self):
+
+        # check incoming port is operational (working interne)
+        self.qbittorrent_check_incoming_port()
+
+        # get list of torrents added by siphonator (tagged)
+        self.qbittorrent_search()
+
+        # check if torrent is in stalled state
+        self.qbittorrent_identify_stalled()
+
+        # check if torrent is downloading slower than configured value
+        self.qbittorrent_identify_slow()
+
+        # if torrent is in stalled state then delete torrent (and possibly data if configured value set)
+        self.qbittorrent_delete_torrent()
+
+    def qbittorrent_check_incoming_port(self):
+
+        # identify if incoming port is operational
+        True
+
     def qbittorrent_search(self):
 
         # display qBittorrent info
@@ -50,6 +72,21 @@ class TorrentClients(object):
         # retrieve and show torrents tagged as added by siphonator
         for torrent in self.qbt_client.torrents_info(tag='siphonator'):
             print(f'{torrent.hash[-6:]}: {torrent.name} ({torrent.state})')
+
+    def qbittorrent_identify_stalled(self):
+
+        # identify if torrent is in stalled/downloading/seeding state, if stalled for longer than xx minutes defined in config then mark for possible deletion
+        True
+
+    def qbittorrent_identify_slow(self):
+
+        # identify if torrent is slow, so if speed of download is equal to or less than defined speed in config file then mark for possible deletion
+        True
+
+    def qbittorrent_delete_torrent(self):
+
+        # delete specified torrent, also if configured in config then delete data
+        True
 
     def qbittorrent_queue(self):
 
