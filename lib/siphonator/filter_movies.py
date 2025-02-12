@@ -676,7 +676,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return False
 
-        library_path = self.config_dict['general']['library_path']
+        library_path = self.config_dict['general']['library_path_list']
         filter_library_path_walk = self.config_dict.get('library_path_walk')
 
         # constructs a list of library filenames that match the index title and year

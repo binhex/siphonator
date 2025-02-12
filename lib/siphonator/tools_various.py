@@ -98,12 +98,19 @@ class ToolsVarious(object):
         self.index_title_identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
         self.index_title_bad_keyword_regex = r'[\s._,\-()\[\]]'
 
-    def library_path_walk(self, library_path):
+    def library_path_walk(self, library_path_list):
+        # Initialize an empty list to store the results
+        all_paths = []
 
-        filter_library_path_walk = os.walk(library_path, topdown=False)
+        # Iterate over each path in the library_path_list
+        for library_path in library_path_list:
+            # Use os.walk to walk the directory tree
+            for root, dirs, files in os.walk(library_path, topdown=False):
+                # Append the results to the all_paths list
+                all_paths.append((root, dirs, files))
 
-        self.logger_instance.debug(f"Filter library path '{library_path}' walked")
-        return filter_library_path_walk
+        self.logger_instance.debug(f"Filter library path list '{library_path_list}' walked")
+        return all_paths
 
     def resolution_from_ffprobe(self, library_filepath, ffprobe_filepath):
 
