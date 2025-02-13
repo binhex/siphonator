@@ -483,5 +483,4 @@ if __name__ == '__main__':
         except (KeyboardInterrupt, SystemExit):
 
             # cleanup pid file
-            siphonator_post_process.exit()
             siphonator_main.exit()
