@@ -38,30 +38,24 @@ class TorrentClients(object):
 
                 self.logger_instance.warning(f"qBittorrent login failed for username '{username}' with error '{e}'")
 
-    # feature - check qbittorrent status, if incoming port working (internet connection ok) and if torrent not stopped then look at whether stalled, if stalled for X minutes (defined in config) then delete (torrent or torrent + data, defined in config)
-    def qbittorrent_monitor_stalled_torrents(self):
+    def qbittorrent_check_global_speed(self):
 
-        # check incoming port is operational (working interne)
-        self.qbittorrent_check_incoming_port()
+        # Retrieve transfer information
+        transfer_info = self.qbt_client.transfer_info()
 
-        # get list of torrents added by siphonator (tagged)
-        self.qbittorrent_search()
+        # Get the global download and upload speeds
+        global_download_speed = transfer_info['dl_info_speed']
+        global_upload_speed = transfer_info['up_info_speed']
 
-        # check if torrent is in stalled state
-        self.qbittorrent_identify_stalled()
+        self.logger_instance.info(f"qBittorrent global download speed is '{global_download_speed}' bytes/sec")
+        self.logger_instance.info(f"qBittorrent global upload speed is '{global_upload_speed}' bytes/sec")
 
-        # check if torrent is downloading slower than configured value
-        self.qbittorrent_identify_slow()
+        if global_download_speed is 0 and global_upload_speed is 0:
+            self.logger_instance.info(f"qBittorrent global download and upload speed is 0 bytes/sec, assuming internet connectivity issues")
+            return False
+        return True
 
-        # if torrent is in stalled state then delete torrent (and possibly data if configured value set)
-        self.qbittorrent_delete_torrent()
-
-    def qbittorrent_check_incoming_port(self):
-
-        # identify if incoming port is operational
-        True
-
-    def qbittorrent_search(self):
+    def qbittorrent_identify_torrents_tagged(self):
 
         # display qBittorrent info
         print(f'qBittorrent: {self.qbt_client.app.version}')
@@ -75,18 +69,30 @@ class TorrentClients(object):
 
     def qbittorrent_identify_stalled(self):
 
-        # identify if torrent is in stalled/downloading/seeding state, if stalled for longer than xx minutes defined in config then mark for possible deletion
-        True
+        # identify if torrent is in stalled state, if stalled for longer than xx minutes defined in config then mark for possible deletion
+
+        # Retrieve the list of torrents
+        torrents = self.qbt_client.torrents_info()
+
+        # Iterate over each torrent and check if it is stalled and has the tag 'siphonator'
+        for torrent in torrents:
+            if torrent.state == 'stalled' and 'siphonator' in torrent.tags:
+                print(f"Torrent '{torrent.name}' is stalled and has the tag 'siphonator'.")
 
     def qbittorrent_identify_slow(self):
 
         # identify if torrent is slow, so if speed of download is equal to or less than defined speed in config file then mark for possible deletion
-        True
+        pass
 
     def qbittorrent_delete_torrent(self):
 
         # delete specified torrent, also if configured in config then delete data
-        True
+        pass
+
+    def qbittorrent_identify_done(self):
+
+        # identify if torrent is in done state, if done then mark for possible deletion of torrent (not data)
+        pass
 
     def qbittorrent_queue(self):
 

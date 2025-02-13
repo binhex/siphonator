@@ -1,5 +1,7 @@
+import lib.siphonator.torrent_clients as torrent_clients
 
-class PostProcessing(object):
+
+class PostProcessMoveCompleted(object):
 
     def __init__(self,logger_instance, result_dict, config_dict):
 
@@ -9,6 +11,10 @@ class PostProcessing(object):
         self.index_title_no_year = result_dict.get('index_title_no_year', None)
         self.index_year_regex = result_dict.get('index_year_regex', None)
         self.logger_instance = logger_instance
+
+    # TODO this calls the other functions below in this class
+    def post_process_move_completed(self):
+        pass
 
     # TODO take output of function get_file_list and perform db query, looking for column result value = 'Passed'
     def compare_files_to_db_success(self ):
@@ -41,3 +47,35 @@ class PostProcessing(object):
     # TODO move processed folders and files to storage - need to add path to config.yml
     def move_folder(self):
         pass
+
+
+class PostProcessMonitorQueue(object):
+
+    def __init__(self, logger_instance, result_dict, config_dict):
+        self.logger_instance = logger_instance
+        self.result_dict = result_dict
+        self.config_dict = config_dict
+        self.logger_instance = logger_instance
+        self.torrent_clients_instance = torrent_clients.TorrentClients(logger_instance, result_dict, config_dict)
+
+    # feature - check qbittorrent status, if incoming port working (internet connection ok) and if torrent not stopped then look at whether stalled, if stalled for X minutes (defined in config) then delete (torrent or torrent + data, defined in config)
+    def post_process_monitor_queue(self):
+
+        # check global ul and dl speeds
+        qbittorrent_check_global_speed = self.torrent_clients_instance.qbittorrent_check_global_speed()
+
+        # if speed is 0 then return False and exit this function
+        if not qbittorrent_check_global_speed:
+            return False
+
+        # # get list of torrents added by siphonator (tagged)
+        # self.torrent_clients_instance.qbittorrent_identify_torrents_tagged()
+        #
+        # # check if torrent is in stalled state
+        # self.torrent_clients_instance.qbittorrent_identify_stalled()
+        #
+        # # check if torrent is downloading slow (check config for definition of slow, less than 100 KB?)
+        # self.torrent_clients_instance.qbittorrent_identify_slow()
+        #
+        # # if torrent is in stalled state then delete torrent (check config to decide whether we delete data as well)
+        # self.torrent_clients_instance.qbittorrent_delete_torrent()

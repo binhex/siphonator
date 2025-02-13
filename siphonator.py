@@ -8,7 +8,9 @@ import xml.etree.ElementTree as elementTree
 from imdbpie import ImdbAPIError
 from daemonize import Daemonize
 from apscheduler.schedulers.background import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 import lib.siphonator.config as siphonator_config
+import lib.siphonator.post_processing as post_processing
 
 # check version of python is 3.x.x
 python_version = sys.version_info
@@ -45,9 +47,9 @@ def create_path(path):
     return True
 
 
-class Siphonator(object):
+class SiphonatorPostProcess(object):
 
-    def __init__(self, logger_instance, init_dict, config_dict):
+    def __init__(self, logger_instance):
 
         self.logger_instance = logger_instance
         self.init_dict = init_dict
@@ -55,12 +57,17 @@ class Siphonator(object):
 
     def schedule_run(self):
 
-        schedule = BlockingScheduler()
-        self.logger_instance.info(f"Running schedule in '{self.config_dict['general']['schedule_mode']}' mode")
+        # set to blocking scheduler if set to foreground
+        if post_process_schedule_mode == 'foreground':
+            schedule = BlockingScheduler()
+        else:
+            schedule = BackgroundScheduler()
+
+        self.logger_instance.info(f"Running schedule in '{post_process_schedule_mode}' mode")
 
         try:
 
-            schedule.add_job(siphonator_instance.run, 'interval', minutes=self.config_dict['general']['schedule_time_value'], next_run_time=datetime.datetime.now())
+            schedule.add_job(siphonator_post_process_instance.run, 'interval', minutes=self.config_dict['general']['post_process']['schedule_time_value'], next_run_time=datetime.datetime.now())
             schedule.start()
 
         except (KeyboardInterrupt, SystemExit):
@@ -74,12 +81,70 @@ class Siphonator(object):
         schedule_current_date_and_time = datetime.datetime.now()
 
         # add in minutes till next schedule
-        next_schedule_run = schedule_current_date_and_time + datetime.timedelta(minutes=int(self.config_dict['general']['schedule_time_value']))
+        next_schedule_run = schedule_current_date_and_time + datetime.timedelta(minutes=int(self.config_dict['general']['post_process']['schedule_time_value']))
 
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(f"Schedule running in '{self.config_dict['general']['schedule_mode']}' mode every '{self.config_dict['general']['schedule_time_value']} {self.config_dict['general']['schedule_time_key']}', next run at '{schedule_run_converted}'")
+        self.logger_instance.info(f"Schedule running in '{self.config_dict['general']['post_process']['schedule_mode']}' mode every '{self.config_dict['general']['post_process']['schedule_time_value']} {self.config_dict['general']['post_process']['schedule_time_key']}', next run at '{schedule_run_converted}'")
+
+    def run(self):
+
+        current_time = siphonator_tools_various.current_time()
+        self.logger_instance.info(f"Processing started at '{current_time}'")
+
+        # TODO need to work out if we need this, if we do then how do we get it?
+        result_dict = {}
+        post_process_instance = post_processing.PostProcessMonitorQueue(self.logger_instance, result_dict, self.config_dict)
+        post_process_instance.post_process_monitor_queue()
+
+        # TODO put in elapsed time
+        current_time = siphonator_tools_various.current_time()
+
+        self.logger_instance.info(f"Processing finished at '{current_time}'")
+        self.schedule_msg()
+
+
+class SiphonatorMain(object):
+
+    def __init__(self, logger_instance):
+
+        self.logger_instance = logger_instance
+        self.init_dict = init_dict
+        self.config_dict = config_dict
+
+    def schedule_run(self):
+
+        # set to blocking scheduler if set to foreground
+        if main_schedule_mode == 'foreground':
+            schedule = BlockingScheduler()
+        else:
+            schedule = BackgroundScheduler()
+
+        self.logger_instance.info(f"Running schedule in '{main_schedule_mode}' mode")
+
+        try:
+
+            schedule.add_job(siphonator_main_instance.run, 'interval', minutes=self.config_dict['general']['main']['schedule_time_value'], next_run_time=datetime.datetime.now())
+            schedule.start()
+
+        except (KeyboardInterrupt, SystemExit):
+
+            self.logger_instance.info(u"Keyboard interrupt or system exit detected, shutting down...")
+            schedule.shutdown()
+
+    def schedule_msg(self):
+
+        # datetime object containing current date and time
+        schedule_current_date_and_time = datetime.datetime.now()
+
+        # add in minutes till next schedule
+        next_schedule_run = schedule_current_date_and_time + datetime.timedelta(minutes=int(self.config_dict['general']['main']['schedule_time_value']))
+
+        # convert to human-readable format dd/mm/YY H:M:S
+        schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
+
+        self.logger_instance.info(f"Schedule running in '{self.config_dict['general']['main']['schedule_mode']}' mode every '{self.config_dict['general']['main']['schedule_time_value']} {self.config_dict['general']['main']['schedule_time_key']}', next run at '{schedule_run_converted}'")
 
     def run(self):
 
@@ -307,7 +372,10 @@ if __name__ == '__main__':
     # create path if it doesn't exist and set filepath
     pid_path = args.pid_path
     create_path(pid_path)
-    pid_filepath = os.path.join(pid_path, 'siphonator.pid')
+
+    # construct pid filepath for main and post processing threads
+    pid_main_filepath = os.path.join(pid_path, 'siphonator.pid')
+    pid_post_process_filepath = os.path.join(pid_path, 'siphonator-post-process.pid')
 
     # create path if it doesn't exist and set filepath
     config_path = args.config_path
@@ -315,13 +383,14 @@ if __name__ == '__main__':
     config_filepath = os.path.join(args.config_path, 'config.yml')
 
     # define initial settings in dict
-    main_init_dict = ({
+    init_dict = ({
         'app_version': app_version,
         'app_root_path': app_root_path,
         'log_path': log_path,
         'log_filepath': logs_filepath,
         'pid_path': pid_path,
-        'pid_filepath': pid_filepath,
+        'pid_main_filepath': pid_main_filepath,
+        'pid_post_process_filepath': pid_post_process_filepath,
         'db_path': db_path,
         'db_filepath': db_filepath,
         'db_version': db_version,
@@ -332,23 +401,23 @@ if __name__ == '__main__':
         'ffprobe_filepath': ffprobe_filepath,
     })
 
-    # send main_init_dict and return main_config_dict read from config.yml
-    main_config_dict = siphonator_config.read_config(main_init_dict)
+    # send init_dict and return config_dict read from config.yml
+    config_dict = siphonator_config.read_config(init_dict)
 
     # setup logging
-    log_level = main_config_dict['general']['log_level']
+    log_level = config_dict['general']['log_level']
     logger = siphonator_tools_logging.app_logging(log_level, logs_filepath)
     logger_create_instance = logger.get('logger')
     logger_handler = logger.get('handler')
 
     # read in config version from config file
-    config_file_version = main_config_dict['general']['config_version']
+    config_file_version = config_dict['general']['config_version']
 
     # update config.yml if required
-    siphonator_config.update_config(main_init_dict, config_file_version)
+    siphonator_config.update_config(init_dict, config_file_version)
 
     # verify config.yml is valid
-    # siphonator_config.verify_config(logger_create_instance, main_init_dict, main_config_dict)
+    # siphonator_config.verify_config(logger_create_instance, init_dict, config_dict)
 
     # if daemon cli flag defined
     if args.daemon:
@@ -358,7 +427,7 @@ if __name__ == '__main__':
     else:
 
         # read daemon mode from config
-        daemon_mode = main_config_dict['general']['daemon_mode'].lower()
+        daemon_mode = config_dict['general']['daemon_mode'].lower()
 
     if platform.system() == 'Windows':
 
@@ -371,32 +440,48 @@ if __name__ == '__main__':
         return_code = pytest.main(["--verbose"])
         exit(return_code)
 
-    # setup scheduler
-    schedule_mode = main_config_dict['general']['schedule_mode'].lower()
-    schedule_time_key = main_config_dict['general']['schedule_time_key']
-    schedule_time_value = main_config_dict['general']['schedule_time_value']
+    # setup main scheduler
+    main_schedule_mode = config_dict['general']['main']['schedule_mode'].lower()
+    main_schedule_time_key = config_dict['general']['main']['schedule_time_key']
+    main_schedule_time_value = config_dict['general']['main']['schedule_time_value']
+
+    # setup post process scheduler
+    post_process_schedule_mode = config_dict['general']['post_process']['schedule_mode'].lower()
+    post_process_schedule_time_key = config_dict['general']['post_process']['schedule_time_key']
+    post_process_schedule_time_value = config_dict['general']['post_process']['schedule_time_value']
 
     logger_create_instance.info(u"Welcome to Siphonator - Coded by binhex.")
     logger_create_instance.info(f"Starting daemon in '{daemon_mode}' mode...")
 
-    siphonator_instance = Siphonator(logger_create_instance, main_init_dict, main_config_dict)
+    # define instances of classes to run
+    siphonator_post_process_instance = SiphonatorPostProcess(logger_create_instance)
+    siphonator_main_instance = SiphonatorMain(logger_create_instance)
+
     if daemon_mode == 'background':
 
         # note when calling method in class for 'action' drop '()'
         # 'keep_fds' prevents daemonize of file descriptors, such as logger, otherwise logging stops
         keep_fds = [logger_handler.stream.fileno()]
-        daemon = Daemonize(app="siphonator", pid=pid_filepath, keep_fds=keep_fds, action=siphonator_instance.schedule_run)
-        daemon.start()
+
+        siphonator_post_process = Daemonize(app="siphonator-post-process", pid=pid_post_process_filepath, keep_fds=keep_fds, action=siphonator_post_process_instance.schedule_run)
+        siphonator_post_process.start()
+
+        siphonator_main = Daemonize(app="siphonator-main", pid=pid_main_filepath, keep_fds=keep_fds, action=siphonator_main_instance.schedule_run)
+        siphonator_main.start()
 
     else:
 
         # note when calling method in class for 'action' drop '()'
-        daemon = Daemonize(app="siphonator", pid=pid_filepath, foreground=True, action=siphonator_instance.schedule_run)
+        siphonator_post_process = Daemonize(app="siphonator-post-process", pid=pid_post_process_filepath, foreground=post_process_schedule_mode, action=siphonator_post_process_instance.schedule_run)
+        siphonator_main = Daemonize(app="siphonator-main", pid=pid_main_filepath, foreground=main_schedule_mode, action=siphonator_main_instance.schedule_run)
+
         try:
 
-            daemon.start()
+            siphonator_post_process.start()
+            siphonator_main.start()
 
         except (KeyboardInterrupt, SystemExit):
 
             # cleanup pid file
-            daemon.exit()
+            siphonator_post_process.exit()
+            siphonator_main.exit()
