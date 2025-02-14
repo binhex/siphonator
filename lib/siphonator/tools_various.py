@@ -5,6 +5,7 @@ import ffmpeg
 import yaml
 from unidecode import unidecode
 import inspect
+from itertools import chain
 
 
 def current_time():
@@ -14,6 +15,11 @@ def current_time():
     # convert to human-readable format dd/mm/YY H:M:S
     run_current_date_and_time_converted = run_current_date_and_time.strftime("%d/%m/%Y %H:%M:%S")
     return run_current_date_and_time_converted
+
+
+def convert_unix_timestamp(timestamp):
+    # Function to convert Unix timestamp to human-readable format
+    return datetime.datetime.fromtimestamp(timestamp).strftime("%d/%m/%Y %H:%M:%S")
 
 
 def get_function_name():
@@ -98,19 +104,30 @@ class ToolsVarious(object):
         self.index_title_identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
         self.index_title_bad_keyword_regex = r'[\s._,\-()\[\]]'
 
-    def library_path_walk(self, library_path_list):
-        # Initialize an empty list to store the results
-        all_paths = []
+    # # Define a function that yields the results of os.walk for each path
+    # def combined_walk(self, library_path_list):
+    #     for library_path in library_path_list:
+    #         yield from os.walk(library_path, topdown=False)
+    #
+    # # Create a reusable generator function
+    # def library_path_walk(self, library_path_list):
+    #     return self.combined_walk(library_path_list)
 
-        # Iterate over each path in the library_path_list
-        for library_path in library_path_list:
-            # Use os.walk to walk the directory tree
-            for root, dirs, files in os.walk(library_path, topdown=False):
-                # Append the results to the all_paths list
-                all_paths.append((root, dirs, files))
+    def library_path_walk(self, library_path_list):
+
+        # Combine the generators from os.walk for both paths into a single generator
+        # note the use of 'chain' to permit multiple generators to be chained together
+        filter_library_path_walk = chain.from_iterable(os.walk(library_path, topdown=False) for library_path in library_path_list)
 
         self.logger_instance.debug(f"Filter library path list '{library_path_list}' walked")
-        return all_paths
+        return filter_library_path_walk
+
+    # def library_path_walk(self, library_path):
+    #
+    #     filter_library_path_walk = os.walk(library_path, topdown=False)
+    #
+    #     self.logger_instance.debug(f"Filter library path '{library_path}' walked")
+    #     return filter_library_path_walk
 
     def resolution_from_ffprobe(self, library_filepath, ffprobe_filepath):
 

@@ -95,6 +95,7 @@ class SiphonatorPostProcess(object):
 
         # TODO need to work out if we need this, if we do then how do we get it?
         result_dict = {}
+
         post_process_instance = post_processing.PostProcessMonitorQueue(self.logger_instance, result_dict, self.config_dict)
         post_process_instance.post_process_monitor_queue()
 
@@ -477,7 +478,7 @@ if __name__ == '__main__':
 
         try:
 
-            siphonator_post_process.start()
+            #siphonator_post_process.start()
             siphonator_main.start()
 
         except (KeyboardInterrupt, SystemExit):

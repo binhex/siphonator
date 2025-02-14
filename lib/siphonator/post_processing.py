@@ -68,12 +68,13 @@ class PostProcessMonitorQueue(object):
         if not qbittorrent_check_global_speed:
             return False
 
-        # # get list of torrents added by siphonator (tagged)
-        # self.torrent_clients_instance.qbittorrent_identify_torrents_tagged()
-        #
-        # # check if torrent is in stalled state
-        # self.torrent_clients_instance.qbittorrent_identify_stalled()
-        #
+        # get list of torrents added by siphonator
+        qbittorrent_identify_torrents_with_category_dict = self.torrent_clients_instance.qbittorrent_identify_torrents_with_category()
+
+        # check if torrent is in stalled state
+        qbittorrent_identify_torrents_stalled = self.torrent_clients_instance.qbittorrent_identify_torrents_stalled(qbittorrent_identify_torrents_with_category_dict)
+        print(qbittorrent_identify_torrents_stalled)
+
         # # check if torrent is downloading slow (check config for definition of slow, less than 100 KB?)
         # self.torrent_clients_instance.qbittorrent_identify_slow()
         #

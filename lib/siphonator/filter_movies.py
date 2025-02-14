@@ -526,8 +526,12 @@ class FilterMovies(object):
                 # construct absolute library path
                 library_abs_path = os.path.join(root, library_dirs)
 
+                # note this must be a list as the library_path_walk function takes a list
+                # in case multiple root folders need to be walked
+                library_abs_path_list = [library_abs_path]
+
                 # walk absolute path to get filename
-                library_abs_path_gen = self.tools_various_instance.library_path_walk(library_abs_path)
+                library_abs_path_gen = self.tools_various_instance.library_path_walk(library_abs_path_list)
 
                 # loop over generator absolute path
                 for sub_root, sub_dirs, sub_files in library_abs_path_gen:

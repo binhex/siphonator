@@ -1,4 +1,5 @@
 import qbittorrentapi
+import lib.siphonator.tools_various as siphonator_tools_various
 
 
 class TorrentClients(object):
@@ -10,6 +11,7 @@ class TorrentClients(object):
         self.logger_instance = logger_instance
         self.add_paused_bool = self.config_dict['torrent_client']['qbittorrent']['add_paused']
         self.category = self.config_dict['torrent_client']['qbittorrent']['category']
+        self.torrent_dict = {}
 
         torrent_client = self.config_dict['torrent_client']['selected']
         if torrent_client == 'qbittorrent':
@@ -55,29 +57,38 @@ class TorrentClients(object):
             return False
         return True
 
-    def qbittorrent_identify_torrents_tagged(self):
+    def qbittorrent_identify_torrents_with_category(self):
 
-        # display qBittorrent info
-        print(f'qBittorrent: {self.qbt_client.app.version}')
-        print(f'qBittorrent Web API: {self.qbt_client.app.web_api_version}')
-        for k, v in self.qbt_client.app.build_info.items():
-            print(f'{k}: {v}')
+        # Retrieve all torrents with the specified category
+        torrents_category_filtered = self.qbt_client.torrents_info(category=self.category)
 
-        # retrieve and show torrents tagged as added by siphonator
-        for torrent in self.qbt_client.torrents_info(tag='siphonator'):
-            print(f'{torrent.hash[-6:]}: {torrent.name} ({torrent.state})')
+        # Use dictionary comprehension to populate torrent_dict
+        torrent_dict = {torrent['hash']: torrent for torrent in torrents_category_filtered}
 
-    def qbittorrent_identify_stalled(self):
+        return torrent_dict
+
+    def qbittorrent_identify_torrents_stalled(self, torrent_dict):
 
         # identify if torrent is in stalled state, if stalled for longer than xx minutes defined in config then mark for possible deletion
 
-        # Retrieve the list of torrents
-        torrents = self.qbt_client.torrents_info()
+        # Extract 'name', 'last_activity', and 'state' values using dictionary comprehension
+        stalled_torrents_dict = {
+            torrent_hash: {
+                'name': info['name'],
+                'last_activity': siphonator_tools_various.convert_unix_timestamp(info['last_activity']),
+                'state': info['state'],
+            }
+            for torrent_hash, info in torrent_dict.items()
+            if 'name' in info and 'last_activity' in info and info.get('state') == 'stalledDL'
+        }
 
-        # Iterate over each torrent and check if it is stalled and has the tag 'siphonator'
-        for torrent in torrents:
-            if torrent.state == 'stalled' and 'siphonator' in torrent.tags:
-                print(f"Torrent '{torrent.name}' is stalled and has the tag 'siphonator'.")
+        # Get last_activity datetime and compare to current time to get difference in minutes
+        current_time = siphonator_tools_various.current_time()
+
+
+        # if time difference in minutes is geater than config value then add to dict, else remove
+
+        return stalled_torrents_dict
 
     def qbittorrent_identify_slow(self):
 
