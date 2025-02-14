@@ -61,22 +61,21 @@ class PostProcessMonitorQueue(object):
     # feature - check qbittorrent status, if incoming port working (internet connection ok) and if torrent not stopped then look at whether stalled, if stalled for X minutes (defined in config) then delete (torrent or torrent + data, defined in config)
     def post_process_monitor_queue(self):
 
-        # check global ul and dl speeds
-        qbittorrent_check_global_speed = self.torrent_clients_instance.qbittorrent_check_global_speed()
+        stalled_monitor_enabled = self.config_dict['post_process']['stalled_monitor_enabled']
 
-        # if speed is 0 then return False and exit this function
-        if not qbittorrent_check_global_speed:
+        # if monitoring not enabled then return
+        if not stalled_monitor_enabled:
             return False
 
-        # get list of torrents added by siphonator
+        # if ul/dl speed is 0 then assume internet down, this is to prevent torrents being incorrectly marked as stalled
+        if not self.torrent_clients_instance.qbittorrent_check_global_speed():
+            return False
+
+        # get list of torrents added by siphonator (category set)
         qbittorrent_identify_torrents_with_category_dict = self.torrent_clients_instance.qbittorrent_identify_torrents_with_category()
 
-        # check if torrent is in stalled state
-        qbittorrent_identify_torrents_stalled = self.torrent_clients_instance.qbittorrent_identify_torrents_stalled(qbittorrent_identify_torrents_with_category_dict)
-        print(qbittorrent_identify_torrents_stalled)
+        # check if torrents are in stalled state, if so include in dict
+        qbittorrent_identify_torrents_for_deletion_dict = self.torrent_clients_instance.qbittorrent_identify_torrents_for_deletion(qbittorrent_identify_torrents_with_category_dict)
 
-        # # check if torrent is downloading slow (check config for definition of slow, less than 100 KB?)
-        # self.torrent_clients_instance.qbittorrent_identify_slow()
-        #
-        # # if torrent is in stalled state then delete torrent (check config to decide whether we delete data as well)
-        # self.torrent_clients_instance.qbittorrent_delete_torrent()
+        # if torrent is in stalled state then delete torrent (check config to decide whether we delete data as well)
+        self.torrent_clients_instance.qbittorrent_delete_torrents(qbittorrent_identify_torrents_for_deletion_dict)

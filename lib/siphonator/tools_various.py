@@ -17,9 +17,14 @@ def current_time():
     return run_current_date_and_time_converted
 
 
-def convert_unix_timestamp(timestamp):
+def current_time_datetime_object():
+    # Get the current date and time as a datetime object
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+def convert_unix_timestamp_datetime_object(timestamp):
     # Function to convert Unix timestamp to human-readable format
-    return datetime.datetime.fromtimestamp(timestamp).strftime("%d/%m/%Y %H:%M:%S")
+    return datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
 
 
 def get_function_name():

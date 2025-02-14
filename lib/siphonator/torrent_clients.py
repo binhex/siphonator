@@ -67,48 +67,63 @@ class TorrentClients(object):
 
         return torrent_dict
 
-    def qbittorrent_identify_torrents_stalled(self, torrent_dict):
+    def qbittorrent_identify_torrents_for_deletion(self, torrent_dict):
 
-        # identify if torrent is in stalled state, if stalled for longer than xx minutes defined in config then mark for possible deletion
+        stalled_delete_torrent_max_mins = self.config_dict['post_process']['stalled_delete_torrent_max_mins']
 
-        # Extract 'name', 'last_activity', and 'state' values using dictionary comprehension
+        # filter the torrents based on state of stalled download and then get last activity diff from current time
         stalled_torrents_dict = {
             torrent_hash: {
                 'name': info['name'],
-                'last_activity': siphonator_tools_various.convert_unix_timestamp(info['last_activity']),
+                'last_activity_diff_mins': int((siphonator_tools_various.current_time_datetime_object() - siphonator_tools_various.convert_unix_timestamp_datetime_object(info['last_activity'])).total_seconds() / 60) if 'last_activity' in info and info['last_activity'] is not None else None,
                 'state': info['state'],
             }
             for torrent_hash, info in torrent_dict.items()
-            if 'name' in info and 'last_activity' in info and info.get('state') == 'stalledDL'
+            if 'name' in info and 'last_activity_diff_mins' and info.get('state') == 'stalledDL'
         }
 
-        # Get last_activity datetime and compare to current time to get difference in minutes
-        current_time = siphonator_tools_various.current_time()
+        # filter the torrents based on the comparison with stalled_delete_torrent_max_mins (from config)
+        torrents_to_delete_dict = {
+            torrent_hash: info
+            for torrent_hash, info in stalled_torrents_dict.items()
+            # TODO would be nice to log torrent names that are stalled but last activity is not greater than config value for stalled_delete_torrent_max_mins
+            if info['last_activity_diff_mins'] is not None and info['last_activity_diff_mins'] > stalled_delete_torrent_max_mins
+        }
 
+        return torrents_to_delete_dict
 
-        # if time difference in minutes is geater than config value then add to dict, else remove
+    def qbittorrent_delete_torrents(self, qbittorrent_identify_torrents_for_deletion_dict):
 
-        return stalled_torrents_dict
+        stalled_delete_torrent_data = self.config_dict['post_process']['stalled_delete_torrent_data']
 
-    def qbittorrent_identify_slow(self):
+        # Delete torrents using dictionary comprehension
+        failed_deletions = {
+            torrent_hash: info
+            for torrent_hash, info in qbittorrent_identify_torrents_for_deletion_dict.items()
+            if not self.qbittorrent_delete_torrent(torrent_hash, stalled_delete_torrent_data)
+        }
 
-        # identify if torrent is slow, so if speed of download is equal to or less than defined speed in config file then mark for possible deletion
-        pass
+        # Print the failed deletions
+        if failed_deletions:
+            self.logger_instance.info(f"Failed to delete the following torrents:")
+            for torrent_hash, info in failed_deletions.items():
+                self.logger_instance.info(f"Hash: {torrent_hash}, Name: {info['name']}")
 
-    def qbittorrent_delete_torrent(self):
+    def qbittorrent_delete_torrent(self, torrent_hash, stalled_delete_torrent_data):
 
-        # delete specified torrent, also if configured in config then delete data
-        pass
+        try:
+            self.qbt_client.torrents_delete(delete_files=stalled_delete_torrent_data, torrent_hashes=torrent_hash)
+            # TODO would be nice to see name of torrent as well as hash when logging
+            self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}'")
+            return True
+        except qbittorrentapi.APIError as e:
+            self.logger_instance.info(f"Failed to delete torrent hash '{torrent_hash}', error was '{e}'")
+            return False
 
     def qbittorrent_identify_done(self):
 
         # identify if torrent is in done state, if done then mark for possible deletion of torrent (not data)
         pass
-
-    def qbittorrent_queue(self):
-
-        # pause all torrents
-        self.qbt_client.torrents.pause.all()
 
     def qbittorrent_add(self):
 

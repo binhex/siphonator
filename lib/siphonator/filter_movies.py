@@ -588,6 +588,9 @@ class FilterMovies(object):
         library_filename_year_to_end_compare = self.tools_various_instance.custom_title_year_to_end_compare(library_file)
         function_name = siphonator_tools_various.get_function_name()
 
+        # this is saying if score for index title is greater, or preferred group in index
+        # title, or preferred quality found in index title then download, else skip
+
         # if library filename year to end is not none (maybe mangled) then calculate and compare score
         if library_filename_year_to_end_compare is not None:
 
@@ -603,13 +606,13 @@ class FilterMovies(object):
                 self.result_dict.update({'result_details': self.result_details_list})
                 return True
 
-            elif library_filename_score > index_title_score:
-                result_details = f"Failed: {function_name}: Index title '{index_title}' score '{index_title_score}' is less than library filename '{library_file}' score '{library_filename_score}'"
-                self.logger_instance.warning(result_details)
-                self.result_dict.update({'result': u'Failed'})
-                self.result_details_list.append(result_details)
-                self.result_dict.update({'result_details': self.result_details_list})
-                return False
+            # elif library_filename_score > index_title_score:
+            #     result_details = f"Failed: {function_name}: Index title '{index_title}' score '{index_title_score}' is less than library filename '{library_file}' score '{library_filename_score}'"
+            #     self.logger_instance.warning(result_details)
+            #     self.result_dict.update({'result': u'Failed'})
+            #     self.result_details_list.append(result_details)
+            #     self.result_dict.update({'result_details': self.result_details_list})
+            #     return False
 
         if self.filter_index_preferred_group(library_file, index_title):
             result_details = f"Passed: {function_name}: Index title '{index_title}' does contain preferred index group, and library filename does not contain preferred index group"

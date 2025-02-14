@@ -478,10 +478,11 @@ if __name__ == '__main__':
 
         try:
 
-            #siphonator_post_process.start()
-            siphonator_main.start()
+            siphonator_post_process.start()
+            #siphonator_main.start()
 
         except (KeyboardInterrupt, SystemExit):
 
             # cleanup pid file
-            siphonator_main.exit()
+            pass
+            #siphonator_main.exit()
