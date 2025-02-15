@@ -1,5 +1,8 @@
+from unicodedata import category
+
 import qbittorrentapi
 import lib.siphonator.tools_various as siphonator_tools_various
+import uuid
 
 
 class TorrentClients(object):
@@ -138,10 +141,30 @@ class TorrentClients(object):
             if download_url is None:
 
                 self.logger_instance.info(f"No torrent/magnet present, cannot download index title '{self.result_dict['index_title']}'")
-                return None
+                return False
 
-        self.logger_instance.debug(f"Magnet/Torrent link is '{download_url}'")
+        # Generate a unique label and set for the torrent to be added, this unique identifier
+        # is then added to the result_dict where it will be saved to the database. This can
+        # then be used to post process by creating/renaming folder to match imdb title for
+        # that unique id
+        unique_label = str(uuid.uuid4())
 
-        # add torrent/magnet to queue
-        self.qbt_client.torrents_add(urls=download_url, category=self.category, is_paused=self.add_paused_bool)
+        try:
+
+            # Add the torrent with the unique label as a 'tag'
+            self.qbt_client.torrents_add(
+                urls=download_url,
+                category=self.category,
+                is_paused=self.add_paused_bool,
+                tags=unique_label,
+            )
+            self.logger_instance.debug(f"Added magnet/torrent URL: {download_url}, Category: {self.category}, Paused: {self.add_paused_bool}, Tag: '{unique_label}'")
+
+        except qbittorrentapi.APIError as e:
+
+            self.logger_instance.debug(f"Failed to add torrent, error is '{e}'")
+            return False
+
+        # re-announce
         self.qbt_client.torrents_reannounce(torrent_hashes='all')
+        return True

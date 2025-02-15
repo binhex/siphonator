@@ -56,8 +56,8 @@ def verify_config(logger_instance, init_dict, config_dict):
         library_path: str
         daemon_mode: str
         schedule_mode: str
-        schedule_time_key: str
-        schedule_time_value: int
+        schedule_time_units: str
+        schedule_time_mins: int
         log_level: str
         config_version: float
 

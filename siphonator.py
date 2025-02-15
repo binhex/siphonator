@@ -67,7 +67,7 @@ class SiphonatorPostProcess(object):
 
         try:
 
-            schedule.add_job(siphonator_post_process_instance.run, 'interval', minutes=self.config_dict['general']['post_process']['schedule_time_value'], next_run_time=datetime.datetime.now())
+            schedule.add_job(siphonator_post_process_instance.run, 'interval', minutes=self.config_dict['general']['post_process']['schedule_time_mins'], next_run_time=datetime.datetime.now())
             schedule.start()
 
         except (KeyboardInterrupt, SystemExit):
@@ -81,12 +81,12 @@ class SiphonatorPostProcess(object):
         schedule_current_date_and_time = datetime.datetime.now()
 
         # add in minutes till next schedule
-        next_schedule_run = schedule_current_date_and_time + datetime.timedelta(minutes=int(self.config_dict['general']['post_process']['schedule_time_value']))
+        next_schedule_run = schedule_current_date_and_time + datetime.timedelta(minutes=int(self.config_dict['general']['post_process']['schedule_time_mins']))
 
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(f"Schedule running in '{self.config_dict['general']['post_process']['schedule_mode']}' mode every '{self.config_dict['general']['post_process']['schedule_time_value']} {self.config_dict['general']['post_process']['schedule_time_key']}', next run at '{schedule_run_converted}'")
+        self.logger_instance.info(f"Schedule running in '{self.config_dict['general']['post_process']['schedule_mode']}' mode every '{self.config_dict['general']['post_process']['schedule_time_mins']} {self.config_dict['general']['post_process']['schedule_time_units']}', next run at '{schedule_run_converted}'")
 
     def run(self):
 
@@ -126,7 +126,7 @@ class SiphonatorMain(object):
 
         try:
 
-            schedule.add_job(siphonator_main_instance.run, 'interval', minutes=self.config_dict['general']['main']['schedule_time_value'], next_run_time=datetime.datetime.now())
+            schedule.add_job(siphonator_main_instance.run, 'interval', minutes=self.config_dict['general']['main']['schedule_time_mins'], next_run_time=datetime.datetime.now())
             schedule.start()
 
         except (KeyboardInterrupt, SystemExit):
@@ -140,12 +140,12 @@ class SiphonatorMain(object):
         schedule_current_date_and_time = datetime.datetime.now()
 
         # add in minutes till next schedule
-        next_schedule_run = schedule_current_date_and_time + datetime.timedelta(minutes=int(self.config_dict['general']['main']['schedule_time_value']))
+        next_schedule_run = schedule_current_date_and_time + datetime.timedelta(minutes=int(self.config_dict['general']['main']['schedule_time_mins']))
 
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(f"Schedule running in '{self.config_dict['general']['main']['schedule_mode']}' mode every '{self.config_dict['general']['main']['schedule_time_value']} {self.config_dict['general']['main']['schedule_time_key']}', next run at '{schedule_run_converted}'")
+        self.logger_instance.info(f"Schedule running in '{self.config_dict['general']['main']['schedule_mode']}' mode every '{self.config_dict['general']['main']['schedule_time_mins']} {self.config_dict['general']['main']['schedule_time_units']}', next run at '{schedule_run_converted}'")
 
     def run(self):
 
@@ -185,7 +185,7 @@ class SiphonatorMain(object):
 
             # ensure jackett is operational by checking for status code 200
             if index_sites_status_code != 200:
-                self.logger_instance.warning(f"Unable to access index site '{self.config_dict['index_proxy']['selected']}', retrying in {self.config_dict['general']['schedule_time_value']} minutes")
+                self.logger_instance.warning(f"Unable to access index site '{self.config_dict['index_proxy']['selected']}', retrying in {self.config_dict['general']['schedule_time_mins']} minutes")
                 return index_sites_status_code
 
             # parse xml from jackett
@@ -443,16 +443,19 @@ if __name__ == '__main__':
 
     # setup main scheduler
     main_schedule_mode = config_dict['general']['main']['schedule_mode'].lower()
-    main_schedule_time_key = config_dict['general']['main']['schedule_time_key']
-    main_schedule_time_value = config_dict['general']['main']['schedule_time_value']
+    main_schedule_time_units = config_dict['general']['main']['schedule_time_units']
+    main_schedule_time_mins = config_dict['general']['main']['schedule_time_mins']
 
     # setup post process scheduler
     post_process_schedule_mode = config_dict['general']['post_process']['schedule_mode'].lower()
-    post_process_schedule_time_key = config_dict['general']['post_process']['schedule_time_key']
-    post_process_schedule_time_value = config_dict['general']['post_process']['schedule_time_value']
+    post_process_schedule_time_units = config_dict['general']['post_process']['schedule_time_units']
+    post_process_schedule_time_mins = config_dict['general']['post_process']['schedule_time_mins']
 
     logger_create_instance.info(u"Welcome to Siphonator - Coded by binhex.")
     logger_create_instance.info(f"Starting daemon in '{daemon_mode}' mode...")
+
+    # TODO should move both main and post process to their own respective methods so that logging shows the function
+    #  name, as they are currently both 'siphontator'
 
     # define instances of classes to run
     siphonator_post_process_instance = SiphonatorPostProcess(logger_create_instance)

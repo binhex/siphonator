@@ -14,8 +14,8 @@
 | :---------- | :-------- | :------ | :--- | :----------- | :------ |
 | Absolute path to existing media | general/library | 1.0.0 | String | N/A | `library_path: '/media'` <tr></tr> |
 | Daemonised mode | general/daemon_mode | 1.0.0 | String | `'foreground'`\|`'background'` | `daemon_mode: 'foreground'` <tr></tr> |
-| Schedule time units to re-check | general/schedule_time_key | 1.0.0 | String | `'minutes'`\|`'hours'` | `schedule_time_key: 'minutes'`  <tr></tr> |
-| Schedule time value to re-check | general/schedule_time_value | 1.0.0 | Integer | N/A | `schedule_time_value: 30`  <tr></tr> |
+| Schedule time units to re-check | general/schedule_time_units | 1.0.0 | String | `'minutes'`\|`'hours'` | `schedule_time_units: 'minutes'`  <tr></tr> |
+| Schedule time value to re-check | general/schedule_time_mins | 1.0.0 | Integer | N/A | `schedule_time_mins: 30`  <tr></tr> |
 | Log level | general/log_level | 1.0.0 | String | `'error'`\|`'warning'`\|`'info'`\|`'debug'` | `log_level: 'info'`  <tr></tr> |
 | Minimum IMDb year | filters/minimum_year | 1.0.0 | String | N/A | `minimum_year: '1960'`  <tr></tr> |
 | Minimum IMDb runtime in minutes | filters/minimum_runtime_mins | 1.0.0 | String | N/A | `minimum_runtime_mins: '60'`  <tr></tr> |
