@@ -163,9 +163,13 @@ class SiphonatorMain(object):
             'library_path_walk': library_path_walk,
         })
 
-        # create sqlite database
+        # create db instance
         db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict)
-        db_sqlite_instance.create_database()
+
+        if not os.path.isfile(db_filepath):
+
+            # create sqlite database
+            db_sqlite_instance.create_database()
 
         # upgrade database if required
         db_sqlite_instance.upgrade_database()
@@ -272,7 +276,7 @@ if __name__ == '__main__':
     # set versioning for app, config, and db
     app_version = '1.0.0'
     config_version = '1.0.1'
-    db_version = int(4)
+    db_version = int(5)
     user_agent = f"Siphonator/{app_version}; https://github.com/binhex/siphonator"
 
     app_root_path = os.path.dirname(os.path.realpath(__file__))

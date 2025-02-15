@@ -12,17 +12,15 @@ class DbSqlite(object):
         self.result_dict = result_dict
         self.db_version = init_dict['db_version']
         self.db_filepath = init_dict['db_filepath']
+        self.db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
 
     def create_database(self):
-
-        # create database connection
-        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
 
         # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
         self.set_db_version(self.db_version)
 
         # create tables with columns if it doesn't already exist
-        db_sqlite_connection["history"].create({
+        self.db_sqlite_connection["history"].create({
             "id": int,
             "index_title": str,
             "result": str,
@@ -34,6 +32,7 @@ class DbSqlite(object):
             "index_size": str,
             "index_size_mb": str,
             "torrent_url": str,
+            "torrent_tag": str,
             "magnet_url": str,
             "category": str,
             "imdb_id": str,
@@ -59,7 +58,7 @@ class DbSqlite(object):
         # duplicate table
         try:
 
-            db_sqlite_connection["history"].duplicate("queued")
+            self.db_sqlite_connection["history"].duplicate("queued")
 
         except sqlite3.OperationalError:
 
@@ -67,10 +66,7 @@ class DbSqlite(object):
 
     def write_database(self):
 
-        # create database connection
-        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
-
-        db_sqlite_connection["history"].insert_all([{
+        self.db_sqlite_connection["history"].insert_all([{
             "index_title": (self.result_dict.get('index_title')),
             "result": (self.result_dict.get('result')),
             "result_details": (self.result_dict.get('result_details')),
@@ -81,6 +77,7 @@ class DbSqlite(object):
             "index_size": (self.result_dict.get('index_size')),
             "index_size_mb": (self.result_dict.get('index_size_mb')),
             "torrent_url": (self.result_dict.get('torrent_url')),
+            "torrent_tag": (self.result_dict.get('torrent_tag')),
             "magnet_url": (self.result_dict.get('magnet_url')),
             "category": (self.result_dict.get('category')),
             "imdb_id": (self.result_dict.get('imdb_id')),
@@ -112,6 +109,7 @@ class DbSqlite(object):
             "index_size",
             "index_size_mb",
             "torrent_url",
+            "torrent_tag",
             "magnet_url",
             "category",
             "imdb_id",
@@ -136,11 +134,8 @@ class DbSqlite(object):
 
     def read_database_simple(self, sqlite_table, sqlite_column, index_title):
 
-        # create database connection
-        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
-
         # query database, note this maybe subject to sqlite injection as I am dynamically setting table and column
-        sqlite_result_generator = db_sqlite_connection.query(f"SELECT {sqlite_column} FROM {sqlite_table} WHERE {sqlite_column} LIKE ?", ('%'+index_title+'%',))
+        sqlite_result_generator = self.db_sqlite_connection.query(f"SELECT {sqlite_column} FROM {sqlite_table} WHERE {sqlite_column} LIKE ?", ('%'+index_title+'%',))
 
         for sqlite_result in sqlite_result_generator:
 
@@ -153,9 +148,6 @@ class DbSqlite(object):
 
     def read_database_adv(self, sqlite_table, sqlite_column, index_title):
 
-        # create database connection
-        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
-
         # get comparison dictionary from index_title
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
         custom_title_full_compare = tools_various_instance.custom_title_full_compare(index_title)
@@ -165,7 +157,7 @@ class DbSqlite(object):
         self.logger_instance.debug(f"Database index title query is '{custom_title_sqlite_query}'")
 
         # query database, note this maybe subject to sqlite injection as I am dynamically setting table and column
-        sqlite_result_generator = db_sqlite_connection.query(f"SELECT {sqlite_column} FROM {sqlite_table} WHERE {sqlite_column} LIKE ?", (custom_title_sqlite_query,))
+        sqlite_result_generator = self.db_sqlite_connection.query(f"SELECT {sqlite_column} FROM {sqlite_table} WHERE {sqlite_column} LIKE ?", (custom_title_sqlite_query,))
 
         for sqlite_result in sqlite_result_generator:
 
@@ -185,79 +177,66 @@ class DbSqlite(object):
 
     def upgrade_database(self):
 
-        # create database connection
-        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
-
         # get db version on disk
-        disk_db_version = self.get_db_version()
+        pragma_user_version = self.get_db_version()
 
         # if database is up-to-date then do nothing
-        if self.db_version == disk_db_version:
-
+        if self.db_version == pragma_user_version:
+            self.logger_instance.debug(f"Required db version '{self.db_version}' and db version on disk '{pragma_user_version}' match, no upgrade required")
             return
 
+        self.logger_instance.debug(f"Required db version '{self.db_version}' and db version on disk '{pragma_user_version}' do not match, upgrade required")
+
         # if v1 then upgrade to v2 by adding in the missing column
-        if disk_db_version == 1:
-
-            db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN imdb_country_origins_list text")
-
+        if pragma_user_version == 1:
+            self.logger_instance.debug(f"Upgrading db version on disk '{pragma_user_version}' to '{int(pragma_user_version)+1}'...")
+            self.db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN imdb_country_origins_list text")
             self.set_db_version(2)
 
         # if v2 then upgrade to v3 by renaming column
-        if disk_db_version == 2:
-
-            db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_country_origins_list TO imdb_country_list")
-            db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_spoken_languages_list TO imdb_language_list")
-
+        if pragma_user_version == 2:
+            self.logger_instance.debug(f"Upgrading db version on disk '{pragma_user_version}' to '{int(pragma_user_version)+1}'...")
+            self.db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_country_origins_list TO imdb_country_list")
+            self.db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_spoken_languages_list TO imdb_language_list")
             self.set_db_version(3)
 
         # if v3 then upgrade to v4 by adding in the missing column
-        if disk_db_version == 3:
-
-            db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN imdb_trailer_url text")
-
+        if pragma_user_version == 3:
+            self.logger_instance.debug(f"Upgrading db version on disk '{pragma_user_version}' to '{int(pragma_user_version)+1}'...")
+            self.db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN imdb_trailer_url text")
             self.set_db_version(4)
 
-        # set db to current version, all upgrades performed
-        self.set_db_version(self.db_version)
+        # if v4 then upgrade to v5 by adding in the missing column
+        if pragma_user_version == 4:
+            self.logger_instance.debug(f"Upgrading db version on disk '{pragma_user_version}' to '{int(pragma_user_version)+1}'...")
+            self.db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN torrent_tag text")
+            self.set_db_version(5)
 
     def set_db_version(self, version):
 
-        # create database connection
-        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
-
         # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
-        db_sqlite_connection.execute("PRAGMA user_version = {v:d}".format(v=version))
+        self.db_sqlite_connection.execute("PRAGMA user_version = {v:d}".format(v=version))
 
     def get_db_version(self):
 
-        # create database connection
-        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
-
         # get db_version from existing database
-        disk_db_version_gen = db_sqlite_connection.query("PRAGMA user_version")
+        pragma_user_version_gen = self.db_sqlite_connection.query("PRAGMA user_version")
 
         # get db on disk version
-        disk_db_version_list = [(i.get('user_version')) for i in disk_db_version_gen]
-        disk_db_version = disk_db_version_list[0]
+        pragma_user_version_list = [(i.get('user_version')) for i in pragma_user_version_gen]
+        pragma_user_version = pragma_user_version_list[0]
 
-        return disk_db_version
+        return pragma_user_version
 
     def vacuum_database(self):
 
-        # create database connection
-        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
-
         # compress db
-        db_sqlite_connection.vacuum()
+        self.db_sqlite_connection.vacuum()
 
     def close_database(self):
 
-        # create database connection
-        db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
-
         # close database
-        db_sqlite_connection.close()
+        self.db_sqlite_connection.close()
 
     def delete_database(self):
 
