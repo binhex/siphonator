@@ -467,11 +467,12 @@ if __name__ == '__main__':
     # send init_dict and return config_dict read from config.yml
     config_dict = siphonator_config.read_config(init_dict)
 
-    # setup logging
-    log_level = config_dict['general']['log_level']
-    logger = siphonator_tools_logging.app_logging(log_level, logs_filepath)
-    logger_create_instance = logger.get('logger')
-    logger_handler = logger.get('handler')
+    # get logging level from config
+    log_level_file = config_dict['general']['log_level_file']
+    log_level_console = config_dict['general']['log_level_console']
+
+    # get logger and handlers
+    logger, file_handler, console_handler = siphonator_tools_logging.app_logging(log_level_file, log_level_console, logs_filepath)
 
     # read in config version from config file
     config_file_version = config_dict['general']['config_version']
@@ -480,7 +481,7 @@ if __name__ == '__main__':
     siphonator_config.update_config(init_dict, config_file_version)
 
     # verify config.yml is valid
-    # siphonator_config.verify_config(logger_create_instance, init_dict, config_dict)
+    # siphonator_config.verify_config(logger, init_dict, config_dict)
 
     # if daemon cli flag defined
     if args.daemon:
@@ -522,18 +523,18 @@ if __name__ == '__main__':
     #  name, as they are currently both 'Siphontator'
 
     # define instances of classes to run
-    queue_management_instance = SiphonatorQueueManagement(logger_create_instance)
-    post_processing_instance = SiphonatorPostProcessing(logger_create_instance)
-    siphonator_instance = SiphonatorMain(logger_create_instance)
+    queue_management_instance = SiphonatorQueueManagement(logger)
+    post_processing_instance = SiphonatorPostProcessing(logger)
+    siphonator_instance = SiphonatorMain(logger)
 
-    logger_create_instance.info(u"Welcome to Siphonator - Coded by binhex.")
-    logger_create_instance.info(f"Starting daemon in '{daemon_mode}' mode...")
+    logger.info(u"Welcome to Siphonator - Coded by binhex.")
+    logger.info(f"Starting daemon in '{daemon_mode}' mode...")
 
     if daemon_mode == 'background':
 
         # note when calling method in class for 'action' drop '()'
         # 'keep_fds' prevents daemonize of file descriptors, such as logger, otherwise logging stops
-        keep_fds = [logger_handler.stream.fileno()]
+        keep_fds = [file_handler.stream.fileno(), console_handler.stream.fileno()]
 
         post_processing_daemonize_bg = Daemonize(app="siphonator-post-processing", pid=pid_post_processing_filepath, keep_fds=keep_fds, action=post_processing_instance.schedule_run)
         post_processing_daemonize_bg.start()
