@@ -92,7 +92,7 @@ class TorrentClients(object):
             if info['last_activity_diff_mins'] is not None and info['last_activity_diff_mins'] > stalled_delete_torrent_max_mins
         }
 
-        self.logger_instance.debug(f"Dict of torrents returned from qBittorrent with state 'stalledDL' is '{torrents_to_delete_dict}")
+        self.logger_instance.debug(f"Torrents from qBittorrent with state 'stalledDL' and last activity >= '{stalled_delete_torrent_max_mins}' mins  is '{torrents_to_delete_dict}")
         return torrents_to_delete_dict
 
     def qbittorrent_delete_torrents(self, qbittorrent_identify_torrents_for_deletion_dict):
