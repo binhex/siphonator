@@ -71,7 +71,7 @@ class TorrentClients(object):
 
     def qbittorrent_identify_torrents_for_deletion(self, torrent_dict):
 
-        stalled_delete_torrent_max_mins = self.config_dict['post_process']['stalled_delete_torrent_max_mins']
+        stalled_delete_torrent_max_mins = self.config_dict['queue_management']['stalled_delete_torrent_max_mins']
 
         # filter the torrents based on state of stalled download and then get last activity diff from current time
         stalled_torrents_dict = {
@@ -96,7 +96,7 @@ class TorrentClients(object):
 
     def qbittorrent_delete_torrents(self, qbittorrent_identify_torrents_for_deletion_dict):
 
-        stalled_delete_torrent_data = self.config_dict['post_process']['stalled_delete_torrent_data']
+        stalled_delete_torrent_data = self.config_dict['queue_management']['stalled_delete_torrent_data']
 
         # Delete torrents using dictionary comprehension
         failed_deletions = {

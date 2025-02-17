@@ -12,7 +12,7 @@ class QueueManagement(object):
     # feature - check qbittorrent status, if incoming port working (internet connection ok) and if torrent not stopped then look at whether stalled, if stalled for X minutes (defined in config) then delete (torrent or torrent + data, defined in config)
     def delete_stalled_torrents(self):
 
-        stalled_monitor_enabled = self.config_dict['post_process']['stalled_monitor_enabled']
+        stalled_monitor_enabled = self.config_dict['queue_management']['stalled_monitor_enabled']
 
         # if monitoring not enabled then return
         if not stalled_monitor_enabled:
