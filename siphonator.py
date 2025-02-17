@@ -68,7 +68,7 @@ class SiphonatorPostProcessing(object):
 
         try:
 
-            schedule.add_job(post_processing_instance.run, 'interval', minutes=self.config_dict['schedule']['post_processing']['schedule_time_mins'], next_run_time=datetime.datetime.now())
+            schedule.add_job(post_processing_instance.run, 'interval', minutes=self.config_dict['schedule']['post_processing']['schedule_time_mins'], next_run_time=datetime.datetime.now(), max_instances=1)
             schedule.start()
 
         except (KeyboardInterrupt, SystemExit):
@@ -87,12 +87,12 @@ class SiphonatorPostProcessing(object):
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(f"Schedule running in '{self.config_dict['schedule']['post_processing']['schedule_mode']}' mode every '{self.config_dict['schedule']['post_processing']['schedule_time_mins']} {self.config_dict['schedule']['post_processing']['schedule_time_units']}', next run at '{schedule_run_converted}'")
+        self.logger_instance.info(f"Schedule for post-processing running in '{self.config_dict['schedule']['post_processing']['schedule_mode']}' mode every '{self.config_dict['schedule']['post_processing']['schedule_time_mins']} {self.config_dict['schedule']['post_processing']['schedule_time_units']}', next run at '{schedule_run_converted}'")
 
     def run(self):
 
         current_time = siphonator_tools_various.current_time()
-        self.logger_instance.info(f"Processing started at '{current_time}'")
+        self.logger_instance.info(f"Processing for post-processing started at '{current_time}'")
 
         post_processing_run_instance = post_processing.PostProcessMove(self.logger_instance, self.config_dict)
         post_processing_run_instance.move_completed()
@@ -100,7 +100,7 @@ class SiphonatorPostProcessing(object):
         # TODO put in elapsed time
         current_time = siphonator_tools_various.current_time()
 
-        self.logger_instance.info(f"Processing finished at '{current_time}'")
+        self.logger_instance.info(f"Processing for post-processing finished at '{current_time}'")
         self.schedule_msg()
 
 
@@ -124,7 +124,7 @@ class SiphonatorQueueManagement(object):
 
         try:
 
-            schedule.add_job(queue_management_instance.run, 'interval', minutes=self.config_dict['schedule']['queue_management']['schedule_time_mins'], next_run_time=datetime.datetime.now())
+            schedule.add_job(queue_management_instance.run, 'interval', minutes=self.config_dict['schedule']['queue_management']['schedule_time_mins'], next_run_time=datetime.datetime.now(), max_instances=1)
             schedule.start()
 
         except (KeyboardInterrupt, SystemExit):
@@ -143,12 +143,12 @@ class SiphonatorQueueManagement(object):
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(f"Schedule running in '{self.config_dict['schedule']['queue_management']['schedule_mode']}' mode every '{self.config_dict['schedule']['queue_management']['schedule_time_mins']} {self.config_dict['schedule']['queue_management']['schedule_time_units']}', next run at '{schedule_run_converted}'")
+        self.logger_instance.info(f"Schedule for queue management is running in '{self.config_dict['schedule']['queue_management']['schedule_mode']}' mode every '{self.config_dict['schedule']['queue_management']['schedule_time_mins']} {self.config_dict['schedule']['queue_management']['schedule_time_units']}', next run at '{schedule_run_converted}'")
 
     def run(self):
 
         current_time = siphonator_tools_various.current_time()
-        self.logger_instance.info(f"Processing started at '{current_time}'")
+        self.logger_instance.info(f"Processing for queue management started at '{current_time}'")
 
         queue_management_run_instance = queue_management.QueueManagement(self.logger_instance, self.config_dict)
         queue_management_run_instance.delete_stalled_torrents()
@@ -156,7 +156,7 @@ class SiphonatorQueueManagement(object):
         # TODO put in elapsed time
         current_time = siphonator_tools_various.current_time()
 
-        self.logger_instance.info(f"Processing finished at '{current_time}'")
+        self.logger_instance.info(f"Processing for queue management finished at '{current_time}'")
         self.schedule_msg()
 
 
@@ -180,7 +180,7 @@ class SiphonatorMain(object):
 
         try:
 
-            schedule.add_job(siphonator_instance.run, 'interval', minutes=self.config_dict['schedule']['siphonator']['schedule_time_mins'], next_run_time=datetime.datetime.now())
+            schedule.add_job(siphonator_instance.run, 'interval', minutes=self.config_dict['schedule']['siphonator']['schedule_time_mins'], next_run_time=datetime.datetime.now(), max_instances=1)
             schedule.start()
 
         except (KeyboardInterrupt, SystemExit):
@@ -199,12 +199,12 @@ class SiphonatorMain(object):
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(f"Schedule running in '{self.config_dict['schedule']['siphonator']['schedule_mode']}' mode every '{self.config_dict['schedule']['siphonator']['schedule_time_mins']} {self.config_dict['schedule']['siphonator']['schedule_time_units']}', next run at '{schedule_run_converted}'")
+        self.logger_instance.info(f"Schedule for siphonator is running in '{self.config_dict['schedule']['siphonator']['schedule_mode']}' mode every '{self.config_dict['schedule']['siphonator']['schedule_time_mins']} {self.config_dict['schedule']['siphonator']['schedule_time_units']}', next run at '{schedule_run_converted}'")
 
     def run(self):
 
         current_time = siphonator_tools_various.current_time()
-        self.logger_instance.info(f"Processing started at '{current_time}'")
+        self.logger_instance.info(f"Processing for siphonator started at '{current_time}'")
 
         # walk library path and store in config dict
         tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
@@ -317,7 +317,7 @@ class SiphonatorMain(object):
         # TODO put in elapsed time
         current_time = siphonator_tools_various.current_time()
 
-        self.logger_instance.info(f"Processing finished at '{current_time}'")
+        self.logger_instance.info(f"Processing for siphonator finished at '{current_time}'")
         self.schedule_msg()
 
     
