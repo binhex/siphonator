@@ -14,9 +14,9 @@ class PostProcessMove(object):
         # get list of torrents that have completed with tags and save to dict
         post_processing_dict = self.torrent_clients_instance.qbittorrent_identify_completed_tags()
 
-        # TODO take output of function create_dict_of_completed abd perform db query for tag name to get imdb name and year and append to dict
+        # send post_processing_dict to db_sqlite to query db bsed on tag name for imdb name and year and append to dict and return
 
-        # TODO delete any non movie related files and folders - note need to identify dvd/bd/uhd raw dumps and not del
+        # use dict from previous function to loop over list of files to delete (chec config to see if enabled)
 
         # TODO create folders for all files that do not have folders in the root
 
