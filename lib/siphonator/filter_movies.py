@@ -595,8 +595,8 @@ class FilterMovies(object):
         if library_filename_year_to_end_compare is not None:
 
             # calculate scores for index title and library filename
-            library_filename_score = siphonator_tools_various.quality_score(library_filename_year_to_end_compare)
             index_title_score = siphonator_tools_various.quality_score(index_title_year_to_end_compare)
+            library_filename_score = siphonator_tools_various.quality_score(library_filename_year_to_end_compare)
 
             if library_filename_score < index_title_score:
                 result_details = f"Passed: {function_name}: Index title '{index_title}' score '{index_title_score}' is greater than library filename '{library_file}' score '{library_filename_score}'"
@@ -605,14 +605,6 @@ class FilterMovies(object):
                 self.result_details_list.append(result_details)
                 self.result_dict.update({'result_details': self.result_details_list})
                 return True
-
-            # elif library_filename_score > index_title_score:
-            #     result_details = f"Failed: {function_name}: Index title '{index_title}' score '{index_title_score}' is less than library filename '{library_file}' score '{library_filename_score}'"
-            #     self.logger_instance.warning(result_details)
-            #     self.result_dict.update({'result': u'Failed'})
-            #     self.result_details_list.append(result_details)
-            #     self.result_dict.update({'result_details': self.result_details_list})
-            #     return False
 
         if self.filter_index_preferred_group(library_file, index_title):
             result_details = f"Passed: {function_name}: Index title '{index_title}' does contain preferred index group, and library filename does not contain preferred index group"

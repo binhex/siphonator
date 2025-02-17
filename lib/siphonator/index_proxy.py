@@ -326,8 +326,8 @@ class IndexProxy(object):
                         notification_email_instance = siphonator_notification_email.NotificationEmail(self.logger_instance, result_dict, self.config_dict)
                         notification_email_instance.email_send()
 
-                    torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, result_dict, self.config_dict)
-                    torrent_client_instance.qbittorrent_add()
+                    torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, self.config_dict, result_dict)
+                    result_dict = torrent_client_instance.qbittorrent_add()
 
                 # write to database
                 db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, result_dict)

@@ -14,10 +14,9 @@ class DbSqlite(object):
         self.db_filepath = init_dict['db_filepath']
         self.db_sqlite_connection = sqlite_utils.Database(self.db_filepath)
 
-    def create_database(self):
+    def create_tables(self):
 
-        # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
-        self.set_db_version(self.db_version)
+        self.logger_instance.info(f"DB filepath '{self.db_filepath}' exists and is a sqlite database, but has no tables or data, performing initial creation of tables...")
 
         # create tables with columns if it doesn't already exist
         self.db_sqlite_connection["history"].create({
@@ -63,6 +62,9 @@ class DbSqlite(object):
         except sqlite3.OperationalError:
 
             pass
+
+        # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
+        self.set_db_version(self.db_version)
 
     def write_database(self):
 
@@ -178,7 +180,7 @@ class DbSqlite(object):
     def upgrade_database(self):
 
         # get db version on disk
-        pragma_user_version = self.get_db_version()
+        pragma_user_version = self.get_pragma_user_version()
 
         # if database is up-to-date then do nothing
         if self.db_version == pragma_user_version:
@@ -217,7 +219,7 @@ class DbSqlite(object):
         # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
         self.db_sqlite_connection.execute("PRAGMA user_version = {v:d}".format(v=version))
 
-    def get_db_version(self):
+    def get_pragma_user_version(self):
 
         # get db_version from existing database
         pragma_user_version_gen = self.db_sqlite_connection.query("PRAGMA user_version")

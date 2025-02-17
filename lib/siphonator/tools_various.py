@@ -40,7 +40,7 @@ def get_function_name():
     return function_name
 
 
-def quality_score(index_title_year_to_end):
+def quality_score(custom_title_year_to_end):
 
     # define scores for resolution, score increases as resolution increases
     resolution_score_dict = {
@@ -77,7 +77,7 @@ def quality_score(index_title_year_to_end):
         for key, value in score_dict.items():
 
             # search for key names, if found add score value to score
-            if re.search(fr'[_\-.\s(]{key}[_\-.\s)]|^{key}[_\-.\s)]', index_title_year_to_end, re.IGNORECASE):
+            if re.search(fr'[_\-.\s(+]{key}[_\-.\s)+]|^{key}[_\-.\s)+]', custom_title_year_to_end, re.IGNORECASE):
                 score += value
 
     # return final score
@@ -109,15 +109,6 @@ class ToolsVarious(object):
         self.index_title_identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
         self.index_title_bad_keyword_regex = r'[\s._,\-()\[\]]'
 
-    # # Define a function that yields the results of os.walk for each path
-    # def combined_walk(self, library_path_list):
-    #     for library_path in library_path_list:
-    #         yield from os.walk(library_path, topdown=False)
-    #
-    # # Create a reusable generator function
-    # def library_path_walk(self, library_path_list):
-    #     return self.combined_walk(library_path_list)
-
     def library_path_walk(self, library_path_list):
 
         # Combine the generators from os.walk for both paths into a single generator
@@ -126,13 +117,6 @@ class ToolsVarious(object):
 
         self.logger_instance.debug(f"Filter library path list '{library_path_list}' walked")
         return filter_library_path_walk
-
-    # def library_path_walk(self, library_path):
-    #
-    #     filter_library_path_walk = os.walk(library_path, topdown=False)
-    #
-    #     self.logger_instance.debug(f"Filter library path '{library_path}' walked")
-    #     return filter_library_path_walk
 
     def resolution_from_ffprobe(self, library_filepath, ffprobe_filepath):
 
@@ -301,7 +285,7 @@ class ToolsVarious(object):
 
             custom_title_year_to_end_compare = custom_title_year_to_end_compare_search.group(0).lower()
             # remove extra leading character
-            custom_title_year_to_end_compare = re.sub(r'^[\s.\-_]+', '', custom_title_year_to_end_compare)
+            custom_title_year_to_end_compare = re.sub(r'^[\s.\-_+]+', '', custom_title_year_to_end_compare)
 
         else:
 
