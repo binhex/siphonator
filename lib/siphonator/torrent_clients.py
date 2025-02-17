@@ -54,9 +54,7 @@ class TorrentClients(object):
             self.logger_instance.warn(f"qBittorrent global download and upload speed is 0 bytes/sec, assuming internet connectivity issues")
             return False
 
-        self.logger_instance.debug(f"qBittorrent global download speed is '{global_download_speed}' bytes/sec")
-        self.logger_instance.debug(f"qBittorrent global upload speed is '{global_upload_speed}' bytes/sec")
-
+        self.logger_instance.debug(f"qBittorrent global download '{global_download_speed}' bytes/sec and upload speed '{global_upload_speed}' bytes/sec != 0, internet connectivity looks good")
         return True
 
     def qbittorrent_identify_torrents_with_category(self):
