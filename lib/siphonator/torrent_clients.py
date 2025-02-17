@@ -65,6 +65,8 @@ class TorrentClients(object):
         # Use dictionary comprehension to populate torrent_dict
         torrent_dict = {torrent['hash']: torrent for torrent in torrents_category_filtered}
 
+        self.logger_instance.debug(f"Dict of torrents returned from qBittorrent with category '{self.category}' is '{torrent_dict}")
+
         return torrent_dict
 
     def qbittorrent_identify_torrents_for_deletion(self, torrent_dict):
@@ -90,6 +92,7 @@ class TorrentClients(object):
             if info['last_activity_diff_mins'] is not None and info['last_activity_diff_mins'] > stalled_delete_torrent_max_mins
         }
 
+        self.logger_instance.debug(f"Dict of torrents returned from qBittorrent with state 'stalledDL' is '{torrents_to_delete_dict}")
         return torrents_to_delete_dict
 
     def qbittorrent_delete_torrents(self, qbittorrent_identify_torrents_for_deletion_dict):
@@ -156,9 +159,9 @@ class TorrentClients(object):
                     completed_torrent_dict_list.append(completed_torrent_dict)
 
         except qbittorrentapi.APIError as e:
-            print(f"API error: {e}")
+            self.logger_instance.warn(f"Failed to connect to qBittorrent API, error was '{e}'")
 
-        print(completed_torrent_dict_list)
+        return completed_torrent_dict_list
 
     def qbittorrent_identify_done(self):
 

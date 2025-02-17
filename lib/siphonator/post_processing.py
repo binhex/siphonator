@@ -12,9 +12,9 @@ class PostProcessMove(object):
     def move_completed(self):
 
         # get list of torrents that have completed with tags and save to dict
-        post_processing_dict = self.torrent_clients_instance.qbittorrent_identify_completed_tags()
+        torrent_dict = self.torrent_clients_instance.qbittorrent_identify_completed_tags()
 
-        # send post_processing_dict to db_sqlite to query db bsed on tag name for imdb name and year and append to dict and return
+        # send torrent_dict to db_sqlite to query db bsed on tag name for imdb name and year and append to dict and return
 
         # use dict from previous function to loop over list of files to delete (chec config to see if enabled)
 
