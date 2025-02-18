@@ -5,7 +5,6 @@ import argparse
 import datetime
 import pytest
 import xml.etree.ElementTree as elementTree
-from imdbpie import ImdbAPIError
 from daemonize import Daemonize
 from apscheduler.schedulers.background import BlockingScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -301,11 +300,11 @@ class SiphonatorMain(object):
                         self.logger_instance.debug(f"Override category found for index site '{index_site_lower}', category set to '{index_site_category}'")
 
                 index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, self.init_dict, self.config_dict, index_site_dict)
-
-                try:
-                    index_site_instance.jackett()
-                except ImdbAPIError:
-                    self.logger_instance.error(u"IMDbPie having issues contacting IMDb")
+                index_site_instance.jackett()
+                # try:
+                #     index_site_instance.jackett()
+                # except ImdbAPIError:
+                #     self.logger_instance.error(f"IMDbPie having issues contacting IMDb, error is '{ImdbAPIError}'")
 
         # compress (vacuum) database
         db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict)

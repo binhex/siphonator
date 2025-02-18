@@ -1,4 +1,5 @@
 import imdbpie
+from imdbpie import ImdbAPIError
 import lib.siphonator.tools_various as siphonator_tools_various
 
 
@@ -23,9 +24,9 @@ class SearchIMDB(object):
 
             imdb_find_id_dict = imdb_instance.search_for_title(self.index_title_compare)
 
-        except (AttributeError, ValueError):
+        except (AttributeError, ValueError, ImdbAPIError) as e:
 
-            result_details = f"Failed: {function_name}: Failed to search IMDb for index title compare '{self.index_title_compare}'"
+            result_details = f"Failed: {function_name}: Failed to search IMDb for index title compare '{self.index_title_compare}' using IMDbPie, error is '{e}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)

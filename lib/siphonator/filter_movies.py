@@ -440,7 +440,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return False
 
-        if imdb_runtime_in_minutes is None:
+        if not imdb_runtime_in_minutes:
 
             result_details = f"Failed: {function_name}: No movie runtime available to filter on, assuming below threshold"
             self.logger_instance.info(result_details)
@@ -854,8 +854,8 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return True
 
-        filter_minimum_rating_dec = Decimal(filter_minimum_rating)
-        if imdb_rating >= filter_minimum_rating_dec:
+        imdb_rating_dec = Decimal(imdb_rating)
+        if imdb_rating_dec >= filter_minimum_rating_dec:
 
             result_details = f"Passed: {function_name}: IMDb rating '{imdb_rating}' equal to/above threshold '{filter_minimum_rating}'"
             self.logger_instance.info(result_details)

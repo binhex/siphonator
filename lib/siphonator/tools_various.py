@@ -1,5 +1,6 @@
 import re
 import os
+import json
 import datetime
 import ffmpeg
 import yaml
@@ -86,6 +87,10 @@ def quality_score(custom_title_year_to_end):
 
 def pretty_print_yaml(yaml_string):
     print(yaml.dump(yaml_string, allow_unicode=True, default_flow_style=False))
+
+
+def pretty_print_json(json_string):
+    print(json.dumps(json_string, indent=4))
 
 
 class ToolsVarious(object):

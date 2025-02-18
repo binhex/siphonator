@@ -23,11 +23,11 @@ class SearchOMDb(object):
         index_title_search_encoded = urllib.parse.quote(self.index_title_search)
         function_name = siphonator_tools_various.get_function_name()
 
-        # generate url to find tmdb id number
+        # generate url to find imdb id number
         omdb_find_id_json_url = f"http://www.omdbapi.com/?apikey={search_omdb_api_key}&t={index_title_search_encoded}&y={self.index_year_compare}"
         self.logger_instance.info(f"Find id URL is {omdb_find_id_json_url}")
 
-        # download tmdb json (used for iphone/android)
+        # download omdb json (used for iphone/android)
         return_code, status_code, content = siphonator_tools_downloader.http_client(self.logger_instance, url=omdb_find_id_json_url, request_type='get')
 
         if return_code != 0:

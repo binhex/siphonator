@@ -4,6 +4,7 @@ import lib.siphonator.tools_downloader as siphonator_tools_downloader
 import lib.siphonator.tools_various as siphonator_tools_various
 import lib.siphonator.search_all as siphonator_search_all
 import lib.siphonator.imdb_imdbpie as siphonator_imdb_imdbpie
+import lib.siphonator.imdb_omdb as siphonator_imdb_omdb
 import lib.siphonator.filter_movies as siphonator_filter_movies
 import lib.siphonator.torrent_clients as siphonator_torrent_clients
 import lib.siphonator.notification_email as siphonator_notification_email
@@ -257,7 +258,7 @@ class IndexProxy(object):
                 tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
                 result_dict = tools_various_instance.index_title_process(result_dict)
 
-                if result_dict.get('result') != 'Failed':
+                if result_dict.get('result') == 'Passed':
 
                     self.logger_instance.info(u"Filtering movie based on index details...")
                     filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, result_dict, self.config_dict, self.index_site_dict)
@@ -270,7 +271,7 @@ class IndexProxy(object):
                     db_sqlite_instance.write_database()
                     continue
 
-                if result_dict.get('result') != 'Failed':
+                if result_dict.get('result') == 'Passed':
 
                     # if imdbid is not found from index site (rarbg supplies tt number) then lookup
                     if imdbid is None:
@@ -286,10 +287,10 @@ class IndexProxy(object):
                     db_sqlite_instance.write_database()
                     continue
 
-                if result_dict.get('result') != 'Failed':
+                if result_dict.get('result') == 'Passed':
 
-                    self.logger_instance.info(u"Getting movie details from IMDb...")
-                    result_dict = siphonator_imdb_imdbpie.imdb_json_api(self.logger_instance, result_dict, self.config_dict)
+                    self.logger_instance.info(u"Getting movie details from IMDb using OMDb...")
+                    result_dict = siphonator_imdb_omdb.omdb_json_api(self.logger_instance, self.config_dict, result_dict)
 
                 else:
 
@@ -298,7 +299,19 @@ class IndexProxy(object):
                     db_sqlite_instance.write_database()
                     continue
 
-                if result_dict.get('result') != 'Failed':
+                if result_dict.get('result') == 'Passed':
+
+                    self.logger_instance.info(u"Getting movie details from IMDb using IMDBPie...")
+                    result_dict = siphonator_imdb_imdbpie.imdb_json_api(self.logger_instance, result_dict)
+
+                else:
+
+                    # write to database
+                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, result_dict)
+                    db_sqlite_instance.write_database()
+                    continue
+
+                if result_dict.get('result') == 'Passed':
 
                     self.logger_instance.info(u"Filtering movie based on IMDb details...")
                     filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, result_dict, self.config_dict, self.index_site_dict)
