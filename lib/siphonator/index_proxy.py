@@ -292,17 +292,10 @@ class IndexProxy(object):
                     self.logger_instance.info(u"Getting movie details from IMDb using OMDb...")
                     result_dict = siphonator_imdb_omdb.omdb_json_api(self.logger_instance, self.config_dict, result_dict)
 
-                else:
+                    if result_dict.get('result') == 'Failed':
 
-                    # write to database
-                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, result_dict)
-                    db_sqlite_instance.write_database()
-                    continue
-
-                if result_dict.get('result') == 'Passed':
-
-                    self.logger_instance.info(u"Getting movie details from IMDb using IMDBPie...")
-                    result_dict = siphonator_imdb_imdbpie.imdb_json_api(self.logger_instance, result_dict)
+                        self.logger_instance.info(u"Getting movie details from IMDb using IMDBPie...")
+                        result_dict = siphonator_imdb_imdbpie.imdb_json_api(self.logger_instance, result_dict)
 
                 else:
 
