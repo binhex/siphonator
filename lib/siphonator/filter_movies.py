@@ -1196,7 +1196,7 @@ class FilterMovies(object):
 
         if imdb_list is None:
 
-            result_details = f"Failed: {function_name}: IMDb {filter_type} not found, assuming IMDb override {filter_type} not present"
+            result_details = f"Failed: {function_name}: IMDb {filter_type} not found, skipping IMDb override {filter_type} checks"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)

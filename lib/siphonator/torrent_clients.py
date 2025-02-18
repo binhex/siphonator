@@ -13,6 +13,10 @@ class TorrentClients(object):
         self.add_paused_bool = self.config_dict['torrent_client']['qbittorrent']['add_paused']
         self.category = self.config_dict['torrent_client']['qbittorrent']['category']
 
+    def qbittorrent_connect(self):
+
+        function_name = siphonator_tools_various.get_function_name()
+
         torrent_client = self.config_dict['torrent_client']['selected']
         if torrent_client == 'qbittorrent':
 
@@ -21,29 +25,43 @@ class TorrentClients(object):
             username = self.config_dict['torrent_client']['qbittorrent']['username']
             password = self.config_dict['torrent_client']['qbittorrent']['password']
 
-            # instantiate a Client using the appropriate WebUI configuration
-            self.qbt_client = qbittorrentapi.Client(
-                host=host,
-                port=port,
-                username=username,
-                password=password,
-            )
-
-            # the Client will automatically acquire/maintain a logged-in state
-            # in line with any request. therefore, this is not strictly necessary;
-            # however, you may want to test the provided login credentials.
             try:
 
-                self.qbt_client.auth_log_in()
+                # instantiate a Client using the appropriate WebUI configuration
+                qbt_client = qbittorrentapi.Client(
+                    host=host,
+                    port=port,
+                    username=username,
+                    password=password,
+                )
 
-            except qbittorrentapi.LoginFailed as e:
+                qbt_client.auth_log_in()
 
-                self.logger_instance.warning(f"qBittorrent login failed for username '{username}' with error '{e}'")
+            except qbittorrentapi.LoginFailed:
+                result_details = f"Failed: {function_name}: qBittorrent login failed"
+                self.logger_instance.warning(result_details)
+                return None
+
+            except qbittorrentapi.APIConnectionError:
+                result_details = f"Failed: {function_name}: qBittorrent API connection error"
+                self.logger_instance.warning(result_details)
+                return None
+
+            except qbittorrentapi.APIError:
+                result_details = f"Failed: {function_name}: qBittorrent API error"
+                self.logger_instance.warning(result_details)
+                return None
+
+            return qbt_client
 
     def qbittorrent_check_global_speed(self):
 
+        qbt_client = self.qbittorrent_connect()
+        if not qbt_client:
+            return
+
         # Retrieve transfer information
-        transfer_info = self.qbt_client.transfer_info()
+        transfer_info = qbt_client.transfer_info()
 
         # Get the global download and upload speeds
         global_download_speed = transfer_info['dl_info_speed']
@@ -59,8 +77,12 @@ class TorrentClients(object):
 
     def qbittorrent_identify_torrents_with_category(self):
 
+        qbt_client = self.qbittorrent_connect()
+        if not qbt_client:
+            return
+
         # Retrieve all torrents with the specified category
-        torrents_category_filtered = self.qbt_client.torrents_info(category=self.category)
+        torrents_category_filtered = qbt_client.torrents_info(category=self.category)
 
         # Use dictionary comprehension to populate torrent_dict
         torrent_dict = {torrent['hash']: torrent for torrent in torrents_category_filtered}
@@ -114,8 +136,12 @@ class TorrentClients(object):
 
     def qbittorrent_delete_torrent(self, torrent_hash, stalled_delete_torrent_data):
 
+        qbt_client = self.qbittorrent_connect()
+        if not qbt_client:
+            return
+
         try:
-            self.qbt_client.torrents_delete(delete_files=stalled_delete_torrent_data, torrent_hashes=torrent_hash)
+            qbt_client.torrents_delete(delete_files=stalled_delete_torrent_data, torrent_hashes=torrent_hash)
             # TODO would be nice to see name of torrent as well as hash when logging
             if stalled_delete_torrent_data:
                 self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' and data")
@@ -128,19 +154,23 @@ class TorrentClients(object):
 
     def qbittorrent_identify_completed_tags(self):
 
+        qbt_client = self.qbittorrent_connect()
+        if not qbt_client:
+            return
+
         completed_torrent_dict_list = []
 
         # identify torrents in completed state with tags
         try:
             # Get the list of torrents with status 'completed'
-            completed_torrents = self.qbt_client.torrents_info(status_filter='completed')
+            completed_torrents = qbt_client.torrents_info(status_filter='completed')
 
             for torrent in completed_torrents:
                 tag = torrent.tags
                 if tag:
 
                     # Get the list of files for the torrent
-                    files = self.qbt_client.torrents_files(torrent.hash)
+                    files = qbt_client.torrents_files(torrent.hash)
 
                     torrent_file_list = []
 
@@ -170,6 +200,10 @@ class TorrentClients(object):
 
     def qbittorrent_add(self):
 
+        qbt_client = self.qbittorrent_connect()
+        if not qbt_client:
+            return
+
         download_url = self.result_dict['magnet_url']
         if download_url is None:
 
@@ -190,7 +224,7 @@ class TorrentClients(object):
         try:
 
             # Add the torrent with the unique label as a 'tag'
-            self.qbt_client.torrents_add(
+            qbt_client.torrents_add(
                 urls=download_url,
                 category=self.category,
                 is_paused=self.add_paused_bool,
@@ -204,7 +238,7 @@ class TorrentClients(object):
             return None
 
         # re-announce
-        self.qbt_client.torrents_reannounce(torrent_hashes='all')
+        qbt_client.torrents_reannounce(torrent_hashes='all')
 
         # add unique tag to result_dict
         self.result_dict.update({'torrent_tag': torrent_tag})

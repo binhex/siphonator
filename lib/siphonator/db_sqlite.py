@@ -1,4 +1,3 @@
-import sqlite3
 import sqlite_utils
 import lib.siphonator.tools_various as siphonator_tools_various
 
@@ -53,15 +52,6 @@ class DbSqlite(object):
             "imdb_language_list": str,
             'imdb_country_list': str,
         }, pk="id", if_not_exists=True)
-
-        # duplicate table
-        try:
-
-            self.db_sqlite_connection["history"].duplicate("queued")
-
-        except sqlite3.OperationalError:
-
-            pass
 
         # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
         self.set_db_version(self.db_version)

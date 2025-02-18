@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 def update_config(init_dict, config_file_version):
 
-    config_filepath = init_dict['config_filepath']
     config_version = init_dict['config_version']
 
     if config_version != config_file_version:
@@ -18,9 +17,6 @@ def update_config(init_dict, config_file_version):
                     'config_version': '1.0.1',
                 }
             }
-
-            # write new config option to config.yaml and then bump config_version
-            #modify_config(config_filepath, config_modify_dict)
 
 
 # read in init_dict as arg, get location of config.yml and return as dict

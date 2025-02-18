@@ -49,7 +49,7 @@ class SearchOMDb(object):
             self.result_dict.update({'result': 'Failed', 'result_details': u"Site feed parse failed for OMDb"})
             return self.result_dict
 
-        # if resulting tmdb json page is blank then continue
+        # if resulting omdb json page is blank then continue
         if omdb_find_id_json is None or omdb_find_id_json == {}:
 
             result_details = f"Failed: {function_name}: Empty json returned from OMDb for index title search '{self.index_title_search}'"
