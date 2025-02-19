@@ -117,42 +117,7 @@ class TorrentClients(object):
         self.logger_instance.debug(f"Torrents from qBittorrent with state 'stalledDL' and last activity >= '{stalled_delete_torrent_max_mins}' mins  is '{torrents_to_delete_dict}")
         return torrents_to_delete_dict
 
-    def qbittorrent_delete_torrents(self, qbittorrent_identify_torrents_for_deletion_dict):
-
-        stalled_delete_torrent_data = self.config_dict['queue_management']['stalled_delete_torrent_data']
-
-        # Delete torrents using dictionary comprehension
-        failed_deletions = {
-            torrent_hash: info
-            for torrent_hash, info in qbittorrent_identify_torrents_for_deletion_dict.items()
-            if not self.qbittorrent_delete_torrent(torrent_hash, stalled_delete_torrent_data)
-        }
-
-        # Print the failed deletions
-        if failed_deletions:
-            self.logger_instance.info(f"Failed to delete the following torrents:")
-            for torrent_hash, info in failed_deletions.items():
-                self.logger_instance.info(f"Hash: {torrent_hash}, Name: {info['name']}")
-
-    def qbittorrent_delete_torrent(self, torrent_hash, stalled_delete_torrent_data):
-
-        qbt_client = self.qbittorrent_connect()
-        if not qbt_client:
-            return
-
-        try:
-            qbt_client.torrents_delete(delete_files=stalled_delete_torrent_data, torrent_hashes=torrent_hash)
-            # TODO would be nice to see name of torrent as well as hash when logging
-            if stalled_delete_torrent_data:
-                self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' and data")
-            else:
-                self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}'")
-            return True
-        except qbittorrentapi.APIError as e:
-            self.logger_instance.info(f"Failed to delete torrent hash '{torrent_hash}', error was '{e}'")
-            return False
-
-    def qbittorrent_identify_completed_tags(self):
+    def qbittorrent_identify_completed_torrents(self):
 
         qbt_client = self.qbittorrent_connect()
         if not qbt_client:
@@ -193,12 +158,7 @@ class TorrentClients(object):
 
         return completed_torrent_dict_list
 
-    def qbittorrent_identify_done(self):
-
-        # identify if torrent is in done state, if done then mark for possible deletion of torrent (not data)
-        pass
-
-    def qbittorrent_add(self):
+    def qbittorrent_add_torrent(self):
 
         qbt_client = self.qbittorrent_connect()
         if not qbt_client:
@@ -243,3 +203,38 @@ class TorrentClients(object):
         # add unique tag to result_dict
         self.result_dict.update({'torrent_tag': torrent_tag})
         return self.result_dict
+
+    def qbittorrent_delete_torrent(self, torrent_hash, delete_torrent_data):
+
+        qbt_client = self.qbittorrent_connect()
+        if not qbt_client:
+            return
+
+        try:
+            qbt_client.torrents_delete(delete_files=delete_torrent_data, torrent_hashes=torrent_hash)
+            # TODO would be nice to see name of torrent as well as hash when logging
+            if delete_torrent_data:
+                self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' and data")
+            else:
+                self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}'")
+            return True
+        except qbittorrentapi.APIError as e:
+            self.logger_instance.info(f"Failed to delete torrent hash '{torrent_hash}', error was '{e}'")
+            return False
+
+    def qbittorrent_delete_stalled_torrents(self, qbittorrent_identify_torrents_for_deletion_dict):
+
+        stalled_delete_torrent_data = self.config_dict['queue_management']['stalled_delete_torrent_data']
+
+        # Delete torrents using dictionary comprehension
+        failed_deletions = {
+            torrent_hash: info
+            for torrent_hash, info in qbittorrent_identify_torrents_for_deletion_dict.items()
+            if not self.qbittorrent_delete_torrent(torrent_hash, stalled_delete_torrent_data)
+        }
+
+        # Print the failed deletions
+        if failed_deletions:
+            self.logger_instance.info(f"Failed to delete the following torrents:")
+            for torrent_hash, info in failed_deletions.items():
+                self.logger_instance.info(f"Hash: {torrent_hash}, Name: {info['name']}")

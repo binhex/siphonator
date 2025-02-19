@@ -93,8 +93,8 @@ class SiphonatorPostProcessing(object):
         current_time = siphonator_tools_various.current_time()
         self.logger_instance.info(f"Processing for post-processing started at '{current_time}'")
 
-        post_processing_run_instance = post_processing.PostProcessMove(self.logger_instance, self.config_dict)
-        post_processing_run_instance.move_completed()
+        post_processing_run_instance = post_processing.PostProcess(self.logger_instance, self.config_dict)
+        post_processing_run_instance.post_process()
 
         # TODO put in elapsed time
         current_time = siphonator_tools_various.current_time()
@@ -150,7 +150,7 @@ class SiphonatorQueueManagement(object):
         self.logger_instance.info(f"Processing for queue management started at '{current_time}'")
 
         queue_management_run_instance = queue_management.QueueManagement(self.logger_instance, self.config_dict)
-        queue_management_run_instance.delete_stalled_torrents()
+        queue_management_run_instance.queue_management()
 
         # TODO put in elapsed time
         current_time = siphonator_tools_various.current_time()
