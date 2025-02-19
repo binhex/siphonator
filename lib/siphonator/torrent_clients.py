@@ -91,30 +91,40 @@ class TorrentClients(object):
 
         return torrent_dict
 
-    def qbittorrent_identify_torrents_for_deletion(self, torrent_dict):
+    def qbittorrent_identify_torrents_for_deletion(self, torrent_dict, state, delay_max_mins, filter_type):
 
-        stalled_delete_torrent_max_mins = self.config_dict['queue_management']['stalled_delete_torrent_max_mins']
+        # Get the current time
+        current_time = siphonator_tools_various.current_time_datetime_object()
 
-        # filter the torrents based on state of stalled download and then get last activity diff from current time
-        stalled_torrents_dict = {
+        # Filter the torrents based on state of download and then get the appropriate time diff from current time
+        torrents_dict = {
             torrent_hash: {
                 'name': info['name'],
-                'last_activity_diff_mins': int((siphonator_tools_various.current_time_datetime_object() - siphonator_tools_various.convert_unix_timestamp_datetime_object(info['last_activity'])).total_seconds() / 60) if 'last_activity' in info and info['last_activity'] is not None else None,
+                'last_activity_diff_mins': int((current_time - siphonator_tools_various.convert_unix_timestamp_datetime_object(info['last_activity'])).total_seconds() / 60) if 'last_activity' in info and info['last_activity'] is not None else None,
+                'added_on_diff_mins': int((current_time - siphonator_tools_various.convert_unix_timestamp_datetime_object(info['added_on'])).total_seconds() / 60) if 'added_on' in info and info['added_on'] is not None else None,
                 'state': info['state'],
             }
             for torrent_hash, info in torrent_dict.items()
-            if 'name' in info and 'last_activity_diff_mins' and info.get('state') == 'stalledDL'
+            if 'name' in info and info.get('state') == state
         }
 
-        # filter the torrents based on the comparison with stalled_delete_torrent_max_mins (from config)
-        torrents_to_delete_dict = {
-            torrent_hash: info
-            for torrent_hash, info in stalled_torrents_dict.items()
-            # TODO would be nice to log torrent names that are stalled but last activity is not greater than config value for stalled_delete_torrent_max_mins
-            if info['last_activity_diff_mins'] is not None and info['last_activity_diff_mins'] > stalled_delete_torrent_max_mins
-        }
+        # Filter the torrents based on delay_max_mins and filter_type
+        if filter_type == 'last_activity':
+            torrents_to_delete_dict = {
+                torrent_hash: info
+                for torrent_hash, info in torrents_dict.items()
+                if info['last_activity_diff_mins'] is not None and info['last_activity_diff_mins'] > delay_max_mins
+            }
+        elif filter_type == 'added_on':
+            torrents_to_delete_dict = {
+                torrent_hash: info
+                for torrent_hash, info in torrents_dict.items()
+                if info['added_on_diff_mins'] is not None and info['added_on_diff_mins'] > delay_max_mins
+            }
+        else:
+            raise ValueError("Invalid filter_type. Must be 'last_activity' or 'added_on'.")
 
-        self.logger_instance.debug(f"Torrents from qBittorrent with state 'stalledDL' and last activity >= '{stalled_delete_torrent_max_mins}' mins  is '{torrents_to_delete_dict}")
+        self.logger_instance.debug(f"Torrents from qBittorrent with state '{state}' and {filter_type} >= '{delay_max_mins}' mins is '{torrents_to_delete_dict}'")
         return torrents_to_delete_dict
 
     def qbittorrent_identify_completed_torrents(self):
@@ -179,7 +189,7 @@ class TorrentClients(object):
         # is then added to the result_dict where it will be saved to the database. This can
         # then be used to post process by creating/renaming folder to match imdb title for
         # that unique id
-        torrent_tag = str(uuid.uuid4())
+        torrent_tag = str(f"siphonator-{uuid.uuid4()}")
 
         try:
 

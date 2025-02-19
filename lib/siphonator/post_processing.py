@@ -14,22 +14,39 @@ class PostProcess(object):
         if not self.config_dict['post_process']['post_process_enabled']:
             return False
 
-        self.torrents_completed_dict()
+        self.identify_completed_torrents()
+        self.delete_completed_torrents()
+        self.cleanup_completed_files()
+        self.rename_completed_files()
+        self.move_completed_files()
 
-        # send torrent_dict to db_sqlite to query db bsed on tag name for imdb name and year and append to dict and return
-
-        # if db sqlite commit successful then delete completed torrents WITHOUT data
-
-        # use dict to loop over list of files to delete (chec config to see if enabled)
-
-        # TODO create folders for all files that do not have folders in the root
-
-        # TODO rename any existing root folders to match imdb title
-
-        # TODO move processed folders and files to storage - need to add path to config.yml
-
-    def torrents_completed_dict(self):
+    def identify_completed_torrents(self):
 
         # TODO WIP
         # get list of torrents that have completed with tags and save to dict
         torrent_completed_dict = self.torrent_clients_instance.qbittorrent_identify_completed_torrents()
+
+        # send torrent_dict to db_sqlite to query db bsed on tag name for imdb name and year and append to dict and return here
+
+    def delete_completed_torrents(self):
+
+        # if db sqlite commit successful then delete completed torrents WITHOUT data
+        pass
+
+    def cleanup_completed_files(self):
+        # if db sqlite commit successful then delete completed torrents WITHOUT data
+
+        if not self.config_dict['post_process']['clean_completed']:
+            return False
+
+    def rename_completed_files(self):
+        # if db sqlite commit successful then delete completed torrents WITHOUT data
+
+        if not self.config_dict['post_process']['rename_completed']:
+            return False
+
+    def move_completed_files(self):
+        # if db sqlite commit successful then delete completed torrents WITHOUT data
+
+        if not self.config_dict['post_process']['move_completed']:
+            return False
