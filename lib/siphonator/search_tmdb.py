@@ -11,7 +11,7 @@ class SearchTMDB(object):
 
         self.result_dict = result_dict
         self.config_dict = config_dict
-        self.index_title_search = result_dict.get('index_title_search', None)
+        self.index_title_tt_search = result_dict.get('index_title_tt_search', None)
         self.index_title_compare = result_dict.get('index_title_compare', None)
         self.index_year_compare = result_dict.get('index_year_compare', None)
         self.result_details_list = result_dict.get('result_details', [])
@@ -20,7 +20,7 @@ class SearchTMDB(object):
     def find_imdb_id_tmdb(self):
 
         search_tmdb_api_key = self.config_dict["credentials"]['tmdb']['api_key']
-        index_title_search_encoded = urllib.parse.quote(self.index_title_search)
+        index_title_search_encoded = urllib.parse.quote(self.index_title_tt_search)
         function_name = siphonator_tools_various.get_function_name()
 
         # generate url to find tmdb id number
@@ -52,7 +52,7 @@ class SearchTMDB(object):
         # if resulting tmdb json page is blank then continue
         if tmdb_find_id_json == {}:
 
-            result_details = f"Failed: {function_name}: No match for movie title '{self.index_title_search}' on TMDb json"
+            result_details = f"Failed: {function_name}: No match for movie title '{self.index_title_tt_search}' on TMDb json"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -179,14 +179,14 @@ class SearchTMDB(object):
             self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
             self.result_dict.update({'imdb_id': imdb_id})
 
-            result_details = f"Passed: {function_name}: Found IMDb ID '{imdb_id}' for movie '{self.index_title_search}' using TMDb search"
+            result_details = f"Passed: {function_name}: Found IMDb ID '{imdb_id}' for movie '{self.index_title_tt_search}' using TMDb search"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Passed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
-        result_details = f"Failed: {function_name}: Failed to identify movie '{self.index_title_search}' using TMDb search"
+        result_details = f"Failed: {function_name}: Failed to identify movie '{self.index_title_tt_search}' using TMDb search"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Failed'})
         self.result_details_list.append(result_details)

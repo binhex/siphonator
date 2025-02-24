@@ -193,7 +193,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return False
 
-        result_details = f"Passed: {function_name}: Index title '{index_title}' does NOT contains tv season or episode string match"
+        result_details = f"Passed: {function_name}: Index title '{index_title}' does NOT contain tv season or episode string match"
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Passed'})
         self.result_details_list.append(result_details)

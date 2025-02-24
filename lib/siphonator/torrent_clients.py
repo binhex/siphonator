@@ -1,15 +1,18 @@
 import qbittorrentapi
 import lib.siphonator.tools_various as siphonator_tools_various
+import lib.siphonator.config as siphonator_config
 import uuid
+import datetime
 
 
 class TorrentClients(object):
 
-    def __init__(self, logger_instance, config_dict, result_dict=None):
+    def __init__(self, logger_instance, config_dict, result_dict=None, init_dict=None):
 
         self.logger_instance = logger_instance
         self.config_dict = config_dict
         self.result_dict = result_dict
+        self.init_dict = init_dict
         self.add_paused_bool = self.config_dict['torrent_client']['qbittorrent']['add_paused']
         self.category = self.config_dict['torrent_client']['qbittorrent']['category']
 
@@ -69,10 +72,46 @@ class TorrentClients(object):
 
         if global_download_speed == 0 and global_upload_speed == 0:
 
-            self.logger_instance.warn(f"qBittorrent global download and upload speed is 0 bytes/sec, assuming internet connectivity issues")
+            # Get the current time
+            current_datetime_object = siphonator_tools_various.current_time_datetime_object()
+
+            # convert now datetime object to string
+            current_datetime_string = siphonator_tools_various.convert_datetime_object_into_string(current_datetime_object)
+
+            # modify config_dict for current datetime string
+            self.config_dict['queue_management']['internet_connection_down_datetime'] = current_datetime_string
+
+            # write datetime string to config file
+            siphonator_config.write_config(self.init_dict, self.config_dict)
+
+            self.logger_instance.warn(f"qBittorrent global dl and ul speed is 0 bytes/sec, assuming internet connectivity issues, skipping queue management")
             return False
 
         self.logger_instance.debug(f"qBittorrent global download '{global_download_speed}' bytes/sec and upload speed '{global_upload_speed}' bytes/sec != 0, internet connectivity looks good")
+        return True
+
+    def qbittorrent_internet_connection_down_grace(self):
+
+        qbt_client = self.qbittorrent_connect()
+        if not qbt_client:
+            return
+
+        # get config values
+        internet_connection_down_datetime = self.config_dict['queue_management']['internet_connection_down_datetime']
+        internet_connection_down_grace_mins = self.config_dict['queue_management']['internet_connection_down_grace_mins']
+
+        # get last down datetime and app grace period to it
+        internet_connection_down_datetime_object = siphonator_tools_various.convert_string_into_datetime_object(internet_connection_down_datetime)
+        internet_connection_down_grace_datetime_object = internet_connection_down_datetime_object + datetime.timedelta(minutes=internet_connection_down_grace_mins)
+
+        # Get the current time
+        current_datetime_object = siphonator_tools_various.current_time_datetime_object()
+
+        if internet_connection_down_grace_datetime_object > current_datetime_object:
+            self.logger_instance.debug(f"qBittorrent grace period datetime '{internet_connection_down_grace_datetime_object}' is greater than current datetime '{current_datetime_object}', skipping queue management")
+            return False
+
+        self.logger_instance.debug(f"qBittorrent grace period datetime '{internet_connection_down_grace_datetime_object}' is less than or equal to than current datetime '{current_datetime_object}', internet connectivity restored")
         return True
 
     def qbittorrent_identify_torrents_with_category(self):
@@ -214,7 +253,7 @@ class TorrentClients(object):
         self.result_dict.update({'torrent_tag': torrent_tag})
         return self.result_dict
 
-    def qbittorrent_delete_torrent(self, torrent_hash, delete_torrent_data):
+    def qbittorrent_delete_torrent(self, torrent_hash, delete_torrent_data, state):
 
         qbt_client = self.qbittorrent_connect()
         if not qbt_client:
@@ -224,15 +263,15 @@ class TorrentClients(object):
             qbt_client.torrents_delete(delete_files=delete_torrent_data, torrent_hashes=torrent_hash)
             # TODO would be nice to see name of torrent as well as hash when logging
             if delete_torrent_data:
-                self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' and data")
+                self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' and data with state '{state}'")
             else:
-                self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}'")
+                self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' with state '{state}'")
             return True
         except qbittorrentapi.APIError as e:
             self.logger_instance.info(f"Failed to delete torrent hash '{torrent_hash}', error was '{e}'")
             return False
 
-    def qbittorrent_delete_stalled_torrents(self, qbittorrent_identify_torrents_for_deletion_dict):
+    def qbittorrent_delete_stalled_torrents(self, qbittorrent_identify_torrents_for_deletion_dict, state):
 
         stalled_delete_torrent_data = self.config_dict['queue_management']['stalled_delete_torrent_data']
 
@@ -240,7 +279,7 @@ class TorrentClients(object):
         failed_deletions = {
             torrent_hash: info
             for torrent_hash, info in qbittorrent_identify_torrents_for_deletion_dict.items()
-            if not self.qbittorrent_delete_torrent(torrent_hash, stalled_delete_torrent_data)
+            if not self.qbittorrent_delete_torrent(torrent_hash, stalled_delete_torrent_data, state)
         }
 
         # Print the failed deletions

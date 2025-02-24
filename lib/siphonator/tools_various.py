@@ -20,12 +20,22 @@ def current_time():
 
 def current_time_datetime_object():
     # Get the current date and time as a datetime object
-    return datetime.datetime.now(datetime.timezone.utc)
+    return datetime.datetime.now()
 
 
 def convert_unix_timestamp_datetime_object(timestamp):
     # Function to convert Unix timestamp to human-readable format
-    return datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
+    return datetime.datetime.fromtimestamp(timestamp)
+
+
+def convert_string_into_datetime_object(datetime_string):
+    # convert string to same format as datetime.datetime.now
+    return datetime.datetime.strptime(datetime_string, '"%Y-%m-%d %H:%M:%S"')
+
+
+def convert_datetime_object_into_string(datetime_object):
+    # convert string to same format as datetime.datetime.now
+    return datetime.datetime.strftime(datetime_object, '"%Y-%m-%d %H:%M:%S"')
 
 
 def get_function_name():
@@ -98,10 +108,12 @@ class ToolsVarious(object):
     def __init__(self, logger_instance):
 
         self.logger_instance = logger_instance
-        self.index_title_search_regex = r'\.|_'
+        self.index_title_search_regex = r'\.|_|\-'
+        self.index_title_round_brackets_regex = r'\(|\)'
         self.index_title_sqlite_regex = r'\.|_|-|\s|&'
         self.index_title_word_match_regex = r'-|\.|_|\[|\]|\(|\)'
         self.index_title_remove_non_ascii_regex = r'[^a-zA-Z0-9]+'
+        self.index_title_remove_non_ascii_start_to_title_regex = r'(\s?\[?[^\x00-\x7F]{2,}).*([^\x00-\x7F]{2,}\]?\s?)'
         self.index_title_remove_separators_regex = r'[\.\-_\s\(\):\'\,]+'
         self.index_title_remove_square_brackets_and_content_regex = r'\[[^\]]+\]'
         self.index_title_remove_website_regex = r'www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,4}|[a-zA-Z0-9]+\.com'
@@ -109,6 +121,7 @@ class ToolsVarious(object):
         self.index_title_remove_invalid_windows_filename_chars_regex = r'\?|<|>|:|\"|\/|\\|\||\*'
         self.index_title_resolution_regex = r'\d{3,4}p'
         self.index_title_year_to_end_regex = r'([\s\.\-_\[])(\(?\d{4}\)?)([^pi]).*'
+        self.index_title_after_year_to_end_regex = r'(?<=\d{4})\s?[\s\.\-\_].*'  # note requires removal of round brackets first
         self.index_title_year_regex = r'^([​\.\-_\s\(\):\'\,\[])?(\()?(\d{4})(\))?'
         self.index_title_group_regex = r'([a-zA-Z0-9]+)(\)?)(\[[a-zA-Z0-9]+\])?(\.[a-z0-9]{3})?(\[[a-zA-Z0-9]+\])?$'
         self.index_title_identify_tv_season_or_episode_regex = r'(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})?'
@@ -209,6 +222,23 @@ class ToolsVarious(object):
 
         return custom_title_compare
 
+    def custom_title_tt_search(self, custom_title):
+
+        # TODO bug' does not strip '[BEST-TORRENTS.COM] Mufasa.The.Lion.King.2024.MULTi.2160p.iT.WEB-DL.DV.HDR.H.265.DDP5.1.Atmos-K83'
+        # TODO bug does not remove www scenetime com from start of index title
+
+        if custom_title is None:
+            self.logger_instance.warning(u'No custom_title sent to function')
+            return None
+
+        remove_index_title_non_ascii_start_to_title = re.sub(self.index_title_remove_non_ascii_start_to_title_regex, '', custom_title)
+        remove_index_title_round_brackets = re.sub(self.index_title_round_brackets_regex, '', remove_index_title_non_ascii_start_to_title)
+        remove_index_title_after_year_to_end = re.sub(self.index_title_after_year_to_end_regex, '', remove_index_title_round_brackets)
+        replace_periods_underscores_and_hyphens_with_spaces = re.sub(self.index_title_search_regex, ' ', remove_index_title_after_year_to_end)
+        remove_duplicate_spaces = " ".join(replace_periods_underscores_and_hyphens_with_spaces.split()).lower()
+
+        return remove_duplicate_spaces
+
     def custom_title_search(self, custom_title):
 
         if custom_title is None:
@@ -246,13 +276,11 @@ class ToolsVarious(object):
             return None
 
         custom_title_strip = re.sub(self.index_title_remove_website_regex, '', custom_title).lower()
-        custom_title_strip = re.sub(self.index_title_remove_square_brackets_and_content_regex, '',
-                                    custom_title_strip).lower()
+        custom_title_strip = re.sub(self.index_title_remove_square_brackets_and_content_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_separators_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_non_ascii_regex, '', custom_title_strip).lower()
         custom_title_strip = re.sub(self.index_title_remove_bad_words_regex, '', custom_title_strip).lower()
-        custom_title_strip = re.sub(self.index_title_remove_invalid_windows_filename_chars_regex, '',
-                                    custom_title_strip).lower()
+        custom_title_strip = re.sub(self.index_title_remove_invalid_windows_filename_chars_regex, '', custom_title_strip).lower()
         return custom_title_strip
 
     def custom_title_word_match_compare(self, custom_title):
@@ -434,6 +462,17 @@ class ToolsVarious(object):
 
         self.logger_instance.debug(f"Index title search is '{index_title_search}'")
 
+        index_title_tt_search = self.custom_title_tt_search(index_title)
+        if index_title_tt_search is None:
+            result_details = f"Failed: {function_name}: Cannot identify search-tt title from index title"
+            self.logger_instance.warning(result_details)
+            result_dict.update({'result': u'Failed'})
+            result_details_list.append(result_details)
+            result_dict.update({'result_details': result_details_list})
+            return result_dict
+
+        self.logger_instance.info(f"Index title search-tt is '{index_title_tt_search}'")
+
         index_title_year_to_end_compare = self.custom_title_year_to_end_compare(index_title)
         if index_title_year_to_end_compare is None:
             result_details = f"Failed: {function_name}: Cannot identify year to end from index title"
@@ -472,6 +511,7 @@ class ToolsVarious(object):
             'index_title_full_compare': index_title_full_compare,
             'index_year_compare': index_year_compare,
             'index_title_search': index_title_search,
+            'index_title_tt_search': index_title_tt_search,
             'index_title_year_to_end_compare': index_title_year_to_end_compare,
             'index_title_and_year_compare': index_title_and_year_compare
         })

@@ -3,24 +3,40 @@ import lib.siphonator.torrent_clients as torrent_clients
 
 class QueueManagement(object):
 
-    def __init__(self, logger_instance, config_dict):
+    def __init__(self, logger_instance, config_dict, init_dict):
         self.logger_instance = logger_instance
         self.config_dict = config_dict
-        self.torrent_clients_instance = torrent_clients.TorrentClients(self.logger_instance, self.config_dict)
+        self.init_dict = init_dict
+        # note we specify 'init_dict=' here as we want to skip optional argument 'result_dict' but specify optional argument 'init_dict'
+        self.torrent_clients_instance = torrent_clients.TorrentClients(self.logger_instance, self.config_dict, init_dict=self.init_dict)
 
     def queue_management(self):
 
         if not self.config_dict['queue_management']['queue_management_enabled']:
             return False
 
-        self.delete_metadata_torrents()
-        self.delete_stalled_torrents()
+        if not self.prerun_checks():
+            return False
+
+        # check and delete any matching torrents in a metadata download stalled state
+        self.delete_stalled_torrents('metadata', 'metaDL', 'added_on')
+
+        # check and delete any matching torrents in a data download stalled state
+        self.delete_stalled_torrents('stalled', 'stalledDL', 'last_activity')
 
     def prerun_checks(self):
 
         # if ul/dl speed is 0 then assume internet down, this is to prevent torrents being incorrectly marked as stalled
         if not self.torrent_clients_instance.qbittorrent_check_global_speed():
             return False
+
+        # if internet previous down datetime + grace period is greater than current datetime then skip queue management
+        if not self.torrent_clients_instance.qbittorrent_internet_connection_down_grace():
+            return False
+
+        return True
+
+    def qbittorrent_list_torrents(self):
 
         # get list of torrents added by siphonator (category set)
         qbittorrent_identify_torrents_with_category_dict = self.torrent_clients_instance.qbittorrent_identify_torrents_with_category()
@@ -31,46 +47,24 @@ class QueueManagement(object):
 
         return qbittorrent_identify_torrents_with_category_dict
 
-    def delete_metadata_torrents(self):
+    def delete_stalled_torrents(self, delete_state, state, filter_type):
 
-        delay_max_mins = self.config_dict['queue_management']['metadata_delete_torrent_max_mins']
+        delay_max_mins = self.config_dict['queue_management'][f"{delete_state}_delete_torrent_max_mins"]
 
-        if not self.config_dict['queue_management']['metadata_monitor_enabled']:
+        if not self.config_dict['queue_management'][f"{delete_state}_monitor_enabled"]:
             return False
 
-        qbittorrent_identify_torrents_with_category_dict = self.prerun_checks()
-
-        if not qbittorrent_identify_torrents_with_category_dict:
+        if not self.qbittorrent_list_torrents():
             return False
 
-        # check if torrents are in metadl state, if so include in dict
-        qbittorrent_identify_torrents_for_deletion_dict = self.torrent_clients_instance.qbittorrent_identify_torrents_for_deletion(qbittorrent_identify_torrents_with_category_dict, 'metaDL', delay_max_mins, 'added_on')
-
-        # if returned dict is empty then we cannot identify any torrents for deletion
-        if not qbittorrent_identify_torrents_for_deletion_dict:
-            return False
-
-        # if torrent is in stalled state then delete torrent (check config to decide whether we delete data as well)
-        self.torrent_clients_instance.qbittorrent_delete_stalled_torrents(qbittorrent_identify_torrents_for_deletion_dict)
-
-    def delete_stalled_torrents(self):
-
-        delay_max_mins = self.config_dict['queue_management']['stalled_delete_torrent_max_mins']
-
-        if not self.config_dict['queue_management']['stalled_monitor_enabled']:
-            return False
-
-        qbittorrent_identify_torrents_with_category_dict = self.prerun_checks()
-
-        if not qbittorrent_identify_torrents_with_category_dict:
-            return False
+        qbittorrent_list_torrents = self.qbittorrent_list_torrents()
 
         # check if torrents are in stalled state, if so include in dict
-        qbittorrent_identify_torrents_for_deletion_dict = self.torrent_clients_instance.qbittorrent_identify_torrents_for_deletion(qbittorrent_identify_torrents_with_category_dict, 'stalledDL', delay_max_mins, 'last_activity')
+        qbittorrent_identify_torrents_for_deletion_dict = self.torrent_clients_instance.qbittorrent_identify_torrents_for_deletion(qbittorrent_list_torrents, state, delay_max_mins, filter_type)
 
         # if returned dict is empty then we cannot identify any torrents for deletion
         if not qbittorrent_identify_torrents_for_deletion_dict:
             return False
 
         # if torrent is in stalled state then delete torrent (check config to decide whether we delete data as well)
-        self.torrent_clients_instance.qbittorrent_delete_stalled_torrents(qbittorrent_identify_torrents_for_deletion_dict)
+        self.torrent_clients_instance.qbittorrent_delete_stalled_torrents(qbittorrent_identify_torrents_for_deletion_dict, state)
