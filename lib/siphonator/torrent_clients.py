@@ -147,6 +147,8 @@ class TorrentClients(object):
             if 'name' in info and info.get('state') == state
         }
 
+        self.logger_instance.debug(f"Torrents from qBittorrent with state '{state}' and '{filter_type}' is '{torrents_dict}'")
+
         # Filter the torrents based on delay_max_mins and filter_type
         if filter_type == 'last_activity':
             torrents_to_delete_dict = {
@@ -163,7 +165,7 @@ class TorrentClients(object):
         else:
             raise ValueError("Invalid filter_type. Must be 'last_activity' or 'added_on'.")
 
-        self.logger_instance.debug(f"Torrents from qBittorrent with state '{state}' and {filter_type} >= '{delay_max_mins}' mins is '{torrents_to_delete_dict}'")
+        self.logger_instance.debug(f"Torrents from qBittorrent with state '{state}' and '{filter_type}' that exceeds configured maximum delay '{delay_max_mins}' in mins is '{torrents_to_delete_dict}'")
         return torrents_to_delete_dict
 
     def qbittorrent_identify_completed_torrents(self):

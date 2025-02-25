@@ -54,10 +54,10 @@ class QueueManagement(object):
         if not self.config_dict['queue_management'][f"{delete_state}_monitor_enabled"]:
             return False
 
-        if not self.qbittorrent_list_torrents():
-            return False
-
         qbittorrent_list_torrents = self.qbittorrent_list_torrents()
+
+        if not qbittorrent_list_torrents:
+            return False
 
         # check if torrents are in stalled state, if so include in dict
         qbittorrent_identify_torrents_for_deletion_dict = self.torrent_clients_instance.qbittorrent_identify_torrents_for_deletion(qbittorrent_list_torrents, state, delay_max_mins, filter_type)
