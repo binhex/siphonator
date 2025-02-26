@@ -18,12 +18,13 @@ import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
 class IndexProxy(object):
 
-    def __init__(self, logger_instance, init_dict, config_dict, index_site_dict):
+    def __init__(self, logger_instance, init_dict, config_dict, index_site_dict, library_path_walk):
 
         self.init_dict = init_dict
         self.config_dict = config_dict
         self.index_site_dict = index_site_dict
         self.logger_instance = logger_instance
+        self.library_path_walk = library_path_walk
 
     # in logger_instance,kwargs for construct url (host, port, api_key, category, search, limit, user_agent)
     # out return_code, status_code, content
@@ -261,7 +262,7 @@ class IndexProxy(object):
                 if result_dict.get('result') == 'Passed':
 
                     self.logger_instance.info(u"Filtering movie based on index details...")
-                    filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, result_dict, self.config_dict, self.index_site_dict)
+                    filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, result_dict, self.config_dict, self.index_site_dict, self.library_path_walk)
                     result_dict = filter_movies_instance.filter_index_movies()
 
                 else:
@@ -307,7 +308,7 @@ class IndexProxy(object):
                 if result_dict.get('result') == 'Passed':
 
                     self.logger_instance.info(u"Filtering movie based on IMDb details...")
-                    filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, result_dict, self.config_dict, self.index_site_dict)
+                    filter_movies_instance = siphonator_filter_movies.FilterMovies(self.logger_instance, self.init_dict, result_dict, self.config_dict, self.index_site_dict, self.library_path_walk)
                     result_dict = filter_movies_instance.filter_imdb_movies()
 
                 else:

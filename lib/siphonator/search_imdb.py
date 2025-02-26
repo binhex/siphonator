@@ -110,7 +110,7 @@ class SearchIMDB(object):
             self.result_dict.update({'imdb_id': imdb_id})
 
             result_details = f"Passed: {function_name}: Found IMDb ID '{imdb_id}' for movie '{self.index_title_tt_search}' using IMDb search"
-            self.logger_instance.warning(result_details)
+            self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})

@@ -211,11 +211,6 @@ class SiphonatorMain(object):
         # we save it as a list so we can re-use it, as walking is very costly
         library_path_walk = list(tools_various_instance.library_path_walk(self.config_dict['general']['library_path_list']))
 
-        # add library walk to config dict
-        self.config_dict.update({
-            'library_path_walk': library_path_walk,
-        })
-
         # create db instance
         db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict)
 
@@ -287,19 +282,22 @@ class SiphonatorMain(object):
                     'index_site': index_site,
                 })
 
-                # get category overrides for specific index sites
-                override_category_dict = self.config_dict.get('index_site', {}).get('override_search', {}).get(index_site_lower, {})
+                # get list of index sites with override searches
+                override_search_dict = self.config_dict['index_site']['override_search']
 
-                # if index site is in the override dictionary then proceed
-                if override_category_dict:
+                # check if the index site exists in the override dictionary in a case-insensitive way
+                if any(key.lower() == index_site_lower for key in override_search_dict.keys()):
 
-                    get_index_site_category = override_category_dict.get('category', {})
-                    if get_index_site_category:
+                    override_search_category = self.config_dict['index_site']['override_search'][index_site_lower]['category']
 
-                        index_site_category = get_index_site_category
-                        self.logger_instance.debug(f"Override category found for index site '{index_site_lower}', category set to '{index_site_category}'")
+                    # add override category to index site dict
+                    index_site_dict.update({
+                        'category': override_search_category,
+                    })
 
-                index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, self.init_dict, self.config_dict, index_site_dict)
+                    self.logger_instance.info(f"Override category found for index site '{index_site_lower}', category set to '{override_search_category}'")
+
+                index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, self.init_dict, self.config_dict, index_site_dict, library_path_walk)
                 index_site_instance.jackett()
 
         # compress (vacuum) database

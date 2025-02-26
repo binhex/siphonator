@@ -8,7 +8,7 @@ import lib.siphonator.tools_various as siphonator_tools_various
 
 class FilterMovies(object):
 
-    def __init__(self, logger_instance, init_dict, result_dict, config_dict, index_site_dict):
+    def __init__(self, logger_instance, init_dict, result_dict, config_dict, index_site_dict, library_path_walk):
 
         self.init_dict = init_dict
         self.result_dict = result_dict
@@ -17,6 +17,7 @@ class FilterMovies(object):
         self.result_details_list = result_dict.get('result_details', [])
         self.logger_instance = logger_instance
         self.tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
+        self.library_path_walk = library_path_walk
 
     def filter_index_movies(self):
 
@@ -113,7 +114,7 @@ class FilterMovies(object):
         filter_override_movie_title_list = self.config_dict["filters"]['override_movie_title_list']
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_override_movie_title_list is None:
+        if not filter_override_movie_title_list:
 
             result_details = f"Failed: {function_name}: Override movie title not defined, assuming movie title is not in override list"
             self.logger_instance.info(result_details)
@@ -122,7 +123,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return False
 
-        if index_title_and_year_compare is None:
+        if not index_title_and_year_compare:
 
             result_details = f"Failed: {function_name}: Index title and year for comparison not found, assuming movie title is not in override list"
             self.logger_instance.info(result_details)
@@ -205,7 +206,7 @@ class FilterMovies(object):
         filter_bad_title_list = self.config_dict["filters"]['bad_index_title_list']
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_bad_title_list is None:
+        if not filter_bad_title_list:
 
             result_details = f"Passed: {function_name}: No bad index title keywords defined, skipping bad index title keyword check"
             self.logger_instance.info(result_details)
@@ -245,7 +246,7 @@ class FilterMovies(object):
         filter_preferred_index_group_list = self.config_dict["filters"]['preferred_index_group_list']
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_preferred_index_group_list is None:
+        if not filter_preferred_index_group_list:
 
             result_details = f"Failed: {function_name}: No preferred index groups defined, skipping preferred index group check"
             self.logger_instance.info(result_details)
@@ -355,7 +356,7 @@ class FilterMovies(object):
         filter_size_mb = self.index_site_dict.get(f'{size}_size_mb')
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_size_mb is None:
+        if not filter_size_mb:
 
             result_details = f"Passed: {function_name}: '{size.capitalize()}' size not defined, skipping maximum size check"
             self.logger_instance.info(result_details)
@@ -364,7 +365,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return True
 
-        if index_size is None:
+        if not index_size:
 
             result_details = f"Failed: {function_name}: No Index size available to filter on, assuming below threshold"
             self.logger_instance.info(result_details)
@@ -422,7 +423,7 @@ class FilterMovies(object):
         filter_minimum_bitrate_mb = self.index_site_dict.get('minimum_bitrate_mb')
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_minimum_bitrate_mb is None:
+        if not filter_minimum_bitrate_mb:
 
             result_details = f"Passed: {function_name}: No minimum bitrate defined, assuming above threshold"
             self.logger_instance.info(result_details)
@@ -431,7 +432,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return True
 
-        if index_size is None:
+        if not index_size:
 
             result_details = f"Failed: {function_name}: No Index size available to filter on, assuming below threshold"
             self.logger_instance.info(result_details)
@@ -473,10 +474,9 @@ class FilterMovies(object):
 
     def filter_library_file(self):
 
-        filter_library_path_walk = self.config_dict.get('library_path_walk')
         identify_walk_files_filepath_list = []
 
-        for root, dirs, files in filter_library_path_walk:
+        for root, dirs, files in self.library_path_walk:
 
             for library_filename in files:
 
@@ -498,12 +498,11 @@ class FilterMovies(object):
 
     def filter_library_dir(self):
 
-        filter_library_path_walk = self.config_dict.get('library_path_walk')
         index_title_compare = self.result_dict.get('index_title_compare')
         index_year_compare = self.result_dict.get('index_year_compare')
         identify_walk_files_filepath_list = []
 
-        for root, dirs, files in filter_library_path_walk:
+        for root, dirs, files in self.library_path_walk:
 
             for library_dirs in dirs:
 
@@ -512,7 +511,7 @@ class FilterMovies(object):
                 library_dir_year_compare = self.tools_various_instance.custom_title_year_compare(library_dirs)
 
                 # if we cannot determine the year from the directory then continue
-                if library_dir_year_compare is None:
+                if not library_dir_year_compare:
                     continue
 
                 # if library directory year compare not in index title then continue
@@ -556,11 +555,11 @@ class FilterMovies(object):
         function_name = siphonator_tools_various.get_function_name()
 
         library_year_compare = self.tools_various_instance.custom_title_year_compare(library_filename)
-        if library_year_compare is None:
+        if not library_year_compare:
             return True
 
         library_title_compare = self.tools_various_instance.custom_title_compare(library_filename)
-        if library_title_compare is None:
+        if not library_title_compare:
             return True
 
         index_title_compare = self.result_dict.get('index_title_compare')
@@ -644,7 +643,7 @@ class FilterMovies(object):
             # get resolution of library file by analysing file using ffprobe
             library_filename_resolution_string = self.tools_various_instance.resolution_from_ffprobe(library_filepath, ffprobe_filepath)
 
-            if library_filename_resolution_string is None:
+            if not library_filename_resolution_string:
 
                 result_details = f"Passed: {function_name}: Unable to determine resolution from filename or ffprobe for library file '{library_filename}'"
                 self.logger_instance.info(result_details)
@@ -676,7 +675,6 @@ class FilterMovies(object):
             return False
 
         library_path = self.config_dict['general']['library_path_list']
-        filter_library_path_walk = self.config_dict.get('library_path_walk')
 
         # constructs a list of library filenames that match the index title and year
         identify_walk_files_filepath_dict = self.filter_library_file()
@@ -684,7 +682,7 @@ class FilterMovies(object):
         library_filepath_list = identify_walk_files_filepath_dict['identify_walk_files_filepath_list']
 
         # if libray path is defined (not None) then process, else return True
-        if filter_library_path_walk is not None:
+        if self.library_path_walk is not None:
 
             # if identify_walk_files_filepath_dict value is not empty then get filepaths from files
             if library_filepath_list:
@@ -818,7 +816,7 @@ class FilterMovies(object):
         filter_minimum_rating = self.config_dict['filters']['minimum_rating']
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_minimum_rating is None:
+        if not filter_minimum_rating:
 
             result_details = f"Passed: {function_name}: No IMDb minimum rating defined, assuming above threshold"
             self.logger_instance.info(result_details)
@@ -827,7 +825,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return True
 
-        if imdb_rating is None:
+        if not imdb_rating:
 
             result_details = f"Failed: {function_name}: No IMDb rating available to filter on, assuming below threshold"
             self.logger_instance.info(result_details)
@@ -879,7 +877,7 @@ class FilterMovies(object):
         filter_minimum_votes = self.config_dict['filters']['minimum_votes']
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_minimum_votes is None:
+        if not filter_minimum_votes:
 
             result_details = f"Passed: {function_name}: No IMDb minimum votes defined, skipping votes check"
             self.logger_instance.info(result_details)
@@ -888,7 +886,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return True
 
-        if imdb_votes is None:
+        if not imdb_votes:
 
             result_details = f"Failed: {function_name}: No IMDb votes available to filter on, assuming below threshold"
             self.logger_instance.info(result_details)
@@ -933,7 +931,7 @@ class FilterMovies(object):
         filter_minimum_year = self.config_dict['filters']['minimum_year']
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_minimum_year is None:
+        if not filter_minimum_year:
 
             result_details = f"Passed: {function_name}: No minimum movie year defined, assuming above threshold"
             self.logger_instance.info(result_details)
@@ -942,7 +940,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return True
 
-        if index_year_compare is None:
+        if not index_year_compare:
 
             result_details = f"Failed: {function_name}: No movie year available to filter on, assuming below threshold"
             self.logger_instance.info(result_details)
@@ -978,7 +976,7 @@ class FilterMovies(object):
         filter_minimum_runtime_mins = self.config_dict['filters']['minimum_runtime_mins']
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_minimum_runtime_mins is None:
+        if not filter_minimum_runtime_mins:
 
             result_details = f"Passed: {function_name}: No minimum runtime defined, assuming above threshold"
             self.logger_instance.info(result_details)
@@ -987,7 +985,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return True
 
-        if imdb_runtime_in_minutes is None:
+        if not imdb_runtime_in_minutes:
 
             result_details = f"Failed: {function_name}: No movie runtime available to filter on, assuming below threshold"
             self.logger_instance.info(result_details)
@@ -1023,7 +1021,7 @@ class FilterMovies(object):
         filter_bad_genre_list = self.config_dict["filters"]['bad_genre_list']
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_bad_genre_list is None:
+        if not filter_bad_genre_list:
 
             result_details = f"Passed: {function_name}: No bad genre(s) defined, skipping bad genre check"
             self.logger_instance.info(result_details)
@@ -1032,7 +1030,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return True
 
-        if imdb_genres_list is None:
+        if not imdb_genres_list:
 
             result_details = f"Passed: {function_name}: No IMDb genre(s) found, skipping bad genre check"
             self.logger_instance.info(result_details)
@@ -1067,7 +1065,7 @@ class FilterMovies(object):
         filter_bad_movie_title_list = self.config_dict["filters"]['bad_movie_title_list']
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_bad_movie_title_list is None:
+        if not filter_bad_movie_title_list:
 
             result_details = f"Passed: {function_name}: No bad movie titles defined, skipping bad movie title check"
             self.logger_instance.info(result_details)
@@ -1102,11 +1100,11 @@ class FilterMovies(object):
     def filter_imdb_good_type(self):
 
         imdb_title_type_lower = self.result_dict.get('imdb_title_type').lower()
-        filter_good_imdb_title_type_list = self.config_dict["filters"][f"good_imdb_title_type"]
+        filter_good_imdb_title_type_list = self.config_dict["filters"][f"good_imdb_title_type_list"]
 
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_good_imdb_title_type_list is None:
+        if not filter_good_imdb_title_type_list:
 
             result_details = f"Passed: {function_name}: No good IMDb types defined, skipping good IMDb type check"
             self.logger_instance.info(result_details)
@@ -1140,7 +1138,7 @@ class FilterMovies(object):
         filter_list = self.config_dict["filters"][f"good_{filter_type}_list"]
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_list is None:
+        if not filter_list:
 
             result_details = f"Passed: {function_name}: Filter for '{filter_type}' not defined, skipping '{filter_type}' checks"
             self.logger_instance.info(result_details)
@@ -1149,7 +1147,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return True
 
-        if imdb_list is None:
+        if not imdb_list:
 
             result_details = f"Passed: {function_name}: IMDb '{filter_type}' not found, assuming '{filter_type}' is OK"
             self.logger_instance.info(result_details)
@@ -1185,7 +1183,7 @@ class FilterMovies(object):
         filter_list = self.config_dict["filters"][f"override_{filter_type}_list"]
         function_name = siphonator_tools_various.get_function_name()
 
-        if filter_list is None:
+        if not filter_list:
 
             result_details = f"Failed: {function_name}: Filter override_{filter_type}_list not defined, skipping IMDb override {filter_type} checks"
             self.logger_instance.info(result_details)
@@ -1194,7 +1192,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return False
 
-        if imdb_list is None:
+        if not imdb_list:
 
             result_details = f"Failed: {function_name}: IMDb {filter_type} not found, skipping IMDb override {filter_type} checks"
             self.logger_instance.info(result_details)
