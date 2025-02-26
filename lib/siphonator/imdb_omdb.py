@@ -175,8 +175,13 @@ def omdb_json_api(logger_instance, config_dict, result_dict):
 
             _pycountry = pycountry.languages.get(name=omdb_language)
             if _pycountry is not None:
-                omdb_language = _pycountry.alpha_2.lower()
-                omdb_language_short_list.append(omdb_language)
+                try:
+                    omdb_language = _pycountry.alpha_2
+                except AttributeError as e:
+                    logger_instance.debug(f"Unable to get 2 character country code, error is '{e}'")
+                    continue
+
+                omdb_language_short_list.append(omdb_language.lower())
         omdb_language_list = omdb_language_short_list
 
     else:
