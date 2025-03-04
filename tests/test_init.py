@@ -1,5 +1,6 @@
 import os
 import yaml
+import pathlib
 import lib.siphonator.tools_logging as siphonator_tools_logging
 
 
@@ -47,8 +48,23 @@ class TestsInit(object):
         ffprobe_filepath = self.ffprobe_filepath
 
         # setup logging
-        log_level = self.config_yaml['general']['log_level']
-        logger = siphonator_tools_logging.app_logging(log_level, self.logs_filepath)
-        logger_create_instance = logger.get('logger')
+        log_level = self.config_yaml['general']['log_level_console']
 
-        return ffprobe_filepath, logger_create_instance
+        logger, file_handler, console_handler = siphonator_tools_logging.app_logging(log_level, self.logs_filepath, self.logs_filepath)
+
+        library_path = '/tmp/tests/test_filter_downloaded_file'
+        library_filename = 'movie title (2020) 1080p bluray dts-group.mkv'
+
+        # create test directory structure
+        pathlib.Path(library_path).mkdir(parents=True, exist_ok=True)
+
+        # create filepath
+        library_filepath = os.path.join(library_path, library_filename)
+
+        # create test movie file from filepath
+        open(library_filepath, mode='a').close()
+
+        # walk path to get test directory and filename
+        library_path_walk = os.walk(library_path, topdown=False)
+
+        return ffprobe_filepath, logger, library_path_walk
