@@ -81,4 +81,3 @@ def verify_config(logger_instance, init_dict, config_dict):
         preferred_index_quality_list: list
         preferred_index_group_list: list
         override_character_list: list
-

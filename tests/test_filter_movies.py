@@ -1,8 +1,11 @@
 import shutil
+import os
 import pytest
-import lib.siphonator.filter_movies as siphonator_filter_movies
-import lib.siphonator.tools_various as siphonator_tools_various
+import pathlib
 import test_init
+import lib.siphonator.filter_movies as siphonator_filter_movies
+import lib.siphonator.tools_filters as siphonator_tools_filters
+
 # to run tests from command line use 'python -m pytest --verbose'
 
 
@@ -11,7 +14,7 @@ def filter_bad_genre(imdb_genres_list):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Arrange
     init_dict = {
@@ -35,7 +38,7 @@ def filter_bad_genre(imdb_genres_list):
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict, library_path_walk)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_imdb_bad_genre()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -47,7 +50,7 @@ def filter_preferred_index_group(filter_preferred_index_group_list, library_file
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Arrange
     init_dict = {
@@ -68,7 +71,7 @@ def filter_preferred_index_group(filter_preferred_index_group_list, library_file
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict, library_path_walk)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_index_preferred_group(library_filename, index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -80,7 +83,7 @@ def filter_preferred_index_quality(filter_preferred_index_quality_list, library_
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Arrange
     init_dict = {
@@ -104,8 +107,8 @@ def filter_preferred_index_quality(filter_preferred_index_quality_list, library_
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict, library_path_walk)
-    response = siphonator_filter_movies_instance.filter_index_preferred_quality(library_filename, index_title)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
+    response = siphonator_filter_movies_instance.filter_special_editions(library_filename, index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -116,7 +119,7 @@ def filter_rating(imdb_rating):
 
     # get setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Arrange
     init_dict = {
@@ -144,7 +147,7 @@ def filter_rating(imdb_rating):
     override_genre_dict = {}
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict, library_path_walk)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_imdb_rating(override_genre_dict)
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -156,7 +159,7 @@ def filter_bad_index_title(index_title, filter_bad_index_title_list):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Arrange
     init_dict = {
@@ -180,7 +183,7 @@ def filter_bad_index_title(index_title, filter_bad_index_title_list):
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict, library_path_walk)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_index_bad_keyword()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -192,7 +195,7 @@ def filter_bad_movie_title(filter_bad_movie_title_list):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Arrange
     init_dict = {
@@ -201,7 +204,7 @@ def filter_bad_movie_title(filter_bad_movie_title_list):
 
     # Arrange
     result_dict = {
-        'index_title_and_year_compare': 'badmovie2020',
+        'movie_title_and_year_compare': 'badmovie2020',
     }
 
     # Arrange
@@ -216,7 +219,7 @@ def filter_bad_movie_title(filter_bad_movie_title_list):
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict, library_path_walk)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_imdb_bad_title()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -228,7 +231,7 @@ def filter_override_genre(imdb_genres_list, override_genre, override_genre_minim
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Arrange
     init_dict = {
@@ -259,7 +262,7 @@ def filter_override_genre(imdb_genres_list, override_genre, override_genre_minim
     }
 
     # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict, library_path_walk)
+    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict)
     response = siphonator_filter_movies_instance.filter_imdb_override_genre()
 
     # yield used instead of return to allow us to do cleanup afterward
@@ -267,15 +270,15 @@ def filter_override_genre(imdb_genres_list, override_genre, override_genre_minim
 
 
 @pytest.fixture
-def filter_downloaded_iterate_files(index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list):
+def filter_downloaded_iterate_files(index_title, index_site_search, library_path_list, library_filename, filter_preferred_index_group_list, filter_preferred_index_quality_list):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
-    tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    index_title_compare = tools_various_instance.custom_title_compare(index_title)
-    index_year_compare = tools_various_instance.custom_title_year_compare(index_title)
+    tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
+    index_title_compare = tools_filters_instance.movie_title_compare(index_title)
+    index_year_compare = tools_filters_instance.movie_title_year(index_title)
 
     # Arrange
     init_dict = {
@@ -292,13 +295,12 @@ def filter_downloaded_iterate_files(index_title, index_site_search, library_path
     # Arrange
     config_dict = {
         'general': {
-            'library_path': library_path,
+            'library_path_list': library_path_list,
         },
         'filters': {
             'preferred_index_group_list': filter_preferred_index_group_list,
             'preferred_index_quality_list': filter_preferred_index_quality_list,
         },
-        'library_path_walk': library_path_walk,
     }
 
     # Arrange
@@ -306,16 +308,31 @@ def filter_downloaded_iterate_files(index_title, index_site_search, library_path
         'criteria': index_site_search,
     }
 
-    # Act
-    siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict, library_path_walk)
-    response = siphonator_filter_movies_instance.filter_library_iterate_files()
+    # Arrange
+    ####
 
-    # yield used instead of return to allow us to do cleanup afterward
-    yield response
+    for library_path in library_path_list:
+        # create test directory structure
+        pathlib.Path(library_path).mkdir(parents=True, exist_ok=True)
 
-    # cleanup test area
-    shutil.rmtree(library_path)
+        # create filepath
+        library_filepath = os.path.join(library_path, library_filename)
 
+        # create test movie file from filepath
+        open(library_filepath, mode='a').close()
+
+        # walk path to get test directory and filename
+        library_path_walk = os.walk(library_path, topdown=False)
+
+        # Act
+        siphonator_filter_movies_instance = siphonator_filter_movies.FilterMovies(logger, init_dict, result_dict, config_dict, index_site_dict, library_path_walk)
+        response = siphonator_filter_movies_instance.filter_library_iterate_files()
+
+        # yield used instead of return to allow us to do cleanup afterward
+        yield response
+
+        # cleanup test area
+        shutil.rmtree(library_path)
 
 # tests
 ###
@@ -437,27 +454,22 @@ def test_filter_preferred_index_quality(filter_preferred_index_quality, filter_p
     assert response == exp_assert
 
 
-@pytest.mark.parametrize('index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list, exp_assert', [
-    ('movie title (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], False),                                          # index title matches library file, do not download (False)
-    ('movie title (2020) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dtshd-group.mkv', ['preferredgroup'], ['remastered'], False),                                        # index title matches library file, but score is lower for index title, skip
-    ('movie title (2020) 1080p bluray dtshd-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                         # index title matches library file, but score is higher for index title, download
-    ('movie title (2020) 1080p bluray dts-group', '720p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                            # index title found in library, but search criteria does not match library filename
-    ('movie title (2030) 1080p bluray dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                           # index title not found in library, index title year different
-    ('movie title (2020) 1080p bluray dts-preferredgroup', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                  # index title exists in library, but preferred index group found
-    ('movie title (2020) 1080p bluray dts-preferredgroup1', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-preferredgroup2.mkv', ['preferredgroup1', 'preferredgroup2'], ['remastered'], False),  # index title contains preferred group and library file contains preferred group, do not download (False)
-    ('movie title (2020) 1080p bluray remastered dts-group', '1080p', '/tmp/tests/test_filter_downloaded_file', 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                # index title found in library, but preferred quality found for index title
+@pytest.mark.parametrize('index_title, index_site_search, library_path_list, library_filename, filter_preferred_index_group_list, filter_preferred_index_quality_list, exp_assert', [
+    ('movie title (2020) 1080p bluray dts-group', '1080p', ['/tmp/tests/test_filter_downloaded_file'], 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], False),                                          # index title matches library file, do not download (False)
+    ('movie title (2020) 1080p bluray dts-group', '1080p', ['/tmp/tests/test_filter_downloaded_file'], 'movie title (2020) 1080p bluray dtshd-group.mkv', ['preferredgroup'], ['remastered'], False),                                        # index title matches library file, but score is lower for index title, skip
+    ('movie title (2020) 1080p bluray dtshd-group', '1080p', ['/tmp/tests/test_filter_downloaded_file'], 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                         # index title matches library file, but score is higher for index title, download
+    ('movie title (2020) 1080p bluray dts-group', '720p', ['/tmp/tests/test_filter_downloaded_file'], 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], False),                                           # index title found in library, but search criteria does not match library filename
+    ('movie title (2030) 1080p bluray dts-group', '1080p', ['/tmp/tests/test_filter_downloaded_file'], 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                           # index title not found in library, index title year different
+    ('movie title (2020) 1080p bluray dts-preferredgroup', '1080p', ['/tmp/tests/test_filter_downloaded_file'], 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                  # index title exists in library, but preferred index group found
+    ('movie title (2020) 1080p bluray dts-preferredgroup1', '1080p', ['/tmp/tests/test_filter_downloaded_file'], 'movie title (2020) 1080p bluray dts-preferredgroup2.mkv', ['preferredgroup1', 'preferredgroup2'], ['remastered'], False),  # index title contains preferred group and library file contains preferred group, do not download (False)
+    ('movie title (2020) 1080p bluray remastered dts-group', '1080p', ['/tmp/tests/test_filter_downloaded_file'], 'movie title (2020) 1080p bluray dts-group.mkv', ['preferredgroup'], ['remastered'], True),                                # index title found in library, but preferred quality found for index title
 ])
-def test_filter_downloaded_iterate_files(filter_downloaded_iterate_files, index_title, index_site_search, library_path, filename, filter_preferred_index_group_list, filter_preferred_index_quality_list, exp_assert):
+def test_filter_downloaded_iterate_files(filter_downloaded_iterate_files, index_title, index_site_search, library_path_list, library_filename, filter_preferred_index_group_list, filter_preferred_index_quality_list, exp_assert):
 
     response = filter_downloaded_iterate_files
 
     # Assert
     assert response == exp_assert
-import pytest
-import test_init
-import lib.siphonator.tools_various as siphonator_tools_various
-# to run tests from command line use 'python -m pytest --verbose'
-
 
 #
 # test functions
@@ -468,11 +480,11 @@ def resolution_from_string(index_title):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Act
-    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    response = siphonator_tools_various_instance.resolution_from_string(index_title)
+    siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
+    response = siphonator_tools_filters_instance.index_title_resolution(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -483,11 +495,11 @@ def custom_title_sqlite(index_title):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Act
-    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    response = siphonator_tools_various_instance.custom_title_sqlite(index_title)
+    siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
+    response = siphonator_tools_filters_instance.sqlite_query(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -498,26 +510,11 @@ def custom_title_compare(index_title):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Act
-    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    response = siphonator_tools_various_instance.custom_title_compare(index_title)
-
-    # yield used instead of return to allow us to do cleanup afterward
-    yield response
-
-
-@pytest.fixture
-def custom_title_search(index_title):
-
-    # Setup
-    test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
-
-    # Act
-    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    response = siphonator_tools_various_instance.custom_title_search(index_title)
+    siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
+    response = siphonator_tools_filters_instance.movie_title_compare(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -528,11 +525,11 @@ def custom_title_word_match_compare(index_title):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Act
-    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    response = siphonator_tools_various_instance.custom_title_word_match_compare(index_title)
+    siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
+    response = siphonator_tools_filters_instance.sanitise_subst(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -543,11 +540,11 @@ def custom_title_full_compare(index_title):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Act
-    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    response = siphonator_tools_various_instance.custom_title_full_compare(index_title)
+    siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
+    response = siphonator_tools_filters_instance.index_title_compare(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -558,11 +555,11 @@ def custom_title_group_compare(index_title):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Act
-    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    response = siphonator_tools_various_instance.custom_title_group_compare(index_title)
+    siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
+    response = siphonator_tools_filters_instance.index_title_group(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -573,26 +570,26 @@ def custom_title_year_compare(index_title):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Act
-    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    response = siphonator_tools_various_instance.custom_title_year_compare(index_title)
+    siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
+    response = siphonator_tools_filters_instance.movie_title_year(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
 
 
 @pytest.fixture
-def custom_title_year_to_end_compare(index_title):
+def custom_title_year_to_end(index_title):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Act
-    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    response = siphonator_tools_various_instance.custom_title_year_to_end_compare(index_title)
+    siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
+    response = siphonator_tools_filters_instance.index_title_after_year_to_end(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -603,11 +600,11 @@ def custom_title_tv_season_episode(index_title):
 
     # Setup
     test_init_instance = test_init.TestsInit()
-    ffprobe_filepath, logger, library_path_walk = test_init_instance.setup()
+    ffprobe_filepath, logger = test_init_instance.setup()
 
     # Act
-    siphonator_tools_various_instance = siphonator_tools_various.ToolsVarious(logger)
-    response = siphonator_tools_various_instance.custom_title_tv_season_episode(index_title)
+    siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
+    response = siphonator_tools_filters_instance.tv_search(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -646,24 +643,21 @@ def test_custom_title_sqlite(custom_title_sqlite, index_title, exp_assert):
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) DTS 1080p', 'movietitle'),                                               # index title audio encode before resolution
-    ('movie title (2020) BD 1080p', 'movietitle'),                                                # index title source and resolution reversed
-    ('movie title (2020) 1080p BluRay DTS', 'movietitle'),                                        # index title has no group
-    ('movie title (2020) 1080p BluRay DTS-GROUP', 'movietitle'),                                  # index title lower case and  has spaces
-    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has periods
-    ('Movie.Title.[2020.1080p].BluRay.DTS-GROUP', 'movietitle'),                                  # index title has square brackets around year and resolution
-    ('Movie.Title.(2020),1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has periods and comma
-    ("Movie'.Title.(2020).1080p.BluRay.DTS-GROUP", 'movietitle'),                                 # index title has single quote
-    ('Movie:.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                 # index title has colon
-    ('Movie?<>:"/|*.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                          # index title contains all invalid windows filename characters
-    ('Movié.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                  # index title has french e in title
-    ('Movie.&.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                # index title has ampersand symbol - remove
-    ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                              # index title has word 'and' - remove
-    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),               # index title has junk square brackets at start
-    ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movietitle'),                 # index title has junk square brackets at end
-    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movietitle'),  # index title has junk square brackets at start and end
-    ('www.Torrenting.com   -    Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),    # index title has junk before title
-    ('Æon Flux (2005) 1080p BluRay DTS-GROUP', 'aeonflux'),                                       # index title is non ascii english, force to ascii using unidecode
+    ('movie title (2020) DTS 1080p', 'movietitle'),                                                  # index title audio encode before resolution
+    ('movie title (2020) BD 1080p', 'movietitle'),                                                   # index title source and resolution reversed
+    ('movie title (2020) 1080p BluRay DTS', 'movietitle'),                                           # index title has no group
+    ('movie title (2020) 1080p BluRay DTS-GROUP', 'movietitle'),                                     # index title lower case and  has spaces
+    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                     # index title has periods
+    ('Movie.Title.[2020.1080p].BluRay.DTS-GROUP', 'movietitle'),                                     # index title has square brackets around year and resolution
+    ('Movie.Title.(2020),1080p.BluRay.DTS-GROUP', 'movietitle'),                                     # index title has periods and comma
+    ('Movie:.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                                    # index title has colon
+    ('Movie?<>:"/|*.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle'),                             # index title contains all invalid windows filename characters
+    ('Movie.&.Title.(2020).1080p.BluRay.DTS-GROUP', 'movieandtitle'),                                # index title has ampersand symbol - replace with 'and'
+    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movieandtitle'),               # index title has junk square brackets at start
+    ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movieandtitle'),                 # index title has junk square brackets at end
+    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movieandtitle'),  # index title has junk square brackets at start and end
+    ('www.Torrenting.com   -    Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movieandtitle'),    # index title has junk before title
+    ('Æon Flux (2005) 1080p BluRay DTS-GROUP', 'æonflux'),                                           # index title is non ascii english, ensure we permit single non ascii chars
 ])
 def test_custom_title_compare(custom_title_compare, index_title, exp_assert):
 
@@ -674,23 +668,9 @@ def test_custom_title_compare(custom_title_compare, index_title, exp_assert):
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) 1080p bluray.dts-group', 'movie title (2020) 1080p bluray dts-group'),  # spaces and lower case
-    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', 'movie title (2020) 1080p bluray dts-group'),  # periods and mixed case
-    ('MOVIE_TITLE_(2020)_1080p_BluRay_DTS-GROUP', 'movie title (2020) 1080p bluray dts-group'),  # underscores and upper case
-])
-def test_custom_title_search(custom_title_search, index_title, exp_assert):
-
-    response = custom_title_search
-
-    # Assert
-    assert response == exp_assert
-
-
-@pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) 1080p BluRay dts-group', 'movie title 2020 1080p bluray dts-group'),    # spaces
-    ('[movie title (2020) 1080p BluRay dts-group]', 'movie title 2020 1080p bluray dts-group'),  # square brackets
-    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', 'movie title 2020 1080p bluray dts-group'),    # periods
-    ('MOVIE_TITLE_(2020)_1080p_BLURAY_DTS-GROUP', 'movie title 2020 1080p bluray dts-group'),    # underscores and upper case
+    ('movie title (2020) 1080p BluRay dts-group', 'movie title 2020 1080p bluray dts group'),    # spaces
+    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', 'movie title 2020 1080p bluray dts group'),    # periods
+    ('MOVIE_TITLE_(2020)_1080p_BLURAY_DTS-GROUP', 'movie title 2020 1080p bluray dts group'),    # underscores and upper case
 ])
 def test_custom_title_word_match_compare(custom_title_word_match_compare, index_title, exp_assert):
 
@@ -701,12 +681,12 @@ def test_custom_title_word_match_compare(custom_title_word_match_compare, index_
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) 1080p BluRay dts-group', 'movietitle20201080pbluraydtsgroup'),                                  # spaces
-    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle20201080pbluraydtsgroup'),                                  # periods
-    ('MOVIE_TITLE_(2020)_1080p_BluRay_DTS-GROUP', 'movietitle20201080pbluraydtsgroup'),                                  # underscores and upper case
-    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle20201080pbluraydtsgroup'),               # index title has junk square brackets at start
-    ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movietitle20201080pbluraydtsgroup'),                 # index title has junk square brackets at end
-    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movietitle20201080pbluraydtsgroup'),  # index title has junk square brackets at start and end
+    ('movie title (2020) 1080p BluRay dts-group', 'movietitle20201080pbluraydtsgroup'),                                     # spaces
+    ('Movie.Title.(2020).1080p.BluRay.DTS-GROUP', 'movietitle20201080pbluraydtsgroup'),                                     # periods
+    ('MOVIE_TITLE_(2020)_1080p_BluRay_DTS-GROUP', 'movietitle20201080pbluraydtsgroup'),                                     # underscores and upper case
+    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP', 'movieandtitle20201080pbluraydtsgroup'),               # index title has junk square brackets at start
+    ('Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movieandtitle20201080pbluraydtsgroup'),                 # index title has junk square brackets at end
+    ('[junk at start]Movie.and.Title.(2020).1080p.BluRay.DTS-GROUP[junk at end]', 'movieandtitle20201080pbluraydtsgroup'),  # index title has junk square brackets at start and end
 ])
 def test_custom_title_full_compare(custom_title_full_compare, index_title, exp_assert):
 
@@ -745,25 +725,25 @@ def test_custom_title_year_compare(custom_title_year_compare, index_title, exp_a
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) 1080p bluray dts-group', '(2020) 1080p bluray dts-group'),                                    # brackets on year
-    ('movie.title.2020.1080p.bluray.dts-group', '2020.1080p.bluray.dts-group'),                                        # no brackets on year
-    ('2100 movie title 2020 1080p bluray dts-group', '2020 1080p bluray dts-group'),                                   # year at start of title, no brackets
-    ('movie.title.2020.REMASTERED.PROPER.1080p.BluRay.x265-GROUP', '2020.remastered.proper.1080p.bluray.x265-group'),  # real world failing case
-    ('Movie.Title.[2020.1080p].BluRay.DTS-GROUP', '[2020.1080p].bluray.dts-group'),                                    # index title has square brackets around year and resolution
+    ('movie title (2020) 1080p bluray dts-group', '1080p bluray dts group'),                                      # brackets on year
+    ('movie.title.2020.1080p.bluray.dts-group', '1080p bluray dts group'),                                        # no brackets on year
+    ('2100 movie title 2020 1080p bluray dts-group', '1080p bluray dts group'),                                   # year at start of title, no brackets
+    ('movie.title.2020.REMASTERED.PROPER.1080p.BluRay.x265-GROUP', 'remastered proper 1080p bluray x265 group'),  # real world failing case
+    ('Movie.Title.[2020.1080p].BluRay.DTS-GROUP', '1080p bluray dts group'),                                      # index title has square brackets around year and resolution
 ])
-def test_custom_title_year_to_end_compare(custom_title_year_to_end_compare, index_title, exp_assert):
+def test_custom_title_year_to_end(custom_title_year_to_end, index_title, exp_assert):
 
-    response = custom_title_year_to_end_compare
+    response = custom_title_year_to_end
 
     # Assert
     assert response == exp_assert
 
 
 @pytest.mark.parametrize('index_title, exp_assert', [
-    ('movie title (2020) S01 1080p bluray dts-group', False),       # shorthand season
-    ('movie title (2020) Season01 1080p bluray dts-group', False),  # longhand season
-    ('movie title (2020) S01E01 1080p bluray dts-group', False),    # shorthand season and episode
-    ('movie (2300) title 2020 1080p bluray dts-group', True),       # no season or episode
+    ('movie title (2020) S01 1080p bluray dts-group', True),       # shorthand season
+    ('movie title (2020) Season01 1080p bluray dts-group', True),  # longhand season
+    ('movie title (2020) S01E01 1080p bluray dts-group', True),    # shorthand season and episode
+    ('movie (2300) title 2020 1080p bluray dts-group', False),     # no season or episode
 ])
 def test_custom_title_tv_season_episode(custom_title_tv_season_episode, index_title, exp_assert):
 

@@ -18,8 +18,6 @@ class TorrentClients(object):
 
     def qbittorrent_connect(self):
 
-        function_name = siphonator_tools_various.get_function_name()
-
         torrent_client = self.config_dict['torrent_client']['selected']
         if torrent_client == 'qbittorrent':
 
@@ -41,17 +39,17 @@ class TorrentClients(object):
                 qbt_client.auth_log_in()
 
             except qbittorrentapi.LoginFailed:
-                result_details = f"Failed: {function_name}: qBittorrent login failed"
+                result_details = f"Failed: qBittorrent login failed"
                 self.logger_instance.warning(result_details)
                 return None
 
             except qbittorrentapi.APIConnectionError:
-                result_details = f"Failed: {function_name}: qBittorrent API connection error"
+                result_details = f"Failed: qBittorrent API connection error"
                 self.logger_instance.warning(result_details)
                 return None
 
             except qbittorrentapi.APIError:
-                result_details = f"Failed: {function_name}: qBittorrent API error"
+                result_details = f"Failed: qBittorrent API error"
                 self.logger_instance.warning(result_details)
                 return None
 

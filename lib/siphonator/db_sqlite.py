@@ -1,5 +1,5 @@
 import sqlite_utils
-import lib.siphonator.tools_various as siphonator_tools_various
+import lib.siphonator.tools_filters as siphonator_tools_filters
 
 
 class DbSqlite(object):
@@ -141,11 +141,11 @@ class DbSqlite(object):
     def read_database_adv(self, sqlite_table, sqlite_column, index_title):
 
         # get comparison dictionary from index_title
-        tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-        custom_title_full_compare = tools_various_instance.custom_title_full_compare(index_title)
+        tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
+        custom_title_full_compare = tools_filters_instance.index_title_compare(index_title)
 
         # get index title with sqlite wildcard char '%'
-        custom_title_sqlite_query = tools_various_instance.custom_title_sqlite(index_title)
+        custom_title_sqlite_query = tools_filters_instance.sqlite_query(index_title)
         self.logger_instance.debug(f"Database index title query is '{custom_title_sqlite_query}'")
 
         # query database, note this maybe subject to sqlite injection as I am dynamically setting table and column
@@ -157,9 +157,13 @@ class DbSqlite(object):
             index_title_sqlite_result = sqlite_result.get('index_title')
 
             # get comparison dictionary for index title from sqlite query
-            tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-            custom_title_full_compare_sqlite = tools_various_instance.custom_title_full_compare(index_title_sqlite_result)
+            tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
+            custom_title_full_compare_sqlite = tools_filters_instance.index_title_compare(index_title_sqlite_result)
 
+            if not custom_title_full_compare_sqlite:
+                continue
+            # print(f"sqlite: {custom_title_full_compare_sqlite}")
+            # print(f"index title: {custom_title_full_compare}")
             # compare index title against sqlite query index title
             if custom_title_full_compare in custom_title_full_compare_sqlite:
 

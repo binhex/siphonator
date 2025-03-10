@@ -1,7 +1,6 @@
 import imdbpie
 from imdbpie import ImdbAPIError
 import re
-import lib.siphonator.tools_various as siphonator_tools_various
 
 # TODO once we have all imdb details in the database then any index title that matches an existing processed title can use the same imdb details without the need to contact imdb
 
@@ -19,13 +18,12 @@ def imdb_json_api(logger_instance, result_dict):
 
     imdb_id = result_dict.get('imdb_id')
     logger_instance.info(f"Getting title attributes for movie with IMDb ID '{imdb_id}'...")
-    function_name = siphonator_tools_various.get_function_name()
 
     try:
         imdb_instance = imdbpie.Imdb()
 
     except (IndexError, KeyError, TypeError, ImdbAPIError) as e:
-        result_details = f"Failed: {function_name}: Cannot connect to IMDb using IMDbPie, error is '{e}'"
+        result_details = f"Failed: Cannot connect to IMDb using IMDbPie, error is '{e}'"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)
@@ -39,7 +37,7 @@ def imdb_json_api(logger_instance, result_dict):
         imdb_get_title_auxiliary_dict = imdb_instance.get_title_auxiliary(str(imdb_id))
 
     except (IndexError, KeyError, TypeError, ImdbAPIError) as e:
-        result_details = f"Failed: {function_name}: Cannot get IMDb details using IMDbPie, error is '{e}'"
+        result_details = f"Failed: Cannot get IMDb details using IMDbPie, error is '{e}'"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)
@@ -55,7 +53,7 @@ def imdb_json_api(logger_instance, result_dict):
 
     except (IndexError, KeyError, TypeError) as e:
         if not credits_director_list:
-            logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Credits Director, error is '{e}'")
+            logger_instance.warning(f"Failed: Unable to identify IMDb Credits Director, error is '{e}'")
             credits_director_list = None
 
     try:
@@ -67,7 +65,7 @@ def imdb_json_api(logger_instance, result_dict):
 
     except (IndexError, KeyError, TypeError) as e:
         if not credits_writer_list:
-            logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Credits Writer, error is '{e}'")
+            logger_instance.warning(f"Failed: Unable to identify IMDb Credits Writer, error is '{e}'")
             credits_writer_list = None
 
     try:
@@ -79,7 +77,7 @@ def imdb_json_api(logger_instance, result_dict):
 
     except (IndexError, KeyError, TypeError) as e:
         if not credits_cast_list:
-            logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Credits Cast, error is '{e}'")
+            logger_instance.warning(f"Failed: Unable to identify IMDb Credits Cast, error is '{e}'")
             credits_cast_list = None
 
     try:
@@ -91,7 +89,7 @@ def imdb_json_api(logger_instance, result_dict):
 
     except (IndexError, KeyError, TypeError) as e:
         if not credits_character_list:
-            logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Credits Characters, error is '{e}'")
+            logger_instance.warning(f"Failed: Unable to identify IMDb Credits Characters, error is '{e}'")
             credits_character_list = None
 
     try:
@@ -99,7 +97,7 @@ def imdb_json_api(logger_instance, result_dict):
 
     except (IndexError, KeyError, TypeError) as e:
         if not spoken_languages_list:
-            logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Spoken Languages, error is '{e}'")
+            logger_instance.warning(f"Failed: Unable to identify IMDb Spoken Languages, error is '{e}'")
             spoken_languages_list = None
 
     try:
@@ -107,7 +105,7 @@ def imdb_json_api(logger_instance, result_dict):
 
     except (IndexError, KeyError, TypeError) as e:
         if not spoken_languages_list:
-            logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Country Origins, error is '{e}'")
+            logger_instance.warning(f"Failed: Unable to identify IMDb Country Origins, error is '{e}'")
             country_origins_list = None
 
     try:
@@ -115,28 +113,28 @@ def imdb_json_api(logger_instance, result_dict):
 
     except (IndexError, KeyError, TypeError) as e:
         if not genres_list:
-            logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Genres, error is '{e}'")
+            logger_instance.warning(f"Failed: Unable to identify IMDb Genres, error is '{e}'")
             genres_list = None
 
     try:
         imdb_title = (imdb_get_title_dict['base']['title'])
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Title, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to identify IMDb Title, error is '{e}'")
         imdb_title = None
 
     try:
         imdb_year = (imdb_get_title_dict['base']['year'])
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Year, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to identify IMDb Year, error is '{e}'")
         imdb_year = None
 
     try:
         imdb_trailer_id = (imdb_get_title_auxiliary_dict['videos']['mainTrailer']['id'])
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Trailer, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to identify IMDb Trailer, error is '{e}'")
         imdb_trailer_id = None
 
     trailer_url = None
@@ -153,49 +151,49 @@ def imdb_json_api(logger_instance, result_dict):
         poster_url = (imdb_get_title_dict['base']['image']['url'])
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Poster URL, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to identify IMDb Poster URL, error is '{e}'")
         poster_url = None
 
     try:
         title_type = (imdb_get_title_dict['base']['titleType'])
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb Title Type e.g. Movie/TV, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to identify IMDb Title Type e.g. Movie/TV, error is '{e}'")
         title_type = None
 
     try:
         running_time_in_minutes = (imdb_get_title_dict['base']['runningTimeInMinutes'])
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb running time in minutes, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to identify IMDb running time in minutes, error is '{e}'")
         running_time_in_minutes = None
 
     try:
         plot_summary = (imdb_get_title_dict['plot']['summaries'][0]['text'])
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb plot summary, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to identify IMDb plot summary, error is '{e}'")
         plot_summary = None
 
     try:
         plot_outline = (imdb_get_title_dict['plot']['outline']['text'])
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb plot outline, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to identify IMDb plot outline, error is '{e}'")
         plot_outline = None
 
     try:
         rating = (imdb_get_title_dict['ratings']['rating'])
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb rating, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to identify IMDb rating, error is '{e}'")
         rating = None
 
     try:
         votes = (imdb_get_title_dict['ratings']['ratingCount'])
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to identify IMDb rating count, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to identify IMDb rating count, error is '{e}'")
         votes = None
 
     result_dict.update({
@@ -218,7 +216,7 @@ def imdb_json_api(logger_instance, result_dict):
         'imdb_country_list': country_origins_list,
     })
 
-    result_details = f"Passed: {function_name}: Identified IMDb metadata using IMDbPie"
+    result_details = f"Passed: Identified IMDb metadata using IMDbPie"
     logger_instance.info(result_details)
     result_dict.update({'result': u'Passed'})
     result_details_list.append(result_details)

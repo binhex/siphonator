@@ -205,11 +205,16 @@ class SiphonatorMain(object):
         current_time = siphonator_tools_various.current_time()
         self.logger_instance.info(f"Processing for siphonator started at '{current_time}'")
 
-        # walk library path and store in config dict
-        tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
+        library_path_list = self.config_dict['general']['library_path_list']
 
-        # we save it as a list so we can re-use it, as walking is very costly
-        library_path_walk = list(tools_various_instance.library_path_walk(self.config_dict['general']['library_path_list']))
+        if library_path_list:
+
+            # we save it as a list so we can re-use it, as walking is very costly
+            library_path_walk = list(siphonator_tools_various.library_path_walk(library_path_list))
+
+        else:
+
+            library_path_walk = None
 
         # create db instance
         db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict)
@@ -243,7 +248,7 @@ class SiphonatorMain(object):
                 return index_sites_status_code
 
             # parse xml from jackett
-            index_sites_xml = elementTree.fromstring(index_sites_content)
+            jackett_index_sites_list_xml = elementTree.fromstring(index_sites_content)
 
         else:
 
@@ -252,53 +257,80 @@ class SiphonatorMain(object):
 
         # empty dict to store configured index sites
         index_sites_configured_dict = {}
-        for i in index_sites_xml:
 
-            index_site_dict = i.attrib
-            index_site_configured = index_site_dict['configured']
-            index_site_name = index_site_dict['id']
+        # loop over sites defined in xml from jackett
+        for jackett_index_site in jackett_index_sites_list_xml:
 
-            if index_site_configured == 'true':
+            jackett_index_site_dict = jackett_index_site.attrib
+            jackett_index_site_configured = jackett_index_site_dict['configured']
+            jackett_index_site_name = jackett_index_site_dict['id']
 
-                index_sites_configured_dict.update({index_site_name: self.config_dict['index_site']['search']})
+            # ensure index site from jackett is set as configured
+            if jackett_index_site_configured == 'true':
+
+                # add search criteria from config for each index site from jackett to dict
+                index_sites_configured_dict.update({jackett_index_site_name: self.config_dict['index_site']['search']})
 
         # loop over top level dict of index sites
         for index_site in index_sites_configured_dict:
 
+            # ensure index site name is lowercase for comparison
             index_site_lower = index_site.lower()
-            index_site_list_dict = (index_sites_configured_dict[index_site])
 
-            # we may want to ignore certain index sites
-            if index_site_lower in self.config_dict['index_site']['ignore_list']:
+            index_site_dict_list = (index_sites_configured_dict[index_site])
 
-                self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{self.config_dict['index_site']['ignore_list']}'")
-                continue
+            # if index site ignore list is defined then process
+            if self.config_dict['index_site']['ignore_list']:
+
+                # ensure config index site ignore list is lowercase for comparison
+                config_index_site_ignore_list_lower = [x.lower() for x in self.config_dict['index_site']['ignore_list']]
+
+                # if index site name is in ignore list then skip
+                if index_site_lower in config_index_site_ignore_list_lower:
+
+                    self.logger_instance.info(f"Index site '{index_site_lower}' is in index site ignore list '{config_index_site_ignore_list_lower}'")
+                    continue
 
             # loop over dict containing search criteria
-            for index_site_dict in index_site_list_dict:
+            for index_site_dict in index_site_dict_list:
 
-                # add index site to index site dict
+                # add index site name to dict
                 index_site_dict.update({
-                    'index_site': index_site,
+                    'index_site': index_site_lower,
                 })
+
+                # get search category
+                search_category = index_site_dict['category']
 
                 # get list of index sites with override searches
                 override_search_dict = self.config_dict['index_site']['override_search']
 
-                # check if the index site exists in the override dictionary in a case-insensitive way
-                if any(key.lower() == index_site_lower for key in override_search_dict.keys()):
+                # check if the index site exists in the override dictionary
+                if any(override_search_site.lower() == index_site_lower for override_search_site in override_search_dict.keys()):
 
                     override_search_category = self.config_dict['index_site']['override_search'][index_site_lower]['category']
 
-                    # add override category to index site dict
+                    # set category to override category for the specific site
                     index_site_dict.update({
                         'category': override_search_category,
                     })
 
                     self.logger_instance.info(f"Override category found for index site '{index_site_lower}', category set to '{override_search_category}'")
 
+                else:
+
+                    # if no override found for the index site then set category to search criteria value
+                    index_site_dict.update({
+                        'category': search_category,
+                    })
+
                 index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, self.init_dict, self.config_dict, index_site_dict, library_path_walk)
                 index_site_instance.jackett()
+
+                # revert back to the original category if it was overridden
+                index_site_dict.update({
+                    'category': search_category,
+                })
 
         # compress (vacuum) database
         db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict)
@@ -313,7 +345,7 @@ class SiphonatorMain(object):
         self.logger_instance.info(f"Processing for siphonator finished at '{current_time}'")
         self.schedule_msg()
 
-    
+
 # required to prevent separate process from trying to load parent process
 if __name__ == '__main__':
 

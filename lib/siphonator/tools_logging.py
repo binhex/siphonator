@@ -5,12 +5,12 @@ import logging.handlers
 def app_logging(log_level_file, log_level_console, logs_filepath):
 
     # File formatter
-    file_formatter = logging.Formatter("%(asctime)s :: [%(levelname)s] %(message)s")
+    file_formatter = logging.Formatter("%(asctime)s %(funcName)s :: [%(levelname)s] %(message)s")
     if log_level_file.lower() == "debug":
         file_formatter = logging.Formatter("%(asctime)s %(threadName)s %(module)s %(funcName)s :: [%(levelname)s] %(message)s")
 
     # Console formatter
-    console_formatter = logging.Formatter("%(asctime)s :: [%(levelname)s] %(message)s")
+    console_formatter = logging.Formatter("%(asctime)s %(funcName)s :: [%(levelname)s] %(message)s")
     if log_level_console.lower() == "debug":
         console_formatter = logging.Formatter("%(asctime)s %(threadName)s %(module)s %(funcName)s :: [%(levelname)s] %(message)s")
 
@@ -53,4 +53,3 @@ def app_logging(log_level_file, log_level_console, logs_filepath):
         console_handler.setLevel(logging.WARNING)
 
     return app_logger, file_handler, console_handler
-    #return {'logger': app_logger, 'handler': file_handler}

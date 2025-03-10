@@ -1,6 +1,6 @@
 import imdbpie
 from imdbpie import ImdbAPIError
-import lib.siphonator.tools_various as siphonator_tools_various
+import lib.siphonator.tools_filters as siphonator_tools_filters
 
 
 class SearchIMDB(object):
@@ -9,24 +9,22 @@ class SearchIMDB(object):
 
         self.result_dict = result_dict
         self.config_dict = config_dict
-        self.index_title_tt_search = result_dict.get('index_title_tt_search', None)
-        self.index_title_compare = result_dict.get('index_title_compare', None)
-        self.index_year_compare = result_dict.get('index_year_compare', None)
+        self.movie_title_and_year_search = result_dict.get('movie_title_and_year_search', None)
+        self.movie_title_compare = result_dict.get('movie_title_compare', None)
+        self.movie_title_year = result_dict.get('movie_title_year', None)
         self.result_details_list = result_dict.get('result_details', [])
         self.logger_instance = logger_instance
 
     def find_imdb_id_imdb(self):
 
-        function_name = siphonator_tools_various.get_function_name()
-
         imdb_instance = imdbpie.Imdb()
         try:
 
-            imdb_find_id_dict = imdb_instance.search_for_title(self.index_title_tt_search)
+            imdb_find_id_dict = imdb_instance.search_for_title(self.movie_title_and_year_search)
 
         except (AttributeError, ValueError, ImdbAPIError) as e:
 
-            result_details = f"Failed: {function_name}: Failed to search IMDb for index title search '{self.index_title_tt_search}' using IMDbPie, error is '{e}'"
+            result_details = f"Failed: Failed to search IMDb for index title search '{self.movie_title_and_year_search}' using IMDbPie, error is '{e}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -36,7 +34,7 @@ class SearchIMDB(object):
         # if resulting imdb json page is blank then continue
         if imdb_find_id_dict == {}:
 
-            result_details = f"Failed: {function_name}: No match for movie title '{self.index_title_tt_search}' on IMDb json"
+            result_details = f"Failed: No match for movie title '{self.movie_title_and_year_search}' on IMDb json"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -62,15 +60,14 @@ class SearchIMDB(object):
                 continue
 
             # get comparison dictionary for imdb_title
-            tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-            imdb_title_compare = tools_various_instance.custom_title_compare(imdb_title)
+            tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
+            imdb_title_compare = tools_filters_instance.imdb_title_compare(imdb_title)
 
-            if imdb_title_compare not in self.index_title_compare:
-
-                self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'")
+            if imdb_title_compare is None or imdb_title_compare not in self.movie_title_compare:
+                self.logger_instance.info(f"IMDb title compare '{imdb_title_compare}' not in index title compare '{self.movie_title_compare}'")
                 continue
 
-            self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' matches index title compare '{self.index_title_compare}'")
+            self.logger_instance.info(f"IMDb title compare '{imdb_title_compare}' matches index title compare '{self.movie_title_compare}'")
 
             # find imdb year
             try:
@@ -88,12 +85,12 @@ class SearchIMDB(object):
                 self.logger_instance.debug(u"IMDb year is None, cannot compare")
                 continue
 
-            if int(imdb_year) != int(self.index_year_compare):
+            if int(imdb_year) != int(self.movie_title_year):
 
-                self.logger_instance.debug(f"IMDb year compare '{imdb_year}' does not equal index year compare '{self.index_year_compare}'")
+                self.logger_instance.debug(f"IMDb year compare '{imdb_year}' does not equal index year compare '{self.movie_title_year}'")
                 continue
 
-            self.logger_instance.debug(f"IMDb year compare '{imdb_year}' equals index year compare '{self.index_year_compare}'")
+            self.logger_instance.debug(f"IMDb year compare '{imdb_year}' equals index year compare '{self.movie_title_year}'")
 
             # find imdb id
             try:
@@ -109,14 +106,14 @@ class SearchIMDB(object):
             self.logger_instance.info(f"IMDb ID URL is 'https://www.imdb.com/title/{imdb_id}/'")
             self.result_dict.update({'imdb_id': imdb_id})
 
-            result_details = f"Passed: {function_name}: Found IMDb ID '{imdb_id}' for movie '{self.index_title_tt_search}' using IMDb search"
+            result_details = f"Passed: Found IMDb ID '{imdb_id}' for movie '{self.movie_title_and_year_search}' using IMDb search"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Passed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
-        result_details = f"Failed: {function_name}: Failed to identify movie '{self.index_title_tt_search}' using IMDb search"
+        result_details = f"Failed: Failed to identify movie '{self.movie_title_and_year_search}' using IMDb search"
         self.logger_instance.warning(result_details)
         self.result_dict.update({'result': u'Failed'})
         self.result_details_list.append(result_details)

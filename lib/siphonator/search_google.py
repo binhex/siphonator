@@ -1,5 +1,5 @@
 import googlesearch
-import lib.siphonator.tools_various as siphonator_tools_various
+import lib.siphonator.tools_filters as siphonator_tools_filters
 import re
 
 
@@ -9,24 +9,22 @@ class SearchGoogle(object):
 
         self.result_dict = result_dict
         self.config_dict = config_dict
-        self.index_title_tt_search = result_dict.get('index_title_tt_search', None)
+        self.movie_title_and_year_search = result_dict.get('movie_title_and_year_search', None)
         self.index_title_compare = result_dict.get('index_title_compare', None)
         self.index_title_full_compare = result_dict.get('index_title_full_compare', None)
-        self.index_year_compare = result_dict.get('index_year_compare', None)
+        self.movie_title_year = result_dict.get('movie_title_year', None)
         self.result_details_list = result_dict.get('result_details', [])
         self.logger_instance = logger_instance
 
     def find_imdb_id_google(self):
 
         # TODO note the timeout does not seem to work well and the search can get stuck, see https://github.com/Nv7-GitHub/googlesearch/issues/34
-        google_find_id_gen = googlesearch.search(f"imdb {self.index_title_tt_search})", advanced=True, sleep_interval=5, num_results=1, timeout=10)
-
-        function_name = siphonator_tools_various.get_function_name()
+        google_find_id_gen = googlesearch.search(f"imdb {self.movie_title_and_year_search})", advanced=True, sleep_interval=5, num_results=1, timeout=10)
 
         if not google_find_id_gen:
 
-            result_details = f"Failed: {function_name}: Failed to search Google for index title search '{self.index_title_tt_search}'"
-            self.logger_instance.debug(result_details)
+            result_details = f"Failed: Failed to search Google for index title search '{self.movie_title_and_year_search}'"
+            self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
@@ -39,8 +37,8 @@ class SearchGoogle(object):
 
         except StopIteration:
 
-            result_details = f"Failed: {function_name}: Failed to return results from Google for index title search '{self.index_title_tt_search}'"
-            self.logger_instance.debug(result_details)
+            result_details = f"Failed: Failed to return results from Google for index title search '{self.movie_title_and_year_search}'"
+            self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
@@ -52,8 +50,8 @@ class SearchGoogle(object):
         # if title or url is none then return
         if not imdb_title or not imdb_url:
 
-            result_details = f"Failed: {function_name}: Failed to return IMDb title or URL from Google for index title search '{self.index_title_tt_search}'"
-            self.logger_instance.debug(result_details)
+            result_details = f"Failed: Failed to return IMDb title or URL from Google for index title search '{self.movie_title_and_year_search}'"
+            self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
@@ -64,41 +62,43 @@ class SearchGoogle(object):
         self.logger_instance.info(f"IMDb URL is '{imdb_url}'")
 
         # create imdb_title to compare
-        tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-        imdb_title_remove_year_to_end = tools_various_instance.custom_title_remove_year_to_end_compare(imdb_title)
-        imdb_title_compare = tools_various_instance.custom_title_compare(imdb_title_remove_year_to_end)
+        tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
+        imdb_title_compare = tools_filters_instance.imdb_title_compare(imdb_title)
+
+        # returned imdb title includes site name imdb, thus we need to strip it
+        imdb_title_compare_strip_imdb = imdb_title_compare.replace('imdb', '')
 
         # check imdb title match index title
-        if imdb_title_compare not in self.index_title_compare:
+        if imdb_title_compare_strip_imdb is None or imdb_title_compare_strip_imdb not in self.index_title_compare:
 
-            result_details = f"Failed: {function_name}: IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'"
-            self.logger_instance.debug(result_details)
+            result_details = f"Failed: IMDb title compare '{imdb_title_compare_strip_imdb}' not in index title compare '{self.index_title_compare}'"
+            self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
-        self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' matches index title compare '{self.index_title_compare}'")
+        self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare_strip_imdb}' matches index title compare '{self.index_title_compare}'")
 
-        # check imdb title year matches index title year
-        if self.index_year_compare not in imdb_title:
+        # check movie title year from index title matches imdb year
+        if self.movie_title_year not in imdb_title:
 
-            result_details = f"Failed: {function_name}: IMDb title '{imdb_title}' does not contain index year compare '{self.index_year_compare}'"
-            self.logger_instance.debug(result_details)
+            result_details = f"Failed: IMDb title '{imdb_title}' does not contain index year compare '{self.movie_title_year}'"
+            self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
-        self.logger_instance.debug(f"IMDb title '{imdb_title}' does contain index year compare '{self.index_year_compare}'")
+        self.logger_instance.debug(f"IMDb title '{imdb_title}' does contain index year compare '{self.movie_title_year}'")
 
         # regex for tt number as we get full url returned from Google search
         imdb_id_search = re.search('tt[0-9]+', imdb_url)
 
         if not imdb_id_search:
 
-            result_details = f"Failed: {function_name}: IMDb URL '{imdb_url}' from Google search does not contain IMDb ID"
-            self.logger_instance.debug(result_details)
+            result_details = f"Failed: IMDb URL '{imdb_url}' from Google search does not contain IMDb ID"
+            self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
@@ -109,7 +109,7 @@ class SearchGoogle(object):
         self.logger_instance.debug(f"IMDb URL is '{imdb_url}'")
         self.result_dict.update({'imdb_id': imdb_id})
 
-        result_details = f"Passed: {function_name}: Found IMDb ID '{imdb_id}' for movie '{self.index_title_tt_search}' using Google search"
+        result_details = f"Passed: Found IMDb ID '{imdb_id}' for movie '{self.movie_title_and_year_search}' using Google search"
         self.logger_instance.debug(result_details)
         self.result_dict.update({'result': u'Passed'})
         self.result_details_list.append(result_details)

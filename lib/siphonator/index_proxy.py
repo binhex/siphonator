@@ -1,7 +1,7 @@
 import xmltodict
 import urllib.parse
 import lib.siphonator.tools_downloader as siphonator_tools_downloader
-import lib.siphonator.tools_various as siphonator_tools_various
+import lib.siphonator.tools_filters as siphonator_tools_filters
 import lib.siphonator.search_all as siphonator_search_all
 import lib.siphonator.imdb_imdbpie as siphonator_imdb_imdbpie
 import lib.siphonator.imdb_omdb as siphonator_imdb_omdb
@@ -26,12 +26,7 @@ class IndexProxy(object):
         self.logger_instance = logger_instance
         self.library_path_walk = library_path_walk
 
-    # in logger_instance,kwargs for construct url (host, port, api_key, category, search, limit, user_agent)
-    # out return_code, status_code, content
     def jackett(self):
-
-        # used in result_details, written to db
-        function_name = siphonator_tools_various.get_function_name()
 
         self.logger_instance.info(f"Processing index site '{self.index_site_dict['index_site']}' for search criteria '{self.index_site_dict['criteria']}' in category '{self.index_site_dict['category']}'...")
 
@@ -40,38 +35,38 @@ class IndexProxy(object):
             try:
                 host = self.config_dict['index_proxy']['jackett']['host']
             except KeyError:
-                self.logger_instance.warning(u'No hostname sent to function, exiting function...')
+                self.logger_instance.warning(u'No jackett hostname sent to function, exiting function...')
                 return 1, None
 
             try:
                 port = self.config_dict['index_proxy']['jackett']['port']
             except KeyError:
-                self.logger_instance.warning(u'No port sent to function, exiting function...')
+                self.logger_instance.warning(u'No jackett port sent to function, exiting function...')
                 return 1, None
 
             try:
                 api_key = self.config_dict['index_proxy']['jackett']['api_key']
             except KeyError:
-                self.logger_instance.warning(u'No api_key sent to function, exiting function...')
+                self.logger_instance.warning(u'No jackett api_key sent to function, exiting function...')
                 return 1, None
 
             try:
                 read_timeout = self.config_dict['index_proxy']['jackett']['read_timeout']
             except KeyError:
                 read_timeout = 30.0
-                self.logger_instance.info(f"No read timeout sent to function, defaulting to '{read_timeout}' seconds")
+                self.logger_instance.info(f"No jackett read timeout sent to function, defaulting to '{read_timeout}' seconds")
 
             try:
                 limit = self.config_dict['index_proxy']['jackett']['limit']
             except KeyError:
-                self.logger_instance.warning(u'No limit sent to function, exiting function...')
-                return 1, None
+                limit = 500
+                self.logger_instance.warning(f"No jackett limit sent to function, defaulting to '{limit}'")
 
             try:
                 max_offset = self.config_dict['index_proxy']['jackett']['offset']
             except KeyError:
-                self.logger_instance.warning(u'No offset sent to function, exiting function...')
-                return 1, None
+                max_offset = 0
+                self.logger_instance.warning(f"No jackett offset sent to function, defaulting to '{max_offset}'")
 
         else:
 
@@ -161,7 +156,7 @@ class IndexProxy(object):
                         self.logger_instance.info(f"Index title '{title}' found in sqlite database using adv match, skipping movie")
                         continue
 
-                self.logger_instance.debug(f"Index title '{title}' not in sqlite database, continuing...")
+                self.logger_instance.info(f"Index title '{title}' not in sqlite database, continuing...")
 
                 try:
 
@@ -256,8 +251,23 @@ class IndexProxy(object):
                     'category': category
                 })
 
-                tools_various_instance = siphonator_tools_various.ToolsVarious(self.logger_instance)
-                result_dict = tools_various_instance.index_title_process(result_dict)
+                # identify index title information using regex, append to regex and return
+                tools_various_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
+                result_dict = tools_various_instance.index_name(result_dict)
+
+                # if we cannot identify the movie title then write to db and continue
+                if not result_dict.get('movie_title'):
+                    # write to database
+                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, result_dict)
+                    db_sqlite_instance.write_database()
+                    continue
+
+                # if we cannot identify the movie year then write to db and continue
+                if not result_dict.get('movie_title_year'):
+                    # write to database
+                    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, result_dict)
+                    db_sqlite_instance.write_database()
+                    continue
 
                 if result_dict.get('result') == 'Passed':
 
@@ -320,7 +330,7 @@ class IndexProxy(object):
 
                 if result_dict.get('result') == 'Passed':
 
-                    result_details = f"Passed: {function_name}: Passed all Index and IMDb filters"
+                    result_details = f"Passed: Passed all Index and IMDb filters"
                     self.logger_instance.info(result_details)
                     result_details_list = result_dict.get('result_details')
                     result_dict.update({'result': u'Passed'})

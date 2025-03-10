@@ -1,18 +1,15 @@
 import re
-import lib.siphonator.tools_various as siphonator_tools_various
 import pycountry
 import omdb
 
 
 def get_json_value(logger_instance, omdb_json, key):
 
-    function_name = siphonator_tools_various.get_function_name()
-
     try:
         omdb_value = omdb_json[key]
 
     except (IndexError, KeyError, TypeError) as e:
-        logger_instance.warning(f"Failed: {function_name}: Unable to get IMDb '{key}' from OMDb json, error is '{e}'")
+        logger_instance.warning(f"Failed: Unable to get IMDb '{key}' from OMDb json, error is '{e}'")
         return None
 
     return omdb_value
@@ -23,14 +20,13 @@ def omdb_get_movie(logger_instance, config_dict, result_dict):
     search_omdb_api_key = config_dict["credentials"]['omdb']['api_key']
     result_details_list = result_dict.get('result_details', [])
     imdb_id = result_dict.get('imdb_id')
-    function_name = siphonator_tools_various.get_function_name()
 
     try:
         omdb_instance = omdb.OMDB(api_key=search_omdb_api_key, timeout=30.0)
         omdb_json = omdb_instance.get_movie(imdbid=imdb_id)
 
     except omdb.exceptions.OMDBTooManyResults:
-        result_details = f"Failed: {function_name}: Too many results returned from OMDb"
+        result_details = f"Failed: Too many results returned from OMDb"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)
@@ -38,7 +34,7 @@ def omdb_get_movie(logger_instance, config_dict, result_dict):
         return result_dict, None
 
     except omdb.exceptions.OMDBNoResults:
-        result_details = f"Failed: {function_name}: No results returned from OMDb"
+        result_details = f"Failed: No results returned from OMDb"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)
@@ -46,7 +42,7 @@ def omdb_get_movie(logger_instance, config_dict, result_dict):
         return result_dict, None
 
     except omdb.exceptions.OMDBLimitReached:
-        result_details = f"Failed: {function_name}: OMDb API limit reached"
+        result_details = f"Failed: OMDb API limit reached"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)
@@ -54,7 +50,7 @@ def omdb_get_movie(logger_instance, config_dict, result_dict):
         return result_dict, None
 
     except omdb.exceptions.OMDBInvalidAPIKey:
-        result_details = f"Failed: {function_name}: Invalid API key for OMDb"
+        result_details = f"Failed: Invalid API key for OMDb"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)
@@ -62,7 +58,7 @@ def omdb_get_movie(logger_instance, config_dict, result_dict):
         return result_dict, None
 
     except omdb.exceptions.OMDBException as e:
-        result_details = f"Failed: {function_name}: Base exception for OMDb, error is '{e}'"
+        result_details = f"Failed: Base exception for OMDb, error is '{e}'"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)
@@ -75,7 +71,6 @@ def omdb_get_movie(logger_instance, config_dict, result_dict):
 def omdb_json_api(logger_instance, config_dict, result_dict):
 
     result_details_list = result_dict.get('result_details', [])
-    function_name = siphonator_tools_various.get_function_name()
 
     # get omdb json, in a function of it's as we share this function with search_omdb
     result_dict, omdb_json = omdb_get_movie(logger_instance, config_dict, result_dict)
@@ -207,7 +202,7 @@ def omdb_json_api(logger_instance, config_dict, result_dict):
         'imdb_country_list': omdb_country_list,
     })
 
-    result_details = f"Passed: {function_name}: Identified IMDb metadata using OMDb"
+    result_details = f"Passed: Identified IMDb metadata using OMDb"
     logger_instance.info(result_details)
     result_dict.update({'result': u'Passed'})
     result_details_list.append(result_details)
