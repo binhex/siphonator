@@ -65,20 +65,17 @@ class SearchGoogle(object):
         tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
         imdb_title_compare = tools_filters_instance.imdb_title_compare(imdb_title)
 
-        # returned imdb title includes site name imdb, thus we need to strip it
-        imdb_title_compare_strip_imdb = imdb_title_compare.replace('imdb', '')
-
         # check imdb title match index title
-        if imdb_title_compare_strip_imdb is None or imdb_title_compare_strip_imdb not in self.index_title_compare:
+        if imdb_title_compare is None or imdb_title_compare not in self.index_title_compare:
 
-            result_details = f"Failed: IMDb title compare '{imdb_title_compare_strip_imdb}' not in index title compare '{self.index_title_compare}'"
+            result_details = f"Failed: IMDb title compare '{imdb_title_compare}' not in index title compare '{self.index_title_compare}'"
             self.logger_instance.warning(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
             self.result_dict.update({'result_details': self.result_details_list})
             return self.result_dict
 
-        self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare_strip_imdb}' matches index title compare '{self.index_title_compare}'")
+        self.logger_instance.debug(f"IMDb title compare '{imdb_title_compare}' matches index title compare '{self.index_title_compare}'")
 
         # check movie title year from index title matches imdb year
         if self.movie_title_year not in imdb_title:

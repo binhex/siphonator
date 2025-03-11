@@ -200,7 +200,10 @@ class ToolsFilters(object):
             self.logger_instance.debug(f'No string sent to function')
             return None
 
-        imdb_title_compare = self.regex_subst(string, '', self.compare_movie_title_regex)
+        # remove imdb related substrings from imdb search sites
+        imdb_title_strip_brackets = self.regex_subst(string, '', self.helper_round_square_brackets_regex)
+        imdb_title_strip_site_title = imdb_title_strip_brackets.replace('imdb', '')
+        imdb_title_compare = self.regex_subst(imdb_title_strip_site_title, '', self.compare_movie_title_regex)
         result = self.regex_subst(imdb_title_compare, 'and', self.helper_replacement_words_regex)
 
         if result:
