@@ -180,7 +180,7 @@ class FilterMovies(object):
 
         index_title = self.result_dict.get('index_title')
 
-        index_title_after_year_to_end = self.tools_filters_instance.index_title_after_year_to_end(index_title)
+        index_title_after_year_to_end = self.result_dict.get('index_title_after_year_to_end')
         index_title_tv_season_episode = self.tools_filters_instance.tv_search(index_title_after_year_to_end)
 
         if index_title_tv_season_episode:
@@ -215,9 +215,12 @@ class FilterMovies(object):
         # get bad index title compare using tools various
         index_title = self.result_dict.get('index_title')
 
+        # get sanitised index title from result dict
+        index_title_sanitised = self.result_dict.get('index_title_sanitised')
+
         for filter_bad_index_title in filter_bad_index_title_list:
 
-            if self.tools_filters_instance.keyword_search(index_title, filter_bad_index_title):
+            if self.tools_filters_instance.keyword_search(index_title_sanitised, filter_bad_index_title):
 
                 result_details = f"Failed: Index title '{index_title}' contains bad title keyword '{filter_bad_index_title}', skipping movie"
                 self.logger_instance.info(result_details)
@@ -233,7 +236,7 @@ class FilterMovies(object):
         self.result_dict.update({'result_details': self.result_details_list})
         return True
 
-    def filter_index_preferred_group(self, library_filename, index_title):
+    def filter_index_preferred_group(self, library_filename_sanitised):
 
         filter_preferred_index_group_list = self.config_dict["filters"]['preferred_index_group_list']
 
@@ -248,8 +251,8 @@ class FilterMovies(object):
 
         filter_preferred_index_group_list_lower = [x.lower() for x in filter_preferred_index_group_list]
 
-        library_filename_group = self.tools_filters_instance.index_title_group(library_filename)
-        index_title_group = self.tools_filters_instance.index_title_group(index_title)
+        library_filename_group = self.tools_filters_instance.index_title_group(library_filename_sanitised)
+        index_title_group = self.result_dict.get('index_title_group')
 
         self.logger_instance.debug(f"Filter preferred index group list is '{filter_preferred_index_group_list_lower}'")
         self.logger_instance.debug(f"Library filename group is '{library_filename_group}'")
@@ -282,7 +285,7 @@ class FilterMovies(object):
         self.result_dict.update({'result_details': self.result_details_list})
         return True
 
-    def filter_special_editions(self, library_filename, index_title):
+    def filter_special_editions(self, library_filename_sanitised, index_title_sanitised):
 
         filter_preferred_index_quality_list = self.config_dict["filters"]['preferred_index_quality_list']
 
@@ -302,25 +305,25 @@ class FilterMovies(object):
 
         for filter_preferred_index_quality in filter_preferred_index_quality_list_lower:
 
-            if self.tools_filters_instance.keyword_search(library_filename, filter_preferred_index_quality):
+            if self.tools_filters_instance.keyword_search(library_filename_sanitised, filter_preferred_index_quality):
 
-                result_details = f"Failed: Library filename '{library_filename}' contains preferred quality keyword '{filter_preferred_index_quality}'"
+                result_details = f"Failed: Library filename '{library_filename_sanitised}' contains preferred quality keyword '{filter_preferred_index_quality}'"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Failed'})
                 self.result_details_list.append(result_details)
                 self.result_dict.update({'result_details': self.result_details_list})
                 return False
 
-            if self.tools_filters_instance.keyword_search(index_title, filter_preferred_index_quality):
+            if self.tools_filters_instance.keyword_search(index_title_sanitised, filter_preferred_index_quality):
 
-                result_details = f"Passed: Index title '{index_title}' does include keyword from preferred index quality list '{filter_preferred_index_quality_list_lower}' and library filename '{library_filename}' does not contain keyword from preferred quality list, ignoring existing library file."
+                result_details = f"Passed: Index title '{index_title_sanitised}' does include keyword from preferred index quality list '{filter_preferred_index_quality_list_lower}' and library filename '{library_filename_sanitised}' does not contain keyword from preferred quality list, ignoring existing library file."
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Passed'})
                 self.result_details_list.append(result_details)
                 self.result_dict.update({'result_details': self.result_details_list})
                 return True
 
-        result_details = f"Failed: Index title '{index_title}' does not contain any keywords from the preferred quality list '{filter_preferred_index_quality_list_lower}'"
+        result_details = f"Failed: Index title '{index_title_sanitised}' does not contain any keywords from the preferred quality list '{filter_preferred_index_quality_list_lower}'"
         self.logger_instance.info(result_details)
         self.result_dict.update({'result': u'Failed'})
         self.result_details_list.append(result_details)
@@ -481,9 +484,11 @@ class FilterMovies(object):
 
             for library_dirs in dirs:
 
+                library_dirs_sanitised = self.tools_filters_instance.sanitise_subst(library_dirs)
+
                 # get library directory compare strings using tools various
-                library_dirs_title_compare = self.tools_filters_instance.movie_title_compare(library_dirs)
-                library_dir_year_compare = self.tools_filters_instance.movie_title_year(library_dirs)
+                library_dirs_title_compare = self.tools_filters_instance.movie_title_compare(library_dirs_sanitised)
+                library_dir_year_compare = self.tools_filters_instance.movie_title_year(library_dirs_sanitised)
 
                 # if we cannot determine the year from the directory then continue
                 if not library_dir_year_compare:
@@ -528,11 +533,13 @@ class FilterMovies(object):
 
         movie_title_year = self.result_dict.get('movie_title_year')
 
-        library_year_compare = self.tools_filters_instance.movie_title_year(library_filename)
+        library_filename_sanitised = self.tools_filters_instance.sanitise_subst(library_filename)
+
+        library_year_compare = self.tools_filters_instance.movie_title_year(library_filename_sanitised)
         if not library_year_compare:
             return True
 
-        library_title_compare = self.tools_filters_instance.movie_title_compare(library_filename)
+        library_title_compare = self.tools_filters_instance.movie_title_compare(library_filename_sanitised)
         if not library_title_compare:
             return True
 
@@ -553,40 +560,40 @@ class FilterMovies(object):
 
         # define scores for resolution, score increases as resolution increases
         resolution_score_dict = {
-            "(480|540)": int(10),
-            "(720)": int(20),
-            "(1080)": int(30),
-            "(2160)": int(40),
-            "(4320)": int(50)
+            r'(480p?|540p?)': int(10),
+            r'(720p?)': int(20),
+            r'(1080p?)': int(30),
+            r'(2160p?)': int(40),
+            r'(4320p?)': int(50)
         }
 
         # define score for source type, score increases as source type improves (higher bitrate)
         source_score_dict = {
-            "(dvdrip|webrip)": int(10),
-            "(hdtv)": int(20),
-            "(web-dl|webdl|hdrip)": int(30),
-            "(bd|bdrip|bluray|blu-ray)": int(40),
-            "(bdremux|remux)": int(80)
+            r'(dvdrip|webrip)': int(10),
+            r'(hdtv)': int(20),
+            r'(web\sdl|webdl|hdrip)': int(30),
+            r'(bd|bdrip|bluray|blu-ray)': int(40),
+            r'(bdremux|remux)': int(80)
         }
 
         # define scores for audio quality, score increases as audio quality increases
         audio_score_dict = {
-            "(dts)": int(10),
-            "(dts-hd|dtshd|true-hd|truehd)": int(20),
-            "(dts-x|dtsx)": int(30)
+            r'(dts)': int(10),
+            r'(dts-hd|dtshd|true-hd|truehd|ddp)': int(20),
+            r'(dts-x|dtsx|atmos)': int(30)
         }
 
         score = 0
         score_dicts = [resolution_score_dict, audio_score_dict, source_score_dict]
 
-        # iterate over audio and source dicts
+        # iterate over dicts
         for score_dict in score_dicts:
 
             # Iterate over the key-value pairs
             for key, value in score_dict.items():
 
-                # search for key names, if found add score value to score
-                if re.search(fr'[_.\s(+]{key}[_.\s)+]|^{key}[_.\s)+]', after_year_to_end_string, re.IGNORECASE):
+                # search for key names, if found add value to score
+                if re.search(fr'^{key}\s|\s{key}\s|\s{key}$', after_year_to_end_string, re.IGNORECASE):
                     score += value
 
         self.logger_instance.debug(f"Index/library title after year to end string '{after_year_to_end_string}' has a total score of '{score}'")
@@ -596,17 +603,27 @@ class FilterMovies(object):
 
     def filter_quality_check(self, library_file):
 
-        index_title = self.result_dict.get('index_title')
-        index_title_after_year_to_end = self.tools_filters_instance.index_title_after_year_to_end(index_title)
-        library_filename_after_year_to_end = self.tools_filters_instance.index_title_after_year_to_end(library_file)
+        index_title_sanitised = self.result_dict.get('index_title_sanitised')
+        library_file_sanitised = self.tools_filters_instance.sanitise_subst(library_file)
 
-        # this is saying if score for index title is greater, or preferred group in index
-        # title, or preferred quality found in index title then download, else skip
+        index_title_after_year_to_end = self.tools_filters_instance.index_title_after_year_to_end(index_title_sanitised)
 
-        # if library filename year to end is not none (maybe mangled) then calculate and compare score
+        # if index title year to end is not none (maybe mangled) then return
+        if index_title_after_year_to_end is None:
+
+            result_details = f"Failed: Cannot identify after year to end for index title '{index_title_sanitised}'"
+            self.logger_instance.info(result_details)
+            self.result_dict.update({'result': u'Failed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
+            return False
+
+        library_filename_after_year_to_end = self.tools_filters_instance.index_title_after_year_to_end(library_file_sanitised)
+
+        # if library filename year to end is not none (maybe mangled) then return
         if library_filename_after_year_to_end is None:
 
-            result_details = f"Failed: Cannot identify after year to end for library filename '{library_file}'"
+            result_details = f"Failed: Cannot identify after year to end for library filename '{library_file_sanitised}'"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -618,7 +635,7 @@ class FilterMovies(object):
         library_filename_score = self.filter_quality_score(library_filename_after_year_to_end)
 
         # check if index/library filename contain preferred group
-        if self.filter_index_preferred_group(library_file, index_title):
+        if self.filter_index_preferred_group(library_file_sanitised):
 
             index_title_score += 10
             result_details = f"Index title '{index_title_after_year_to_end}' does contain preferred index group, and library filename '{library_filename_after_year_to_end}' does not contain preferred index group, adding to score"
@@ -630,8 +647,8 @@ class FilterMovies(object):
             result_details = f"Library title '{library_filename_after_year_to_end}' does contain preferred index group, and index title '{index_title_after_year_to_end}' does not contain preferred index group, adding to score"
             self.logger_instance.info(result_details)
 
-        # check if index/library filename contain preferred cut
-        if self.filter_special_editions(library_file, index_title):
+        # check if index/library filename contain special edition
+        if self.filter_special_editions(library_file_sanitised, index_title_sanitised):
 
             index_title_score += 10
             result_details = f"Passed: Index title '{index_title_after_year_to_end}' does contain special edition, and library filename '{library_filename_after_year_to_end}' does not contain special edition, adding to score"
@@ -666,8 +683,10 @@ class FilterMovies(object):
 
         ffprobe_filepath = self.init_dict.get('ffprobe_filepath')
 
+        library_filename_sanitised = self.tools_filters_instance.sanitise_subst(library_filename)
+
         # attempt to identify resolution from library filename
-        library_filename_resolution_string = self.tools_filters_instance.index_title_resolution(library_filename)
+        library_filename_resolution_string = self.tools_filters_instance.index_title_resolution(library_filename_sanitised)
 
         # if we cannot identify resolution from library filename then use ffprobe
         if not library_filename_resolution_string:
@@ -677,14 +696,14 @@ class FilterMovies(object):
 
             if not library_filename_resolution_string:
 
-                result_details = f"Passed: Unable to determine resolution from filename or ffprobe for library file '{library_filename}'"
+                result_details = f"Passed: Unable to determine resolution from filename or ffprobe for library file '{library_filename_sanitised}'"
                 self.logger_instance.info(result_details)
                 self.result_dict.update({'result': u'Passed'})
                 self.result_details_list.append(result_details)
                 self.result_dict.update({'result_details': self.result_details_list})
                 return None
 
-        self.logger_instance.debug(f"Library filename resolution identified as '{str(library_filename_resolution_string)}' using filename/ffprobe for library file '{library_filename}'")
+        self.logger_instance.debug(f"Library filename resolution identified as '{str(library_filename_resolution_string)}' using filename/ffprobe for library file '{library_filename_sanitised}'")
         return library_filename_resolution_string
 
     def filter_library_iterate_files(self):
@@ -692,7 +711,7 @@ class FilterMovies(object):
         index_title = self.result_dict.get('index_title')
 
         # get index title resolution from index title
-        index_title_resolution_string = self.tools_filters_instance.index_title_resolution(index_title)
+        index_title_resolution_string = self.result_dict.get('index_title_resolution')
 
         # if the index title resolution cannot be identified from index title then skip
         if not index_title_resolution_string:
@@ -1213,7 +1232,7 @@ class FilterMovies(object):
 
         if not filter_list:
 
-            result_details = f"Failed: Filter {filter_type} not defined in config, skipping IMDb override {filter_type} checks"
+            result_details = f"Failed: No {filter_type} defined in config, skipping IMDb override {filter_type} checks"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)

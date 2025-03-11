@@ -213,15 +213,15 @@ class TorrentClients(object):
         if not qbt_client:
             return
 
-        download_url = self.result_dict['magnet_url']
+        download_url = self.result_dict.get('magnet_url')
         if download_url is None:
 
-            self.logger_instance.info(f"No magnet link present for index title '{self.result_dict['index_title']}', trying torrent file...")
+            self.logger_instance.info(f"No magnet link present for index title '{self.result_dict.get('index_title')}', trying torrent file...")
 
-            download_url = self.result_dict['torrent_url']
+            download_url = self.result_dict.get('torrent_url')
             if download_url is None:
 
-                self.logger_instance.info(f"No torrent/magnet present, cannot download index title '{self.result_dict['index_title']}'")
+                self.logger_instance.info(f"No torrent/magnet present, cannot download index title '{self.result_dict.get('index_title')}'")
                 return None
 
         # Generate a unique label and set for the torrent to be added, this unique identifier

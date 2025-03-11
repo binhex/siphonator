@@ -142,7 +142,10 @@ class DbSqlite(object):
 
         # get comparison dictionary from index_title
         tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
-        custom_title_full_compare = tools_filters_instance.index_title_compare(index_title)
+
+        # note we do this as opposed to reading from result_dict as we have not run index_name at this point
+        index_title_sanitised = tools_filters_instance.sanitise_subst(index_title)
+        index_title_compare = tools_filters_instance.index_title_compare(index_title_sanitised)
 
         # get index title with sqlite wildcard char '%'
         custom_title_sqlite_query = tools_filters_instance.sqlite_query(index_title)
@@ -157,16 +160,14 @@ class DbSqlite(object):
             index_title_sqlite_result = sqlite_result.get('index_title')
 
             # get comparison dictionary for index title from sqlite query
-            tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
-            custom_title_full_compare_sqlite = tools_filters_instance.index_title_compare(index_title_sqlite_result)
+            index_title_sqlite_sanitised = tools_filters_instance.sanitise_subst(index_title_sqlite_result)
+            index_title_sqlite_result = tools_filters_instance.index_title_compare(index_title_sqlite_sanitised)
 
-            if not custom_title_full_compare_sqlite:
+            if not index_title_sqlite_result:
                 continue
-            # print(f"sqlite: {custom_title_full_compare_sqlite}")
-            # print(f"index title: {custom_title_full_compare}")
-            # compare index title against sqlite query index title
-            if custom_title_full_compare in custom_title_full_compare_sqlite:
 
+            # compare index title against sqlite query index title
+            if index_title_compare in index_title_sqlite_result:
                 return True
 
         return False
