@@ -29,13 +29,14 @@ class ToolsFilters(object):
         self.resolution_regex = r'\d{3,4}(?=p)'
 
         # core regex
-        self.tv_season_or_episode_regex = r'(?i)(season([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})|s[\d]{2,3}|ep[\d]{2,3}'
+        self.tv_season_or_episode_regex = r'(?i)(season([\d]+)?)|(series([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})|s[\d]{2,3}|ep[\d]{2,3}'
         self.movie_title_regex = r'^(.*?)(?=[\s\.\-\_]\d{4})'
         self.year_regex = r'(?<=[\(\s\.\-\_])\d{4}(?=[\s\.\-\_\)])'
         self.group_regex = r'[a-zA-Z0-9]+$'
 
     def sqlite_query(self, string):
 
+        # string can be raw, no pre-processing
         if string is None:
             self.logger_instance.warning(f"No string sent to function")
             return None
@@ -55,6 +56,7 @@ class ToolsFilters(object):
 
     def keyword_search(self, string, keyword):
 
+        # string must have been pre-processed by sanitise_subst
         if string is None:
             self.logger_instance.warning(f"No string sent to function")
             return None
@@ -71,6 +73,7 @@ class ToolsFilters(object):
 
     def tv_search(self, string):
 
+        # string must have been pre-processed by sanitise_subst and index_title_after_year_to_end functions
         if string is None:
             self.logger_instance.warning(f"No string sent to function")
             return None
@@ -84,6 +87,7 @@ class ToolsFilters(object):
 
     def sanitise_subst(self, string):
 
+        # string can be raw, no pre-processing
         if string is None:
             self.logger_instance.debug(f'No string sent to function')
             return None
@@ -126,6 +130,7 @@ class ToolsFilters(object):
 
     def regex_search(self, string, regex, group=0):
 
+        # string must have been pre-processed by sanitise_subst function
         if string is None:
             self.logger_instance.debug(f'No string sent to function')
             return None
@@ -141,6 +146,7 @@ class ToolsFilters(object):
 
     def regex_subst(self, string, subst, regex):
 
+        # string must have been pre-processed by sanitise_subst function
         if string is None:
             self.logger_instance.debug(f'No string sent to function')
             return None
@@ -159,6 +165,7 @@ class ToolsFilters(object):
 
     def movie_title(self, string):
 
+        # string must have been pre-processed by sanitise_subst function
         if string is None:
             self.logger_instance.debug(f'No string sent to function')
             return None
@@ -170,6 +177,7 @@ class ToolsFilters(object):
 
     def movie_title_year(self, string):
 
+        # string must have been pre-processed by sanitise_subst function
         if string is None:
             self.logger_instance.debug(f'No string sent to function')
             return None
@@ -181,6 +189,7 @@ class ToolsFilters(object):
 
     def movie_title_compare(self, string):
 
+        # string must have been pre-processed by sanitise_subst function
         movie_title = self.movie_title(string)
         if not movie_title:
             return None
@@ -196,18 +205,16 @@ class ToolsFilters(object):
 
     def imdb_title_compare(self, string):
 
+        # string must have been pre-processed by sanitise_subst function (only for Google search)
         if string is None:
             self.logger_instance.debug(f'No string sent to function')
             return None
 
         # remove imdb related substrings from imdb search sites
-        imdb_title_strip_brackets = self.regex_subst(string, '', self.helper_round_square_brackets_regex)
-        imdb_title_strip_site_title = imdb_title_strip_brackets.replace('imdb', '')
-        imdb_title_compare = self.regex_subst(imdb_title_strip_site_title, '', self.compare_movie_title_regex)
-        result = self.regex_subst(imdb_title_compare, 'and', self.helper_replacement_words_regex)
-
-        if result:
-            result = result.lower()
+        imdb_title_lower = string.lower()
+        imdb_title_strip_site_title = imdb_title_lower.replace('imdb', '')
+        imdb_title_normalise_and = imdb_title_strip_site_title.replace('&', 'and')
+        result = self.regex_subst(imdb_title_normalise_and, '', self.compare_movie_title_regex)
 
         self.logger_instance.debug(f"IMDb title compare regex result is input '{string}', output '{result}'")
 
@@ -215,6 +222,7 @@ class ToolsFilters(object):
 
     def index_title_after_year_to_end(self, string):
 
+        # string must have been pre-processed by sanitise_subst function
         if string is None:
             self.logger_instance.debug(f'No string sent to function')
             return None
@@ -229,6 +237,7 @@ class ToolsFilters(object):
 
     def index_title_resolution(self, string):
 
+        # string must have been pre-processed by sanitise_subst function
         if string is None:
             self.logger_instance.debug(f'No string sent to function')
             return None
@@ -244,6 +253,7 @@ class ToolsFilters(object):
 
     def index_title_group(self, string):
 
+        # string must have been pre-processed by sanitise_subst function
         if string is None:
             self.logger_instance.debug(f'No string sent to function')
             return None
@@ -259,6 +269,7 @@ class ToolsFilters(object):
 
     def index_title_compare(self, string):
 
+        # string must have been pre-processed by sanitise_subst function
         if string is None:
             self.logger_instance.debug(f'No string sent to function')
             return None
@@ -313,15 +324,6 @@ class ToolsFilters(object):
         movie_title_year = self.movie_title_year(index_title_sanitised)
         if not movie_title_year:
             result_details = f"Failed: Unable to determine movie year from index title '{index_title_sanitised}'"
-            self.logger_instance.info(result_details)
-            result_dict.update({'result': u'Failed'})
-            result_details_list.append(result_details)
-            result_dict.update({'result_details': result_details_list})
-            return result_dict
-
-        movie_title_and_year = f"{movie_title} {movie_title_year}"
-        if not movie_title_and_year:
-            result_details = f"Failed: Unable to determine movie title and year from index title '{index_title_sanitised}'"
             self.logger_instance.info(result_details)
             result_dict.update({'result': u'Failed'})
             result_details_list.append(result_details)
