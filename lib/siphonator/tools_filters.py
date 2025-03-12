@@ -18,7 +18,6 @@ class ToolsFilters(object):
         self.helper_round_square_brackets_regex = r'[\[\]\(\)]+'
         self.helper_movie_title_year_and_end_regex = r'^(.+?\d{4}[\s\.\-\+,]?)(.*)'
         self.helper_file_extension_regex = r'\.[a-z0-9]{3}$'
-        self.helper_replacement_words_regex = r'&'
         self.helper_spaces_start_and_end = r'^\s+|\s+$'
         self.helper_website_regex = r'www[\s\.\-\_][a-zA-Z0-9]+[\s\.\-\_][a-zA-Z0-9]{3,}'
 
@@ -29,7 +28,7 @@ class ToolsFilters(object):
         self.resolution_regex = r'\d{3,4}(?=p)'
 
         # core regex
-        self.tv_season_or_episode_regex = r'(?i)(season([\d]+)?)|(series([\d]+)?)|s[\d]{2,3}(e[\d]{2,3})|s[\d]{2,3}|ep[\d]{2,3}'
+        self.tv_season_or_episode_regex = r'(?i)s[\d]{2,3}(e[\d]{2,3})|s[\d]{2,3}|ep[\d]{2,3}'
         self.movie_title_regex = r'^(.*?)(?=[\s\.\-\_]\d{4})'
         self.year_regex = r'(?<=[\(\s\.\-\_])\d{4}(?=[\s\.\-\_\)])'
         self.group_regex = r'[a-zA-Z0-9]+$'
@@ -195,7 +194,8 @@ class ToolsFilters(object):
             return None
 
         movie_title_compare = self.regex_subst(movie_title, '', self.compare_movie_title_regex)
-        result = self.regex_subst(movie_title_compare, 'and', self.helper_replacement_words_regex)
+        result = movie_title_compare.replace('&', 'and')
+
         if result:
             result = result.lower()
 
@@ -275,7 +275,8 @@ class ToolsFilters(object):
             return None
 
         index_title_compare = self.regex_subst(string, '', self.compare_movie_title_regex)
-        result = self.regex_subst(index_title_compare, 'and', self.helper_replacement_words_regex)
+        result = index_title_compare.replace('&', 'and')
+
         if result:
             result = result.lower()
         self.logger_instance.debug(f"Index title compare regex result is input '{string}', output '{result}'")
