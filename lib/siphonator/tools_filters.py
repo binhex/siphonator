@@ -36,8 +36,8 @@ class ToolsFilters(object):
     def sqlite_query(self, string):
 
         # string can be raw, no pre-processing
-        if string is None:
-            self.logger_instance.warning(f"No string sent to function")
+        if not string:
+            self.logger_instance.warning(f"Empty or no string sent to function")
             return None
 
         movie_title = self.movie_title(string)
@@ -56,8 +56,8 @@ class ToolsFilters(object):
     def keyword_search(self, string, keyword):
 
         # string must have been pre-processed by sanitise_subst
-        if string is None:
-            self.logger_instance.warning(f"No string sent to function")
+        if not string:
+            self.logger_instance.warning(f"Empty or no string sent to function")
             return None
 
         index_title_after_year_to_end = self.index_title_after_year_to_end(string)
@@ -73,8 +73,8 @@ class ToolsFilters(object):
     def tv_search(self, string):
 
         # string must have been pre-processed by sanitise_subst and index_title_after_year_to_end functions
-        if string is None:
-            self.logger_instance.warning(f"No string sent to function")
+        if not string:
+            self.logger_instance.warning(f"Empty or no string sent to function")
             return None
 
         result = self.regex_search(string, self.tv_season_or_episode_regex)
@@ -87,15 +87,15 @@ class ToolsFilters(object):
     def sanitise_subst(self, string):
 
         # string can be raw, no pre-processing
-        if string is None:
-            self.logger_instance.debug(f'No string sent to function')
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
-        helper_non_ascii_chars_regex = re.compile(self.helper_non_ascii_chars_regex)
-        result = helper_non_ascii_chars_regex.sub('', string)
-
         helper_file_extension_regex = re.compile(self.helper_file_extension_regex)
-        result = helper_file_extension_regex.sub('', result)
+        result = helper_file_extension_regex.sub('', string)
+
+        helper_non_ascii_chars_regex = re.compile(self.helper_non_ascii_chars_regex)
+        result = helper_non_ascii_chars_regex.sub('', result)
 
         helper_brackets_at_start_regex = re.compile(self.helper_brackets_at_start_regex)
         result = helper_brackets_at_start_regex.sub('', result)
@@ -130,8 +130,8 @@ class ToolsFilters(object):
     def regex_search(self, string, regex, group=0):
 
         # string must have been pre-processed by sanitise_subst function
-        if string is None:
-            self.logger_instance.debug(f'No string sent to function')
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         regex = re.compile(regex)
@@ -146,8 +146,8 @@ class ToolsFilters(object):
     def regex_subst(self, string, subst, regex):
 
         # string must have been pre-processed by sanitise_subst function
-        if string is None:
-            self.logger_instance.debug(f'No string sent to function')
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         regex = re.compile(regex)
@@ -165,8 +165,8 @@ class ToolsFilters(object):
     def movie_title(self, string):
 
         # string must have been pre-processed by sanitise_subst function
-        if string is None:
-            self.logger_instance.debug(f'No string sent to function')
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         result = self.regex_search(string, self.movie_title_regex)
@@ -177,8 +177,8 @@ class ToolsFilters(object):
     def movie_title_year(self, string):
 
         # string must have been pre-processed by sanitise_subst function
-        if string is None:
-            self.logger_instance.debug(f'No string sent to function')
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         result = self.regex_search(string, self.year_regex)
@@ -206,8 +206,8 @@ class ToolsFilters(object):
     def imdb_title_compare(self, string):
 
         # string must have been pre-processed by sanitise_subst function (only for Google search)
-        if string is None:
-            self.logger_instance.debug(f'No string sent to function')
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         # remove imdb related substrings from imdb search sites
@@ -223,8 +223,8 @@ class ToolsFilters(object):
     def index_title_after_year_to_end(self, string):
 
         # string must have been pre-processed by sanitise_subst function
-        if string is None:
-            self.logger_instance.debug(f'No string sent to function')
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         result = self.regex_search(string, self.helper_movie_title_year_and_end_regex, group=2)
@@ -238,8 +238,8 @@ class ToolsFilters(object):
     def index_title_resolution(self, string):
 
         # string must have been pre-processed by sanitise_subst function
-        if string is None:
-            self.logger_instance.debug(f'No string sent to function')
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         index_title_after_year_to_end = self.index_title_after_year_to_end(string)
@@ -254,8 +254,8 @@ class ToolsFilters(object):
     def index_title_group(self, string):
 
         # string must have been pre-processed by sanitise_subst function
-        if string is None:
-            self.logger_instance.debug(f'No string sent to function')
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         index_title_after_year_to_end = self.index_title_after_year_to_end(string)
@@ -270,8 +270,8 @@ class ToolsFilters(object):
     def index_title_compare(self, string):
 
         # string must have been pre-processed by sanitise_subst function
-        if string is None:
-            self.logger_instance.debug(f'No string sent to function')
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         index_title_compare = self.regex_subst(string, '', self.compare_movie_title_regex)

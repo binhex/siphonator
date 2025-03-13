@@ -770,6 +770,15 @@ class FilterMovies(object):
                             self.result_dict.update({'result_details': self.result_details_list})
                             return False
 
+                        else:
+
+                            # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
+                            result_details = f"Passed: Index title '{index_title}' does contain override for library filename '{library_filename}'"
+                            self.logger_instance.info(result_details)
+                            self.result_dict.update({'result': u'Passed'})
+                            self.result_details_list.append(result_details)
+                            self.result_dict.update({'result_details': self.result_details_list})
+
                     # if index resolution is less than library file then skip
                     if int(index_title_resolution_string) < int(library_file_resolution_string):
 
@@ -779,6 +788,15 @@ class FilterMovies(object):
                         self.result_details_list.append(result_details)
                         self.result_dict.update({'result_details': self.result_details_list})
                         return False
+
+                    else:
+
+                        # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
+                        result_details = f"Passed: Index title '{index_title}' resolution {index_title_resolution_string} is greater than library filename '{library_filename}' resolution {library_file_resolution_string}"
+                        self.logger_instance.info(result_details)
+                        self.result_dict.update({'result': u'Passed'})
+                        self.result_details_list.append(result_details)
+                        self.result_dict.update({'result_details': self.result_details_list})
 
             else:
 
@@ -814,6 +832,15 @@ class FilterMovies(object):
                                 self.result_dict.update({'result_details': self.result_details_list})
                                 return False
 
+                            else:
+
+                                # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
+                                result_details = f"Passed: Index title '{index_title}' does contain override for library filename '{library_filename}'"
+                                self.logger_instance.info(result_details)
+                                self.result_dict.update({'result': u'Passed'})
+                                self.result_details_list.append(result_details)
+                                self.result_dict.update({'result_details': self.result_details_list})
+
                         # if index resolution is less than library file then skip
                         if int(index_title_resolution_string) < int(library_file_resolution_string):
 
@@ -823,6 +850,15 @@ class FilterMovies(object):
                             self.result_details_list.append(result_details)
                             self.result_dict.update({'result_details': self.result_details_list})
                             return False
+
+                        else:
+
+                            # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
+                            result_details = f"Passed: Index title '{index_title}' resolution {index_title_resolution_string} is greater than library filename '{library_filename}' resolution {library_file_resolution_string}"
+                            self.logger_instance.info(result_details)
+                            self.result_dict.update({'result': u'Passed'})
+                            self.result_details_list.append(result_details)
+                            self.result_dict.update({'result_details': self.result_details_list})
 
         result_details = f"Passed: Index title '{index_title}' contains overrides, is higher resolution or does not exist in library path '{library_path}'"
         self.logger_instance.info(result_details)

@@ -188,5 +188,5 @@ def http_client(logger_instance, **kwargs):
 
         if 200 <= status_code <= 299:
 
-            logger_instance.info(f"The status code '{status_code}' indicates a successful request for '{url}'")
+            logger_instance.debug(f"The status code '{status_code}' indicates a successful request for '{url}'")
             return 0, status_code, content
