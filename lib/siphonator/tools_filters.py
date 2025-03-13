@@ -84,7 +84,7 @@ class ToolsFilters(object):
             return True
         return False
 
-    def sanitise_subst(self, string):
+    def sanitise(self, string):
 
         # string can be raw, no pre-processing
         if not string:
@@ -127,7 +127,8 @@ class ToolsFilters(object):
         self.logger_instance.debug(f"Sanitised string regex result is input '{string}', output '{result}'")
         return result
 
-    def sanitise_compare(self, string):
+    # compares imdb title result with movie title from index title
+    def compare(self, string):
 
         # string must have been pre-processed by sanitise_subst function
         if not string:
@@ -137,7 +138,7 @@ class ToolsFilters(object):
         string_lower = string.lower()
 
         result = string_lower.replace(' & ', 'and')
-        result = result.replace(' imdb ', '')
+        result = result.replace('imdb', '')
         result = result.replace(' one ', '1')
         result = result.replace(' two ', '2')
         result = result.replace(' three ', '3')
@@ -282,7 +283,7 @@ class ToolsFilters(object):
             return result_dict
 
         # remove common characters
-        index_title_sanitised = self.sanitise_subst(index_title)
+        index_title_sanitised = self.sanitise(index_title)
         if not index_title_sanitised:
             result_details = f"Failed: Unable to determine sanitised string from index title '{index_title}'"
             self.logger_instance.info(result_details)
@@ -301,7 +302,7 @@ class ToolsFilters(object):
             result_dict.update({'result_details': result_details_list})
             return result_dict
 
-        movie_title_compare = self.sanitise_compare(index_title_sanitised)
+        movie_title_compare = self.compare(movie_title)
         if not movie_title_compare:
             result_details = f"Failed: Unable to determine movie title compare from index title '{index_title_sanitised}'"
             self.logger_instance.info(result_details)
@@ -321,14 +322,14 @@ class ToolsFilters(object):
 
         # get optional strings from functions
         index_title_after_year_to_end = self.index_title_after_year_to_end(index_title_sanitised)
-        index_title_resolution = self.index_title_resolution(index_title_sanitised)
-        index_title_group = self.index_title_group(index_title_sanitised)
+        index_title_resolution = self.index_title_resolution(index_title_after_year_to_end)
+        index_title_group = self.index_title_group(index_title_after_year_to_end)
 
         # construct other strings from existing variables
         movie_title_and_year_search = f"{movie_title} {movie_title_year}"
-        movie_title_and_year_compare = f"{movie_title_compare}"
+        movie_title_and_year_compare = f"{movie_title_compare}{movie_title_year}"
 
-        index_title_compare = self.sanitise_compare(index_title_sanitised)
+        index_title_compare = self.compare(index_title_sanitised)
 
         index_name_dict = {
             'movie_title': movie_title,

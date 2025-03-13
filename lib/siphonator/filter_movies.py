@@ -135,7 +135,7 @@ class FilterMovies(object):
         for filter_override_movie_title in filter_override_movie_title_list:
 
             # get bad movie title compare using tools various
-            filter_override_movie_title_compare = self.tools_filters_instance.sanitise_compare(filter_override_movie_title)
+            filter_override_movie_title_compare = self.tools_filters_instance.compare(filter_override_movie_title)
 
             if filter_override_movie_title_compare in movie_title_and_year_compare:
 
@@ -484,10 +484,10 @@ class FilterMovies(object):
 
             for library_dirs in dirs:
 
-                library_dirs_sanitised = self.tools_filters_instance.sanitise_subst(library_dirs)
+                library_dirs_sanitised = self.tools_filters_instance.sanitise(library_dirs)
 
                 # get library directory compare strings using tools various
-                library_dirs_title_compare = self.tools_filters_instance.sanitise_compare(library_dirs_sanitised)
+                library_dirs_title_compare = self.tools_filters_instance.compare(library_dirs_sanitised)
                 library_dir_year_compare = self.tools_filters_instance.movie_title_year(library_dirs_sanitised)
 
                 # if we cannot determine the year from the directory then continue
@@ -533,13 +533,13 @@ class FilterMovies(object):
 
         movie_title_year = self.result_dict.get('movie_title_year')
 
-        library_filename_sanitised = self.tools_filters_instance.sanitise_subst(library_filename)
+        library_filename_sanitised = self.tools_filters_instance.sanitise(library_filename)
 
         library_year_compare = self.tools_filters_instance.movie_title_year(library_filename_sanitised)
         if not library_year_compare:
             return True
 
-        library_title_compare = self.tools_filters_instance.sanitise_compare(library_filename_sanitised)
+        library_title_compare = self.tools_filters_instance.compare(library_filename_sanitised)
         if not library_title_compare:
             return True
 
@@ -604,7 +604,7 @@ class FilterMovies(object):
     def filter_quality_check(self, library_file):
 
         index_title_sanitised = self.result_dict.get('index_title_sanitised')
-        library_file_sanitised = self.tools_filters_instance.sanitise_subst(library_file)
+        library_file_sanitised = self.tools_filters_instance.sanitise(library_file)
 
         index_title_after_year_to_end = self.tools_filters_instance.index_title_after_year_to_end(index_title_sanitised)
 
@@ -683,7 +683,7 @@ class FilterMovies(object):
 
         ffprobe_filepath = self.init_dict.get('ffprobe_filepath')
 
-        library_filename_sanitised = self.tools_filters_instance.sanitise_subst(library_filename)
+        library_filename_sanitised = self.tools_filters_instance.sanitise(library_filename)
 
         # attempt to identify resolution from library filename
         library_filename_resolution_string = self.tools_filters_instance.index_title_resolution(library_filename_sanitised)
@@ -1168,7 +1168,7 @@ class FilterMovies(object):
         for filter_bad_movie_title in filter_bad_movie_title_list:
 
             # get bad movie title compare using tools various
-            filter_bad_movie_title_full_compare = self.tools_filters_instance.sanitise_compare(filter_bad_movie_title)
+            filter_bad_movie_title_full_compare = self.tools_filters_instance.compare(filter_bad_movie_title)
 
             if filter_bad_movie_title_full_compare in movie_title_and_year_compare:
 
