@@ -532,18 +532,18 @@ class FilterMovies(object):
     def filter_library_year_and_title(self, library_filename):
 
         movie_title_year = self.result_dict.get('movie_title_year')
+        movie_title_compare = self.result_dict.get('movie_title_compare')
 
         library_filename_sanitised = self.tools_filters_instance.sanitise(library_filename)
+        library_title = self.tools_filters_instance.movie_title(library_filename_sanitised)
+
+        library_title_compare = self.tools_filters_instance.compare(library_title)
+        if not library_title_compare:
+            return True
 
         library_year_compare = self.tools_filters_instance.movie_title_year(library_filename_sanitised)
         if not library_year_compare:
             return True
-
-        library_title_compare = self.tools_filters_instance.compare(library_filename_sanitised)
-        if not library_title_compare:
-            return True
-
-        movie_title_compare = self.result_dict.get('movie_title_compare')
 
         # if index title not in library title then movie does not exist, download
         if library_title_compare not in movie_title_compare:
