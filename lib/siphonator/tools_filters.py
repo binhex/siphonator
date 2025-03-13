@@ -127,6 +127,28 @@ class ToolsFilters(object):
         self.logger_instance.debug(f"Sanitised string regex result is input '{string}', output '{result}'")
         return result
 
+    def sanitise_compare(self, string):
+
+        # string can be raw, no pre-processing
+        if not string:
+            self.logger_instance.debug(f'Empty or no string sent to function')
+            return None
+
+        result = string.replace('&', 'and')
+        result = result.replace('one', '1')
+        result = result.replace('two', '2')
+        result = result.replace('three', '3')
+        result = result.replace('four', '4')
+        result = result.replace('five', '5')
+        result = result.replace('six', '6')
+        result = result.replace('seven', '7')
+        result = result.replace('eight', '8')
+        result = result.replace('nine', '9')
+        result = result.replace('ten', '10')
+
+        self.logger_instance.debug(f"Sanitised compare string regex result is input '{string}', output '{result}'")
+        return result
+
     def regex_search(self, string, regex, group=0):
 
         # string must have been pre-processed by sanitise_subst function
@@ -194,7 +216,7 @@ class ToolsFilters(object):
             return None
 
         movie_title_compare = self.regex_subst(movie_title, '', self.compare_movie_title_regex)
-        result = movie_title_compare.replace('&', 'and')
+        result = self.sanitise_compare(movie_title_compare)
 
         if result:
             result = result.lower()
@@ -213,7 +235,7 @@ class ToolsFilters(object):
         # remove imdb related substrings from imdb search sites
         imdb_title_lower = string.lower()
         imdb_title_strip_site_title = imdb_title_lower.replace('imdb', '')
-        imdb_title_normalise_and = imdb_title_strip_site_title.replace('&', 'and')
+        imdb_title_normalise_and = self.sanitise_compare(imdb_title_strip_site_title)
         result = self.regex_subst(imdb_title_normalise_and, '', self.compare_movie_title_regex)
 
         self.logger_instance.debug(f"IMDb title compare regex result is input '{string}', output '{result}'")
@@ -275,7 +297,7 @@ class ToolsFilters(object):
             return None
 
         index_title_compare = self.regex_subst(string, '', self.compare_movie_title_regex)
-        result = index_title_compare.replace('&', 'and')
+        result = self.sanitise_compare(index_title_compare)
 
         if result:
             result = result.lower()
