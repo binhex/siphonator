@@ -326,7 +326,7 @@ class ToolsFilters(object):
 
         # construct other strings from existing variables
         movie_title_and_year_search = f"{movie_title} {movie_title_year}"
-        movie_title_and_year_compare = f"{movie_title_compare}{movie_title_year}"
+        movie_title_and_year_compare = f"{movie_title_compare}"
 
         index_title_compare = self.sanitise_compare(index_title_sanitised)
 
