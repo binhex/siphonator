@@ -61,7 +61,7 @@ class SearchIMDB(object):
 
             # get comparison dictionary for imdb_title
             tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
-            imdb_title_compare = tools_filters_instance.imdb_title_compare(imdb_title)
+            imdb_title_compare = tools_filters_instance.sanitise_compare(imdb_title)
 
             if imdb_title_compare is None or imdb_title_compare not in self.movie_title_compare:
                 self.logger_instance.info(f"IMDb title compare '{imdb_title_compare}' not in index title compare '{self.movie_title_compare}'")

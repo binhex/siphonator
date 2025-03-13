@@ -129,22 +129,38 @@ class ToolsFilters(object):
 
     def sanitise_compare(self, string):
 
-        # string can be raw, no pre-processing
+        # string must have been pre-processed by sanitise_subst function
         if not string:
             self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
-        result = string.replace('&', 'and')
-        result = result.replace('one', '1')
-        result = result.replace('two', '2')
-        result = result.replace('three', '3')
-        result = result.replace('four', '4')
-        result = result.replace('five', '5')
-        result = result.replace('six', '6')
-        result = result.replace('seven', '7')
-        result = result.replace('eight', '8')
-        result = result.replace('nine', '9')
-        result = result.replace('ten', '10')
+        string_lower = string.lower()
+
+        result = string_lower.replace(' & ', 'and')
+        result = result.replace(' imdb ', '')
+        result = result.replace(' one ', '1')
+        result = result.replace(' two ', '2')
+        result = result.replace(' three ', '3')
+        result = result.replace(' four ', '4')
+        result = result.replace(' five ', '5')
+        result = result.replace(' six ', '6')
+        result = result.replace(' seven ', '7')
+        result = result.replace(' eight ', '8')
+        result = result.replace(' nine', '9')
+        result = result.replace(' ten ', '10')
+        result = result.replace(' i ', '1')
+        result = result.replace(' ii ', '2')
+        result = result.replace(' iii ', '3')
+        result = result.replace(' iv ', '4')
+        result = result.replace(' v ', '5')
+        result = result.replace(' vi ', '6')
+        result = result.replace(' vii ', '7')
+        result = result.replace(' viii ', '8')
+        result = result.replace(' ix ', '9')
+        result = result.replace(' x ', '10')
+
+        # remove all separators
+        result = self.regex_subst(result, '', self.compare_movie_title_regex)
 
         self.logger_instance.debug(f"Sanitised compare string regex result is input '{string}', output '{result}'")
         return result
@@ -208,40 +224,6 @@ class ToolsFilters(object):
 
         return result
 
-    def movie_title_compare(self, string):
-
-        # string must have been pre-processed by sanitise_subst function
-        movie_title = self.movie_title(string)
-        if not movie_title:
-            return None
-
-        movie_title_compare = self.regex_subst(movie_title, '', self.compare_movie_title_regex)
-        result = self.sanitise_compare(movie_title_compare)
-
-        if result:
-            result = result.lower()
-
-        self.logger_instance.debug(f"Movie title compare regex result is input '{string}', output '{result}'")
-
-        return result
-
-    def imdb_title_compare(self, string):
-
-        # string must have been pre-processed by sanitise_subst function (only for Google search)
-        if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
-            return None
-
-        # remove imdb related substrings from imdb search sites
-        imdb_title_lower = string.lower()
-        imdb_title_strip_site_title = imdb_title_lower.replace('imdb', '')
-        imdb_title_normalise_and = self.sanitise_compare(imdb_title_strip_site_title)
-        result = self.regex_subst(imdb_title_normalise_and, '', self.compare_movie_title_regex)
-
-        self.logger_instance.debug(f"IMDb title compare regex result is input '{string}', output '{result}'")
-
-        return result
-
     def index_title_after_year_to_end(self, string):
 
         # string must have been pre-processed by sanitise_subst function
@@ -289,22 +271,6 @@ class ToolsFilters(object):
 
         return result
 
-    def index_title_compare(self, string):
-
-        # string must have been pre-processed by sanitise_subst function
-        if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
-            return None
-
-        index_title_compare = self.regex_subst(string, '', self.compare_movie_title_regex)
-        result = self.sanitise_compare(index_title_compare)
-
-        if result:
-            result = result.lower()
-        self.logger_instance.debug(f"Index title compare regex result is input '{string}', output '{result}'")
-
-        return result
-
     def index_name(self, result_dict):
 
         result_details_list = result_dict.get('result_details', [])
@@ -335,7 +301,7 @@ class ToolsFilters(object):
             result_dict.update({'result_details': result_details_list})
             return result_dict
 
-        movie_title_compare = self.movie_title_compare(index_title_sanitised)
+        movie_title_compare = self.sanitise_compare(index_title_sanitised)
         if not movie_title_compare:
             result_details = f"Failed: Unable to determine movie title compare from index title '{index_title_sanitised}'"
             self.logger_instance.info(result_details)
@@ -362,7 +328,7 @@ class ToolsFilters(object):
         movie_title_and_year_search = f"{movie_title} {movie_title_year}"
         movie_title_and_year_compare = f"{movie_title_compare}{movie_title_year}"
 
-        index_title_compare = self.index_title_compare(index_title_sanitised)
+        index_title_compare = self.sanitise_compare(index_title_sanitised)
 
         index_name_dict = {
             'movie_title': movie_title,

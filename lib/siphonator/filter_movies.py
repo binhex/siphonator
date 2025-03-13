@@ -135,7 +135,7 @@ class FilterMovies(object):
         for filter_override_movie_title in filter_override_movie_title_list:
 
             # get bad movie title compare using tools various
-            filter_override_movie_title_compare = self.tools_filters_instance.imdb_title_compare(filter_override_movie_title)
+            filter_override_movie_title_compare = self.tools_filters_instance.sanitise_compare(filter_override_movie_title)
 
             if filter_override_movie_title_compare in movie_title_and_year_compare:
 
@@ -487,7 +487,7 @@ class FilterMovies(object):
                 library_dirs_sanitised = self.tools_filters_instance.sanitise_subst(library_dirs)
 
                 # get library directory compare strings using tools various
-                library_dirs_title_compare = self.tools_filters_instance.movie_title_compare(library_dirs_sanitised)
+                library_dirs_title_compare = self.tools_filters_instance.sanitise_compare(library_dirs_sanitised)
                 library_dir_year_compare = self.tools_filters_instance.movie_title_year(library_dirs_sanitised)
 
                 # if we cannot determine the year from the directory then continue
@@ -539,7 +539,7 @@ class FilterMovies(object):
         if not library_year_compare:
             return True
 
-        library_title_compare = self.tools_filters_instance.movie_title_compare(library_filename_sanitised)
+        library_title_compare = self.tools_filters_instance.sanitise_compare(library_filename_sanitised)
         if not library_title_compare:
             return True
 
@@ -1168,7 +1168,7 @@ class FilterMovies(object):
         for filter_bad_movie_title in filter_bad_movie_title_list:
 
             # get bad movie title compare using tools various
-            filter_bad_movie_title_full_compare = self.tools_filters_instance.index_title_compare(filter_bad_movie_title)
+            filter_bad_movie_title_full_compare = self.tools_filters_instance.sanitise_compare(filter_bad_movie_title)
 
             if filter_bad_movie_title_full_compare in movie_title_and_year_compare:
 

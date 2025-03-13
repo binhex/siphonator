@@ -90,7 +90,7 @@ class SearchOMDb(object):
 
         # get comparison dictionary for omdb_title
         tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
-        omdb_title_compare = tools_filters_instance.imdb_title_compare(omdb_title)
+        omdb_title_compare = tools_filters_instance.sanitise_compare(omdb_title)
 
         if omdb_title_compare is None or omdb_title_compare not in self.index_title_compare:
             result_details = f"Failed: Cannot identify movie title '{self.movie_title_and_year_search}' using OMDb search"

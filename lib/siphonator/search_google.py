@@ -66,7 +66,7 @@ class SearchGoogle(object):
 
         # note we need to sanitise the Google search result as it may contain brackets, hyphens etc
         imdb_title_sanitised = tools_filters_instance.sanitise_subst(imdb_title)
-        imdb_title_compare = tools_filters_instance.imdb_title_compare(imdb_title_sanitised)
+        imdb_title_compare = tools_filters_instance.sanitise_compare(imdb_title_sanitised)
 
         # check imdb title match index title
         if imdb_title_compare is None or imdb_title_compare not in self.index_title_compare:

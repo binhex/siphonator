@@ -66,8 +66,8 @@ class SearchTMDB(object):
 
             # get comparison dictionary for tmdb_title
             tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
-            tmdb_title_compare = tools_filters_instance.imdb_title_compare(tmdb_title)
-            tmdb_original_title_compare = tools_filters_instance.imdb_title_compare(tmdb_original_title)
+            tmdb_title_compare = tools_filters_instance.sanitise_compare(tmdb_title)
+            tmdb_original_title_compare = tools_filters_instance.sanitise_compare(tmdb_original_title)
 
             if tmdb_title_compare is not None and tmdb_title_compare in self.index_title_compare:
                 self.logger_instance.debug(f"TMDb title compare '{tmdb_title_compare}' matches index title compare '{self.index_title_compare}'")

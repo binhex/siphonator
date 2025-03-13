@@ -277,7 +277,7 @@ def filter_downloaded_iterate_files(index_title, index_site_search, library_path
     ffprobe_filepath, logger = test_init_instance.setup()
 
     tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
-    index_title_compare = tools_filters_instance.movie_title_compare(index_title)
+    index_title_compare = tools_filters_instance.sanitise_compare(index_title)
     index_year_compare = tools_filters_instance.movie_title_year(index_title)
 
     # Arrange
@@ -514,7 +514,7 @@ def custom_title_compare(index_title):
 
     # Act
     siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
-    response = siphonator_tools_filters_instance.movie_title_compare(index_title)
+    response = siphonator_tools_filters_instance.sanitise_compare(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response
@@ -544,7 +544,7 @@ def custom_title_full_compare(index_title):
 
     # Act
     siphonator_tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger)
-    response = siphonator_tools_filters_instance.index_title_compare(index_title)
+    response = siphonator_tools_filters_instance.sanitise_compare(index_title)
 
     # yield used instead of return to allow us to do cleanup afterward
     yield response

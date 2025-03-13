@@ -145,7 +145,7 @@ class DbSqlite(object):
 
         # note we do this as opposed to reading from result_dict as we have not run index_name at this point
         index_title_sanitised = tools_filters_instance.sanitise_subst(index_title)
-        index_title_compare = tools_filters_instance.index_title_compare(index_title_sanitised)
+        index_title_compare = tools_filters_instance.sanitise_compare(index_title_sanitised)
 
         # get index title with sqlite wildcard char '%'
         custom_title_sqlite_query = tools_filters_instance.sqlite_query(index_title)
@@ -161,7 +161,7 @@ class DbSqlite(object):
 
             # get comparison dictionary for index title from sqlite query
             index_title_sqlite_sanitised = tools_filters_instance.sanitise_subst(index_title_sqlite_result)
-            index_title_sqlite_result = tools_filters_instance.index_title_compare(index_title_sqlite_sanitised)
+            index_title_sqlite_result = tools_filters_instance.sanitise_compare(index_title_sqlite_sanitised)
 
             if not index_title_sqlite_result:
                 continue
