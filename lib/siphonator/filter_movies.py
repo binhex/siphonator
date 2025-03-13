@@ -789,7 +789,8 @@ class FilterMovies(object):
                         self.result_dict.update({'result_details': self.result_details_list})
                         return False
 
-                    else:
+                    # if index resolution is greater than library file then log and carry on (maybe higher resolution library files in next iteration)
+                    if int(index_title_resolution_string) > int(library_file_resolution_string):
 
                         # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
                         result_details = f"Passed: Index title '{index_title}' resolution {index_title_resolution_string} is greater than library filename '{library_filename}' resolution {library_file_resolution_string}"
@@ -851,7 +852,8 @@ class FilterMovies(object):
                             self.result_dict.update({'result_details': self.result_details_list})
                             return False
 
-                        else:
+                        # if index resolution is greater than library file then log and carry on (maybe higher resolution library files in next iteration)
+                        if int(index_title_resolution_string) > int(library_file_resolution_string):
 
                             # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
                             result_details = f"Passed: Index title '{index_title}' resolution {index_title_resolution_string} is greater than library filename '{library_filename}' resolution {library_file_resolution_string}"
