@@ -322,8 +322,8 @@ class ToolsFilters(object):
 
         # get optional strings from functions
         index_title_after_year_to_end = self.index_title_after_year_to_end(index_title_sanitised)
-        index_title_resolution = self.index_title_resolution(index_title_after_year_to_end)
-        index_title_group = self.index_title_group(index_title_after_year_to_end)
+        index_title_resolution = self.index_title_resolution(index_title_sanitised)
+        index_title_group = self.index_title_group(index_title_sanitised)
 
         # construct other strings from existing variables
         movie_title_and_year_search = f"{movie_title} {movie_title_year}"
