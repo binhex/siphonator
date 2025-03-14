@@ -66,6 +66,7 @@ class ToolsFilters(object):
 
         result = self.regex_search(index_title_after_year_to_end, rf"^{keyword}\s|\s{keyword}\s|\s{keyword}$")
         #self.logger_instance.debug(f"Keyword search regex result is input '{string}', keyword '{keyword}', output '{result}'")
+
         if result:
             return True
         return False
@@ -83,6 +84,53 @@ class ToolsFilters(object):
         if result:
             return True
         return False
+
+    def convert_string_to_integer_string(self, string):
+
+        # string must have been pre-processed by sanitise_subst and index_title_after_year_to_end functions
+        if not string:
+            self.logger_instance.warning(f"Empty or no string sent to function")
+            return None
+
+        # Define the mapping of words to integers
+        word_to_int_dict = {
+            'one': 1,
+            'two': 2,
+            'three': 3,
+            'four': 4,
+            'five': 5,
+            'six': 6,
+            'seven': 7,
+            'eight': 8,
+            'nine': 9,
+            'ten': 10
+        }
+
+        # Define the mapping of roman numerals to integers
+        roman_to_int_dict = {
+            'i': 1,
+            'ii': 2,
+            'iii': 3,
+            'iv': 4,
+            'v': 5,
+            'vi': 6,
+            'vii': 7,
+            'viii': 8,
+            'ix': 9,
+            'x': 10
+        }
+
+        conversion_dict_list = [word_to_int_dict, roman_to_int_dict]
+
+        # Iterate over list of dictionaries
+        for conversion_dict in conversion_dict_list:
+
+            # Iterate over the dictionary and apply re.compile and re.sub
+            for key, value in conversion_dict.items():
+                regex_pattern = re.compile(fr'(?<=[\s.\-_])({key})(?=[\s.\-_]|$)', re.IGNORECASE)
+                string = regex_pattern.sub(str(value), string)
+
+        return string
 
     def sanitise(self, string):
 
@@ -137,18 +185,14 @@ class ToolsFilters(object):
 
         string_lower = string.lower()
 
+        # replace & with and
         result = string_lower.replace('&', 'and')
+
+        # remove string imdb from Google search result
         result = result.replace('imdb', '')
-        result = result.replace('one', '1')
-        result = result.replace('two', '2')
-        result = result.replace('three', '3')
-        result = result.replace('four', '4')
-        result = result.replace('five', '5')
-        result = result.replace('six', '6')
-        result = result.replace('seven', '7')
-        result = result.replace('eight', '8')
-        result = result.replace('nine', '9')
-        result = result.replace('ten', '10')
+
+        # replace numeric strings or roman numerals with integer values
+        result = self.convert_string_to_integer_string(result)
 
         # remove all separators
         result = self.regex_subst(result, '', self.compare_movie_title_regex)
@@ -267,11 +311,10 @@ class ToolsFilters(object):
 
         index_title = result_dict.get('index_title', None)
 
-        # required for tests that may not have index_title defined
+        # required for pytest that may not have index_title defined
         if index_title is None:
             return result_dict
 
-        # remove common characters
         index_title_sanitised = self.sanitise(index_title)
         if not index_title_sanitised:
             result_details = f"Failed: Unable to determine sanitised string from index title '{index_title}'"
@@ -281,7 +324,6 @@ class ToolsFilters(object):
             result_dict.update({'result_details': result_details_list})
             return result_dict
 
-        # get required strings from functions
         movie_title = self.movie_title(index_title_sanitised)
         if not movie_title:
             result_details = f"Failed: Unable to determine movie title from index title '{index_title_sanitised}'"
