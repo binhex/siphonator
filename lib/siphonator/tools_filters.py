@@ -122,10 +122,10 @@ class ToolsFilters(object):
 
         conversion_dict_list = [word_to_int_dict, roman_to_int_dict]
 
-        # Iterate over list of dictionaries
+        # iterate over list of conversion dictionaries
         for conversion_dict in conversion_dict_list:
 
-            # Iterate over the dictionary and apply re.compile and re.sub
+            # iterate over the dictionary and apply re.compile and re.sub
             for key, value in conversion_dict.items():
                 regex_pattern = re.compile(fr'(?<=[\s.\-_])({key})(?=[\s.\-_]|$)', re.IGNORECASE)
                 string = regex_pattern.sub(str(value), string)
