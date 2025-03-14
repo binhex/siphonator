@@ -37,7 +37,6 @@ class ToolsFilters(object):
 
         # string can be raw, no pre-processing
         if not string:
-            self.logger_instance.warning(f"Empty or no string sent to function")
             return None
 
         movie_title = self.movie_title(string)
@@ -49,7 +48,6 @@ class ToolsFilters(object):
         self.logger_instance.debug(f"input '{movie_title}', regex '{self.sqlite_regex}', output '{sqlite}'")
 
         result = f"%%{sqlite}%%"
-        #self.logger_instance.debug(f"Sqlite query regex result is input '{string}', output '{result}'")
 
         return result
 
@@ -57,7 +55,6 @@ class ToolsFilters(object):
 
         # string must have been pre-processed by sanitise_subst
         if not string:
-            self.logger_instance.warning(f"Empty or no string sent to function")
             return None
 
         index_title_after_year_to_end = self.index_title_after_year_to_end(string)
@@ -65,7 +62,6 @@ class ToolsFilters(object):
             return None
 
         result = self.regex_search(index_title_after_year_to_end, rf"^{keyword}\s|\s{keyword}\s|\s{keyword}$")
-        #self.logger_instance.debug(f"Keyword search regex result is input '{string}', keyword '{keyword}', output '{result}'")
 
         if result:
             return True
@@ -75,11 +71,9 @@ class ToolsFilters(object):
 
         # string must have been pre-processed by sanitise_subst and index_title_after_year_to_end functions
         if not string:
-            self.logger_instance.warning(f"Empty or no string sent to function")
             return None
 
         result = self.regex_search(string, self.tv_season_or_episode_regex)
-        #self.logger_instance.debug(f"tv search regex result is input '{string}', output '{result}'")
 
         if result:
             return True
@@ -89,7 +83,6 @@ class ToolsFilters(object):
 
         # string must have been pre-processed by sanitise_subst and index_title_after_year_to_end functions
         if not string:
-            self.logger_instance.warning(f"Empty or no string sent to function")
             return None
 
         # Define the mapping of words to integers
@@ -136,7 +129,6 @@ class ToolsFilters(object):
 
         # string can be raw, no pre-processing
         if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         helper_file_extension_regex = re.compile(self.helper_file_extension_regex)
@@ -172,7 +164,6 @@ class ToolsFilters(object):
         helper_spaces_start_and_end = re.compile(self.helper_spaces_start_and_end)
         result = helper_spaces_start_and_end.sub('', result)
 
-        #self.logger_instance.debug(f"Sanitised string regex result is input '{string}', output '{result}'")
         return result
 
     # compares imdb title result with movie title from index title
@@ -180,7 +171,6 @@ class ToolsFilters(object):
 
         # string must have been pre-processed by sanitise_subst function
         if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         string_lower = string.lower()
@@ -197,14 +187,12 @@ class ToolsFilters(object):
         # remove all separators
         result = self.regex_subst(result, '', self.compare_movie_title_regex)
 
-        #self.logger_instance.debug(f"Sanitised compare string regex result is input '{string}', output '{result}'")
         return result
 
     def regex_search(self, string, regex, group=0):
 
         # string must have been pre-processed by sanitise_subst function
         if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         regex = re.compile(regex)
@@ -213,14 +201,12 @@ class ToolsFilters(object):
         if result:
             result = result.group(group)
 
-        #self.logger_instance.debug(f"Search regex result is input '{string}', regex '{regex}', output '{result}'")
         return result
 
     def regex_subst(self, string, subst, regex):
 
         # string must have been pre-processed by sanitise_subst function
         if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         regex = re.compile(regex)
@@ -231,18 +217,15 @@ class ToolsFilters(object):
         else:
             return None
 
-        #self.logger_instance.debug(f"Substitution regex result is input '{string}', regex '{regex}', substitute '{subst}', output '{result}'")
         return result
 
     def movie_title(self, string):
 
         # string must have been pre-processed by sanitise_subst function
         if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         result = self.regex_search(string, self.movie_title_regex)
-        #self.logger_instance.debug(f"Movie title regex result is input '{string}', output '{result}'")
 
         return result
 
@@ -250,11 +233,9 @@ class ToolsFilters(object):
 
         # string must have been pre-processed by sanitise_subst function
         if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         result = self.regex_search(string, self.year_regex)
-        #self.logger_instance.debug(f"Movie title year regex result is input '{string}', output '{result}'")
 
         return result
 
@@ -262,14 +243,11 @@ class ToolsFilters(object):
 
         # string must have been pre-processed by sanitise_subst function
         if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         result = self.regex_search(string, self.helper_movie_title_year_and_end_regex, group=2)
         if result:
             result = result.lower()
-
-        #self.logger_instance.debug(f"Index title after year to end regex result is input '{string}', output '{result}'")
 
         return result
 
@@ -277,7 +255,6 @@ class ToolsFilters(object):
 
         # string must have been pre-processed by sanitise_subst function
         if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         index_title_after_year_to_end = self.index_title_after_year_to_end(string)
@@ -285,7 +262,6 @@ class ToolsFilters(object):
             return None
 
         result = self.regex_search(index_title_after_year_to_end, self.resolution_regex)
-        #self.logger_instance.debug(f"Index title resolution regex result is input '{string}', output '{result}'")
 
         return result
 
@@ -293,7 +269,6 @@ class ToolsFilters(object):
 
         # string must have been pre-processed by sanitise_subst function
         if not string:
-            self.logger_instance.debug(f'Empty or no string sent to function')
             return None
 
         index_title_after_year_to_end = self.index_title_after_year_to_end(string)
@@ -301,7 +276,6 @@ class ToolsFilters(object):
             return None
 
         result = self.regex_search(index_title_after_year_to_end, self.group_regex)
-        #self.logger_instance.debug(f"Index title group regex result is input '{string}', output '{result}'")
 
         return result
 
