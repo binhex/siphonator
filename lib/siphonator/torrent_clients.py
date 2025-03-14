@@ -183,21 +183,25 @@ class TorrentClients(object):
                 tag = torrent.tags
                 if tag:
 
-                    # Get the list of files for the torrent
-                    files = qbt_client.torrents_files(torrent.hash)
+                    # get the torrents files for the hashed torrent
+                    torrents_files = qbt_client.torrents_files(torrent.hash)
+
+                    # get the torrents properties for the hashed torrent
+                    torrents_properties = qbt_client.torrents_properties(torrent.hash)
+                    torrent_save_path = torrents_properties.save_path
 
                     torrent_file_list = []
 
-                    for file in files:
+                    for torrents_file in torrents_files:
 
                         # filter dict to only filenames
-                        torrent_file_dict = {'file_name': file.name}
+                        torrent_file_dict = {'file_name': torrents_file.name, 'file_size': torrents_file.size}
 
                         # append dict of filenames to list
                         torrent_file_list.append(torrent_file_dict)
 
                     # filter dict to torrent name, torrent tag, and torrent  filenames (list)
-                    completed_torrent_dict = {'torrent_name': torrent.name, 'torrent_tag': tag, 'torrent_file_list': torrent_file_list}
+                    completed_torrent_dict = {'torrent_name': torrent.name, 'torrent_tag': tag, 'torrent_file_list': torrent_file_list, 'torrent_save_path': torrent_save_path}
 
                     # append dict of torrent name, torrent tag and torrent files to list
                     completed_torrent_dict_list.append(completed_torrent_dict)

@@ -7,7 +7,6 @@ class DbSqlite(object):
     def __init__(self, logger_instance, init_dict, result_dict=None):
 
         self.logger_instance = logger_instance
-        self.init_dict = init_dict
         self.result_dict = result_dict
         self.db_version = init_dict['db_version']
         self.db_filepath = init_dict['db_filepath']
@@ -124,53 +123,52 @@ class DbSqlite(object):
             'imdb_country_list',
         ))
 
-    def read_database_simple(self, sqlite_table, sqlite_column, index_title):
+    def read_database_simple(self, sqlite_table, sqlite_column, sqlite_query):
 
         # query database, note this maybe subject to sqlite injection as I am dynamically setting table and column
-        sqlite_result_generator = self.db_sqlite_connection.query(f"SELECT {sqlite_column} FROM {sqlite_table} WHERE {sqlite_column} LIKE ?", ('%'+index_title+'%',))
+        sqlite_result_generator = self.db_sqlite_connection.query(f"SELECT * FROM {sqlite_table} WHERE {sqlite_column} LIKE ?", ('%'+sqlite_query+'%',))
 
         for sqlite_result in sqlite_result_generator:
 
-            # if index title already in database then return True
-            if index_title in (sqlite_result.get('index_title')):
+            # if sqlite query already in database then return True
+            if sqlite_query in (sqlite_result.get(sqlite_column)):
 
-                return True
+                return True, sqlite_result
 
-        return False
+        return False, None
 
-    def read_database_adv(self, sqlite_table, sqlite_column, index_title):
+    def read_database_adv(self, sqlite_table, sqlite_column, sqlite_query):
 
-        # get comparison dictionary from index_title
         tools_filters_instance = siphonator_tools_filters.ToolsFilters(self.logger_instance)
 
-        # note we do this as opposed to reading from result_dict as we have not run index_name at this point
-        index_title_sanitised = tools_filters_instance.sanitise(index_title)
-        index_title_compare = tools_filters_instance.compare(index_title_sanitised)
+        # note we do this as opposed to reading from result_dict as we have not run index_name (from tools_filters) at this point
+        sqlite_query_sanitised = tools_filters_instance.sanitise(sqlite_query)
+        sqlite_query_compare = tools_filters_instance.compare(sqlite_query_sanitised)
 
-        # get index title with sqlite wildcard char '%'
-        custom_title_sqlite_query = tools_filters_instance.sqlite_query(index_title)
-        self.logger_instance.debug(f"Database index title query is '{custom_title_sqlite_query}'")
+        # construct sqlite query with sqlite wildcard char '%'
+        custom_title_sqlite_query = tools_filters_instance.sqlite_query(sqlite_query)
+        self.logger_instance.debug(f"Database query is '{custom_title_sqlite_query}'")
 
         # query database, note this maybe subject to sqlite injection as I am dynamically setting table and column
-        sqlite_result_generator = self.db_sqlite_connection.query(f"SELECT {sqlite_column} FROM {sqlite_table} WHERE {sqlite_column} LIKE ?", (custom_title_sqlite_query,))
+        sqlite_result_generator = self.db_sqlite_connection.query(f"SELECT * FROM {sqlite_table} WHERE {sqlite_column} LIKE ?", (custom_title_sqlite_query,))
 
         for sqlite_result in sqlite_result_generator:
 
-            # get index_title from sqlite query
-            index_title_sqlite_result = sqlite_result.get('index_title')
+            # get result based on sqlite column name
+            sqlite_result_column_filter = sqlite_result.get(sqlite_column)
 
-            # get comparison dictionary for index title from sqlite query
-            index_title_sqlite_sanitised = tools_filters_instance.sanitise(index_title_sqlite_result)
-            index_title_sqlite_result = tools_filters_instance.compare(index_title_sqlite_sanitised)
+            # get comparison dictionary for column name from sqlite query
+            sqlite_result_column_filter_sanitised = tools_filters_instance.sanitise(sqlite_result_column_filter)
+            sqlite_result_column_filter_compare = tools_filters_instance.compare(sqlite_result_column_filter_sanitised)
 
-            if not index_title_sqlite_result:
+            if not sqlite_result_column_filter_compare:
                 continue
 
-            # compare index title against sqlite query index title
-            if index_title_compare in index_title_sqlite_result:
-                return True
+            # compare sqlite query against sqlite query index title
+            if sqlite_query_compare in sqlite_result_column_filter_compare:
+                return True, sqlite_result
 
-        return False
+        return False, None
 
     def upgrade_database(self):
 

@@ -139,7 +139,7 @@ class IndexProxy(object):
                 self.logger_instance.debug(f"Checking if index title '{title}' is already in the sqlite database...")
 
                 db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict, result_dict)
-                read_database_simple_bool = db_sqlite_instance.read_database_simple('history', 'index_title', title)
+                read_database_simple_bool, query_result = db_sqlite_instance.read_database_simple('history', 'index_title', title)
 
                 if read_database_simple_bool:
 
@@ -149,7 +149,7 @@ class IndexProxy(object):
                 else:
 
                     self.logger_instance.info(f"Index title '{title}' not found in sqlite database using simple match, performing adv sqlite match...")
-                    read_database_adv_bool = db_sqlite_instance.read_database_adv('history', 'index_title', title)
+                    read_database_adv_bool, query_result = db_sqlite_instance.read_database_adv('history', 'index_title', title)
 
                     if read_database_adv_bool:
 

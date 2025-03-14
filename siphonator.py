@@ -93,7 +93,7 @@ class SiphonatorPostProcessing(object):
         current_time = siphonator_tools_various.current_time()
         self.logger_instance.info(f"Processing for post-processing started at '{current_time}'")
 
-        post_processing_run_instance = post_processing.PostProcess(self.logger_instance, self.config_dict)
+        post_processing_run_instance = post_processing.PostProcess(self.logger_instance, self.config_dict, self.init_dict)
         post_processing_run_instance.post_process()
 
         # TODO put in elapsed time
