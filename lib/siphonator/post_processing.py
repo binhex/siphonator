@@ -17,7 +17,6 @@ class PostProcess(object):
         if not self.config_dict['post_process']['post_process_enabled']:
             return False
 
-        # TODO WIP
         # returns dict of all torrents in completed state with torrent_name, torrent_tag and torrent_file_list
         torrent_completed_dict_list = self.torrent_clients_instance.qbittorrent_identify_completed_torrents()
 
@@ -28,58 +27,80 @@ class PostProcess(object):
             # self.remove_completed_torrents(torrent_completed_dict)
 
             # get the list of files for the torrent
-            self.cleanup_completed_files(torrent_completed_dict)
+            self.delete_unwanted_files(torrent_completed_dict)
 
             # rename completed files
             self.rename_completed_files(torrent_completed_dict)
 
+            # move completed files
+            self.move_completed_files(torrent_completed_dict)
+
     def remove_completed_torrents(self, torrent_completed_dict):
+
+        if not self.config_dict['post_process']['remove_completed']:
+            return False
 
         # remove torrent from completed, this is required otherwise errors will show up as missing files once moved
         self.torrent_clients_instance.qbittorrent_delete_torrent(torrent_completed_dict.get('torrent_tag'), False, 'completed')
 
-    def cleanup_completed_files(self, torrent_completed_dict):
+    def delete_unwanted_files(self, torrent_completed_dict):
 
-        # if db sqlite commit successful then delete completed torrents WITHOUT data
-        if not self.config_dict['post_process']['clean_completed']:
+        if not self.config_dict['post_process']['delete_unwanted_files']:
             return False
 
         torrent_file_dict_list = torrent_completed_dict.get('torrent_file_list')
         torrent_save_path = torrent_completed_dict.get('torrent_save_path')
 
-        clean_minimum_file_size_kb = self.config_dict['post_process']['clean_minimum_file_size_kb']
+        delete_files_less_than_kb = self.config_dict['post_process']['delete_files_less_than_kb']
+        delete_file_ext_list = self.config_dict['post_process']['delete_file_ext_list']
+
+        def delete_file(path):
+
+            if os.path.isfile(path):
+                try:
+                    os.remove(path)
+                    self.logger_instance.info(f"Successfully deleted file '{path}'")
+                except OSError as e:
+
+                    self.logger_instance.info(f"Failed to delete file from path '{path}', error is '{e.strerror}'")
+            else:
+                self.logger_instance.info(f"Failed to delete file from path '{path}' as the file does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for the 'Default save path' match qBittorrent")
 
         # iterate over list containing dictionary of files in the torrent
         for torrent_file_dict in torrent_file_dict_list:
 
             torrent_file_name = torrent_file_dict.get('file_name')
-            torrent_file_size = torrent_file_dict.get('file_size')
             torrent_completed_dict.get('torrent_file_list')
-
-            # use bitwise operation to convert from bytes to kilobytes
-            torrent_file_size_kb = torrent_file_size >> 10
 
             torrent_file_path = os.path.join(torrent_save_path, torrent_file_name)
 
-            # if torrent file_size is less than minimum size defined in config then delete
-            if int(torrent_file_size_kb) < int(clean_minimum_file_size_kb):
+            # get torrent file extension, [1:] removes period
+            torrent_file_ext = os.path.splitext(torrent_file_path)[1][1:]
 
-                self.logger_instance.info(f"file size {torrent_file_size_kb}KB for filepath '{torrent_file_path}' is less than minimum file size {clean_minimum_file_size_kb}KB defined in config file, deleting file...")
+            if delete_file_ext_list:
 
-                if os.path.isfile(torrent_file_path):
+                for delete_file_ext in delete_file_ext_list:
 
-                    try:
-                        os.remove(torrent_file_path)
-                        pass
-                    except OSError as e:
-                        self.logger_instance.info(f"Failed to delete file from path '{torrent_file_path}', error is '{e.strerror}'")
+                    # check config delete extension matches file extension in torrent file path
+                    if delete_file_ext == torrent_file_ext:
 
-                else:
+                        delete_file(torrent_file_path)
 
-                    self.logger_instance.info(f"Failed to delete file from path '{torrent_file_path}', path does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for the 'Default save path' match qBittorrent")
+            if delete_files_less_than_kb:
+
+                torrent_file_size = torrent_file_dict.get('file_size')
+
+                # use bitwise operation to convert from bytes to kilobytes
+                torrent_file_size_kb = torrent_file_size >> 10
+
+                # if torrent file_size is less than minimum size defined in config then delete
+                if int(torrent_file_size_kb) < int(delete_files_less_than_kb):
+
+                    self.logger_instance.info(f"file size {torrent_file_size_kb}KB for filepath '{torrent_file_path}' is less than minimum file size {delete_files_less_than_kb}KB defined in config file, deleting file...")
+
+                    delete_file(torrent_file_path)
 
     def rename_completed_files(self, torrent_completed_dict):
-        # if db sqlite commit successful then delete completed torrents WITHOUT data
 
         if not self.config_dict['post_process']['rename_completed']:
             return False
@@ -93,13 +114,14 @@ class PostProcess(object):
             imdb_title = query_result.get('imdb_title')
             imdb_year = query_result.get('imdb_year')
             imdb_title_year = f"{imdb_title} ({imdb_year})"
-            self.logger_instance.info(f"Renaming filepath '{torrent_file_path}' to '{imdb_title_year}")
 
-        # create folder imdb_title_year if it does not exist and move all files to it
+        # get filepath for main video file from torrent details
 
-        # if folder does exist then rename it to imdb_title_year
+        # create folder imdb_title_year if the torrent main video file is not in a folder and movie it there
 
-    def move_completed_files(self):
+        # if folder does exist and main video file is in there then rename it to imdb_title_year
+
+    def move_completed_files(self, torrent_completed_dict):
 
         if not self.config_dict['post_process']['move_completed']:
             return False
