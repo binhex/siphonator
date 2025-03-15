@@ -18,14 +18,14 @@ class PostProcess(object):
         if not self.config_dict['post_process']['post_process_enabled']:
             return False
 
-        # returns dict of all torrents in completed state with torrent_name, torrent_tag and torrent_file_list
+        # returns dict of all torrents in completed state with torrent_name, torrent_hash, torrent_tag and torrent_file_list
         torrent_completed_dict_list = self.torrent_clients_instance.qbittorrent_identify_completed_torrents()
 
         # iterate over completed torrents dict
         for torrent_completed_dict in torrent_completed_dict_list:
 
             # do not uncomment this until we are sure its working!
-            # self.remove_completed_torrents(torrent_completed_dict)
+            self.remove_completed_torrents(torrent_completed_dict)
 
             # get the list of files for the torrent
             self.delete_unwanted_files(torrent_completed_dict)
@@ -38,8 +38,10 @@ class PostProcess(object):
         if not self.config_dict['post_process']['remove_completed']:
             return False
 
+        torrent_hash = torrent_completed_dict.get('torrent_hash')
+
         # remove torrent from completed, this is required otherwise errors will show up as missing files once moved
-        self.torrent_clients_instance.qbittorrent_delete_torrent(torrent_completed_dict.get('torrent_tag'), False, 'completed')
+        self.torrent_clients_instance.qbittorrent_delete_torrent(torrent_hash, False, 'completed')
 
     def delete_unwanted_files(self, torrent_completed_dict):
 
@@ -49,8 +51,8 @@ class PostProcess(object):
         torrent_file_dict_list = torrent_completed_dict.get('torrent_file_list')
         torrent_save_path = torrent_completed_dict.get('torrent_save_path')
 
-        delete_file_ext_list = self.config_dict['post_process']['delete_file_ext_list']
-        delete_files_less_than_kb = self.config_dict['post_process']['delete_files_less_than_kb']
+        delete_unwanted_ext_list = self.config_dict['post_process']['delete_unwanted_ext_list']
+        delete_unwanted_min_kb = self.config_dict['post_process']['delete_unwanted_min_kb']
 
         def delete_file(path):
 
@@ -81,17 +83,17 @@ class PostProcess(object):
             # get torrent file extension, [1:] removes period
             torrent_file_ext = os.path.splitext(torrent_file_path)[1][1:]
 
-            if delete_file_ext_list:
+            if delete_unwanted_ext_list:
 
-                for delete_file_ext in delete_file_ext_list:
+                for delete_unwanted_ext in delete_unwanted_ext_list:
 
                     # check config delete extension matches file extension in torrent file path
-                    if delete_file_ext == torrent_file_ext:
+                    if delete_unwanted_ext == torrent_file_ext:
 
-                        self.logger_instance.info(f"file extension '{torrent_file_ext}' for torrent completed filepath '{torrent_file_path}' matches delete file extension '{delete_file_ext}' from config, deleting file...")
+                        self.logger_instance.info(f"file extension '{torrent_file_ext}' for torrent completed filepath '{torrent_file_path}' matches delete file extension '{delete_unwanted_ext}' from config, deleting file...")
                         delete_file(torrent_file_path)
 
-            if delete_files_less_than_kb:
+            if delete_unwanted_min_kb:
 
                 torrent_file_size = torrent_file_dict.get('file_size')
 
@@ -99,9 +101,9 @@ class PostProcess(object):
                 torrent_file_size_kb = torrent_file_size >> 10
 
                 # if torrent file_size is less than minimum size defined in config then delete
-                if int(torrent_file_size_kb) < int(delete_files_less_than_kb):
+                if int(torrent_file_size_kb) < int(delete_unwanted_min_kb):
 
-                    self.logger_instance.info(f"file size {torrent_file_size_kb}KB for torrent completed filepath '{torrent_file_path}' is less than minimum file size {delete_files_less_than_kb}KB defined in config file, deleting file...")
+                    self.logger_instance.info(f"file size {torrent_file_size_kb}KB for torrent completed filepath '{torrent_file_path}' is less than minimum file size {delete_unwanted_min_kb}KB defined in config file, deleting file...")
                     delete_file(torrent_file_path)
 
     def rename_completed_files(self, torrent_completed_dict):

@@ -201,7 +201,7 @@ class TorrentClients(object):
                         torrent_file_list.append(torrent_file_dict)
 
                     # filter dict to torrent name, torrent tag, and torrent  filenames (list)
-                    completed_torrent_dict = {'torrent_name': torrent.name, 'torrent_tag': tag, 'torrent_file_list': torrent_file_list, 'torrent_save_path': torrent_save_path}
+                    completed_torrent_dict = {'torrent_name': torrent.name, 'torrent_hash': torrent.hash, 'torrent_tag': tag, 'torrent_file_list': torrent_file_list, 'torrent_save_path': torrent_save_path}
 
                     # append dict of torrent name, torrent tag and torrent files to list
                     completed_torrent_dict_list.append(completed_torrent_dict)
@@ -291,3 +291,25 @@ class TorrentClients(object):
             self.logger_instance.info(f"Failed to delete the following torrents:")
             for torrent_hash, info in failed_deletions.items():
                 self.logger_instance.info(f"Hash: {torrent_hash}, Name: {info['name']}")
+
+    def qbittorrent_check_free_space(self):
+
+        qbt_client = self.qbittorrent_connect()
+        if not qbt_client:
+            return
+
+        config_free_space_min_gb = self.config_dict['queue_management']['free_space_min_gb']
+
+        sync_main_data = qbt_client.sync_maindata()
+        free_space_on_disk_bytes = sync_main_data.server_state.free_space_on_disk
+
+        # covert bytes to gigabytes using bitwise operation
+        free_space_on_disk_gb = free_space_on_disk_bytes >> 30
+
+        # if free space reported by qbittorrent is less than minimum in config then return false
+        if free_space_on_disk_gb < config_free_space_min_gb:
+            self.logger_instance.warning(f"qBittorrent reports free space on dsk '{free_space_on_disk_gb}GB' is below minimum free disk space defined in config '{config_free_space_min_gb}GB'")
+            return False
+
+        self.logger_instance.info(f"qBittorrent reports free space on dsk '{free_space_on_disk_gb}GB' is above minimum free disk space defined in config '{config_free_space_min_gb}GB'")
+        return True
