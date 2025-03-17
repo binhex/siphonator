@@ -571,16 +571,16 @@ class FilterMovies(object):
         source_score_dict = {
             r'(dvdrip|webrip)': int(10),
             r'(hdtv)': int(20),
-            r'(web\sdl|webdl|hdrip)': int(30),
-            r'(bd|bdrip|bluray|blu-ray)': int(40),
-            r'(bdremux|remux)': int(80)
+            r'(webdl|web\sdl|hdrip)': int(30),
+            r'(bd|bdrip|bluray|blu\sray)': int(40),
+            r'(remux|bdremux|bd\sremux)': int(80)
         }
 
         # define scores for audio quality, score increases as audio quality increases
         audio_score_dict = {
             r'(dts)': int(10),
-            r'(dts-hd|dtshd|true-hd|truehd|ddp)': int(20),
-            r'(dts-x|dtsx|atmos)': int(30)
+            r'(dtshd|dts\shd|truehd|true\shd|ddp)': int(20),
+            r'(dtsx|dts\sx|atmos)': int(30)
         }
 
         score = 0
