@@ -15,60 +15,52 @@ class TorrentClients(object):
         self.init_dict = init_dict
         self.add_paused_bool = self.config_dict['torrent_client']['qbittorrent']['add_paused']
         self.category = self.config_dict['torrent_client']['qbittorrent']['category']
+        self.qbt_client = self.qbittorrent_connect()
 
     def qbittorrent_connect(self):
 
         torrent_client = self.config_dict['torrent_client']['selected']
-        if torrent_client == 'qbittorrent':
+        if torrent_client != 'qbittorrent':
+            return None
 
-            host = self.config_dict['torrent_client']['qbittorrent']['host']
-            port = self.config_dict['torrent_client']['qbittorrent']['port']
-            username = self.config_dict['torrent_client']['qbittorrent']['username']
-            password = self.config_dict['torrent_client']['qbittorrent']['password']
+        host = self.config_dict['torrent_client']['qbittorrent']['host']
+        port = self.config_dict['torrent_client']['qbittorrent']['port']
+        username = self.config_dict['torrent_client']['qbittorrent']['username']
+        password = self.config_dict['torrent_client']['qbittorrent']['password']
 
-            try:
+        try:
 
-                # instantiate a Client using the appropriate WebUI configuration
-                qbt_client = qbittorrentapi.Client(
-                    host=host,
-                    port=port,
-                    username=username,
-                    password=password,
-                )
+            # instantiate a Client using the appropriate WebUI configuration
+            qbt_client = qbittorrentapi.Client(
+                host=host,
+                port=port,
+                username=username,
+                password=password,
+            )
 
-                qbt_client.auth_log_in()
+            qbt_client.auth_log_in()
 
-            except qbittorrentapi.LoginFailed:
-                result_details = f"Failed: qBittorrent login failed"
-                self.logger_instance.warning(result_details)
-                return None
+        except qbittorrentapi.LoginFailed:
+            result_details = f"Failed: qBittorrent login failed"
+            self.logger_instance.warning(result_details)
+            return None
 
-            except qbittorrentapi.APIConnectionError:
-                result_details = f"Failed: qBittorrent API connection error"
-                self.logger_instance.warning(result_details)
-                return None
+        except qbittorrentapi.APIConnectionError:
+            result_details = f"Failed: qBittorrent API connection error"
+            self.logger_instance.warning(result_details)
+            return None
 
-            except qbittorrentapi.APIError:
-                result_details = f"Failed: qBittorrent API error"
-                self.logger_instance.warning(result_details)
-                return None
+        except qbittorrentapi.APIError:
+            result_details = f"Failed: qBittorrent API error"
+            self.logger_instance.warning(result_details)
+            return None
 
-            return qbt_client
+        return qbt_client
 
-    def qbittorrent_check_global_speed(self):
+    def qbittorrent_connection_status(self):
 
-        qbt_client = self.qbittorrent_connect()
-        if not qbt_client:
-            return
-
-        # Retrieve transfer information
-        transfer_info = qbt_client.transfer_info()
-
-        # Get the global download and upload speeds
-        global_download_speed = transfer_info['dl_info_speed']
-        global_upload_speed = transfer_info['up_info_speed']
-
-        if global_download_speed == 0 and global_upload_speed == 0:
+        sync_main_data = self.qbt_client.sync_maindata()
+        if sync_main_data.server_state.connection_status != 'connected':
 
             # Get the current time
             current_datetime_object = siphonator_tools_various.current_time_datetime_object()
@@ -82,44 +74,36 @@ class TorrentClients(object):
             # write datetime string to config file
             siphonator_config.write_config(self.init_dict, self.config_dict)
 
-            self.logger_instance.warn(f"qBittorrent global dl and ul speed is 0 bytes/sec, assuming internet connectivity issues, skipping queue management")
+            self.logger_instance.warn(f"qBittorrent connection status reported as not connected, skipping queue management")
             return False
 
-        self.logger_instance.debug(f"qBittorrent global download '{global_download_speed}' bytes/sec and upload speed '{global_upload_speed}' bytes/sec != 0, internet connectivity looks good")
+        self.logger_instance.debug(f"qBittorrent connection status reported as connected")
         return True
 
-    def qbittorrent_internet_connection_down_grace(self):
-
-        qbt_client = self.qbittorrent_connect()
-        if not qbt_client:
-            return
+    def qbittorrent_connection_down_grace(self):
 
         # get config values
-        internet_connection_down_datetime = self.config_dict['queue_management']['internet_connection_down_datetime']
-        internet_connection_down_grace_mins = self.config_dict['queue_management']['internet_connection_down_grace_mins']
+        connection_down_datetime = self.config_dict['queue_management']['connection_down_datetime']
+        connection_down_grace_mins = self.config_dict['queue_management']['connection_down_grace_mins']
 
         # get last down datetime and app grace period to it
-        internet_connection_down_datetime_object = siphonator_tools_various.convert_string_into_datetime_object(internet_connection_down_datetime)
-        internet_connection_down_grace_datetime_object = internet_connection_down_datetime_object + datetime.timedelta(minutes=internet_connection_down_grace_mins)
+        connection_down_datetime_object = siphonator_tools_various.convert_string_into_datetime_object(connection_down_datetime)
+        connection_down_grace_datetime_object = connection_down_datetime_object + datetime.timedelta(minutes=connection_down_grace_mins)
 
         # Get the current time
         current_datetime_object = siphonator_tools_various.current_time_datetime_object()
 
-        if internet_connection_down_grace_datetime_object > current_datetime_object:
-            self.logger_instance.debug(f"qBittorrent grace period datetime '{internet_connection_down_grace_datetime_object}' is greater than current datetime '{current_datetime_object}', skipping queue management")
+        if connection_down_grace_datetime_object > current_datetime_object:
+            self.logger_instance.debug(f"qBittorrent grace period datetime '{connection_down_grace_datetime_object}' is greater than current datetime '{current_datetime_object}', skipping queue management")
             return False
 
-        self.logger_instance.debug(f"qBittorrent grace period datetime '{internet_connection_down_grace_datetime_object}' is less than or equal to than current datetime '{current_datetime_object}', internet connectivity restored")
+        self.logger_instance.debug(f"qBittorrent grace period datetime '{connection_down_grace_datetime_object}' is less than or equal to than current datetime '{current_datetime_object}', internet connectivity restored")
         return True
 
     def qbittorrent_identify_torrents_with_category(self):
 
-        qbt_client = self.qbittorrent_connect()
-        if not qbt_client:
-            return
-
         # Retrieve all torrents with the specified category
-        torrents_category_filtered = qbt_client.torrents_info(category=self.category)
+        torrents_category_filtered = self.qbt_client.torrents_info(category=self.category)
 
         # Use dictionary comprehension to populate torrent_dict
         torrent_dict = {torrent['hash']: torrent for torrent in torrents_category_filtered}
@@ -168,42 +152,62 @@ class TorrentClients(object):
 
     def qbittorrent_identify_completed_torrents(self):
 
-        qbt_client = self.qbittorrent_connect()
-        if not qbt_client:
-            return
+        # get the global ratio limit
+        global_ratio_limit = self.qbt_client.app_preferences().max_ratio
 
         completed_torrent_dict_list = []
 
         # identify torrents in completed state with tags
         try:
             # Get the list of torrents with status 'completed'
-            completed_torrents = qbt_client.torrents_info(status_filter='completed')
+            completed_torrents = self.qbt_client.torrents_info(status_filter='completed')
 
             for torrent in completed_torrents:
-                tag = torrent.tags
-                if tag:
+
+                # get torrent tag
+                torrent_tag = torrent.tags
+
+                # ensure the torrent is tagged for siphonator
+                if 'siphonator' in torrent_tag:
+
+                    # get the selected torrents current ratio
+                    torrent_ratio = torrent.ratio
+
+                    # get the torrent-specific ratio limit
+                    user_ratio_limit = torrent.max_ratio
+
+                    # determine the effective ratio limit (torrent-specific if set, otherwise global)
+                    effective_ratio_limit = user_ratio_limit if user_ratio_limit >= 0 else global_ratio_limit
+
+                    # if torrent ratio is less than the user or global ratio limit then skip
+                    if torrent_ratio < effective_ratio_limit:
+                        return None
+
+                    # get hash and name
+                    torrent_hash = torrent.hash
+                    torrent_name = torrent.name
 
                     # get the torrents files for the hashed torrent
-                    torrents_files = qbt_client.torrents_files(torrent.hash)
+                    torrents_files = self.qbt_client.torrents_files(torrent.hash)
 
                     # get the torrents properties for the hashed torrent
-                    torrents_properties = qbt_client.torrents_properties(torrent.hash)
+                    torrents_properties = self.qbt_client.torrents_properties(torrent.hash)
                     torrent_save_path = torrents_properties.save_path
 
                     torrent_file_list = []
 
                     for torrents_file in torrents_files:
 
-                        # filter dict to only filenames
+                        # add filename and file sizes to dict, used in post-processing to remove unwanted files
                         torrent_file_dict = {'file_name': torrents_file.name, 'file_size': torrents_file.size}
 
                         # append dict of filenames to list
                         torrent_file_list.append(torrent_file_dict)
 
-                    # filter dict to torrent name, torrent tag, and torrent  filenames (list)
-                    completed_torrent_dict = {'torrent_name': torrent.name, 'torrent_hash': torrent.hash, 'torrent_tag': tag, 'torrent_file_list': torrent_file_list, 'torrent_save_path': torrent_save_path}
+                    # create dictionary including all required info from torrent, as well as inclusion of the torrent file dict list
+                    completed_torrent_dict = {'torrent_name': torrent_name, 'torrent_hash': torrent_hash, 'torrent_tag': torrent_tag, 'torrent_file_list': torrent_file_list, 'torrent_save_path': torrent_save_path}
 
-                    # append dict of torrent name, torrent tag and torrent files to list
+                    # append dict including all info for torrent to the list
                     completed_torrent_dict_list.append(completed_torrent_dict)
 
         except qbittorrentapi.APIError as e:
@@ -212,10 +216,6 @@ class TorrentClients(object):
         return completed_torrent_dict_list
 
     def qbittorrent_add_torrent(self):
-
-        qbt_client = self.qbittorrent_connect()
-        if not qbt_client:
-            return
 
         download_url = self.result_dict.get('magnet_url')
         if download_url is None:
@@ -237,7 +237,7 @@ class TorrentClients(object):
         try:
 
             # Add the torrent with the unique label as a 'tag'
-            qbt_client.torrents_add(
+            self.qbt_client.torrents_add(
                 urls=download_url,
                 category=self.category,
                 is_paused=self.add_paused_bool,
@@ -251,7 +251,7 @@ class TorrentClients(object):
             return None
 
         # re-announce
-        qbt_client.torrents_reannounce(torrent_hashes='all')
+        self.qbt_client.torrents_reannounce(torrent_hashes='all')
 
         # add unique tag to result_dict
         self.result_dict.update({'torrent_tag': torrent_tag})
@@ -259,12 +259,8 @@ class TorrentClients(object):
 
     def qbittorrent_delete_torrent(self, torrent_hash, delete_torrent_data, state):
 
-        qbt_client = self.qbittorrent_connect()
-        if not qbt_client:
-            return
-
         try:
-            qbt_client.torrents_delete(delete_files=delete_torrent_data, torrent_hashes=torrent_hash)
+            self.qbt_client.torrents_delete(delete_files=delete_torrent_data, torrent_hashes=torrent_hash)
             # TODO would be nice to see name of torrent as well as hash when logging
             if delete_torrent_data:
                 self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' and data with state '{state}'")
@@ -292,24 +288,20 @@ class TorrentClients(object):
             for torrent_hash, info in failed_deletions.items():
                 self.logger_instance.info(f"Hash: {torrent_hash}, Name: {info['name']}")
 
-    def qbittorrent_check_free_space(self):
+    def qbittorrent_uptime(self):
 
-        qbt_client = self.qbittorrent_connect()
-        if not qbt_client:
-            return
+        # TODO this is broken, key does not exist
+        sync_main_data = self.qbt_client.sync_maindata()
+        server_state = sync_main_data['server_state']
+        uptime_seconds = server_state
 
-        config_free_space_min_gb = self.config_dict['queue_management']['free_space_min_gb']
+        qbittorrent_uptime_secs = sync_main_data.server_state.uptime
+        self.logger_instance.info(f"qBittorrent uptime is '{qbittorrent_uptime_secs}' seconds")
 
-        sync_main_data = qbt_client.sync_maindata()
-        free_space_on_disk_bytes = sync_main_data.server_state.free_space_on_disk
+        client_startup_grace_secs = (self.config_dict['queue_management']['client_startup_grace_mins']) * 60
 
-        # covert bytes to gigabytes using bitwise operation
-        free_space_on_disk_gb = free_space_on_disk_bytes >> 30
-
-        # if free space reported by qbittorrent is less than minimum in config then return false
-        if free_space_on_disk_gb < config_free_space_min_gb:
-            self.logger_instance.warning(f"qBittorrent reports free space on dsk '{free_space_on_disk_gb}GB' is below minimum free disk space defined in config '{config_free_space_min_gb}GB'")
+        if qbittorrent_uptime_secs < client_startup_grace_secs:
+            self.logger_instance.info(f"qBittorrent uptime of '{qbittorrent_uptime_secs}' seconds is less than the qBittorrent start grace period of '{client_startup_grace_secs}' seconds")
             return False
 
-        self.logger_instance.info(f"qBittorrent reports free space on dsk '{free_space_on_disk_gb}GB' is above minimum free disk space defined in config '{config_free_space_min_gb}GB'")
         return True

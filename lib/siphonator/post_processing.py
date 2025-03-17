@@ -21,6 +21,10 @@ class PostProcess(object):
         # returns dict of all torrents in completed state with torrent_name, torrent_hash, torrent_tag and torrent_file_list
         torrent_completed_dict_list = self.torrent_clients_instance.qbittorrent_identify_completed_torrents()
 
+        # if dict is empty due to not reaching ratio or bad qbt client then return
+        if not torrent_completed_dict_list:
+            return False
+
         # iterate over completed torrents dict
         for torrent_completed_dict in torrent_completed_dict_list:
 

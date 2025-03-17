@@ -12,18 +12,17 @@ class QueueManagement(object):
 
     def prerun_checks(self):
 
-        # if ul/dl speed is 0 then assume internet down, this is to prevent torrents being incorrectly marked as stalled
-        if not self.torrent_clients_instance.qbittorrent_check_global_speed():
+        # if connection status marked as down then skip queue management
+        if not self.torrent_clients_instance.qbittorrent_connection_status():
             return False
 
-        # if internet previous down datetime + grace period is greater than current datetime then skip queue management
-        if not self.torrent_clients_instance.qbittorrent_internet_connection_down_grace():
+        # if last connection down datetime + grace period is greater than current datetime then skip queue management
+        if not self.torrent_clients_instance.qbittorrent_connection_down_grace():
             return False
 
-        # check if qbittorrent is low on disk space, if so then skip queue management as torrents could be in an error
-        # or recovering from error state (stalled) and thus incorrectly marked as stalled and deleted
-        if not self.torrent_clients_instance.qbittorrent_check_free_space():
-            return False
+        # # if qbittorrent uptime is less than config value then skip queue management
+        # if not self.torrent_clients_instance.qbittorrent_uptime():
+        #     return False
 
         return True
 
