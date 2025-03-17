@@ -4,6 +4,7 @@ import sys
 import argparse
 import datetime
 import pytest
+import qbittorrentapi
 import xml.etree.ElementTree as elementTree
 from daemonize import Daemonize
 from apscheduler.schedulers.background import BlockingScheduler
@@ -45,6 +46,75 @@ def create_path(path):
             return False
 
     return True
+
+
+def check_jackett():
+
+    index_proxy = config_dict['index_proxy']['selected']
+    if index_proxy != 'jackett':
+        return False
+
+    # construct url to jackett
+    index_proxy_url = f"http://{config_dict['index_proxy']['jackett']['host']}:{config_dict['index_proxy']['jackett']['port']}/api/v2.0/indexers/all/results/torznab/api?configured=true&apikey={config_dict['index_proxy']['jackett']['api_key']}&t=indexers&q="
+
+    # download list of enabled index sites from jackett
+    index_sites_return_code, index_sites_status_code, index_sites_content = siphonator_tools_downloader.http_client(
+        logger, url=index_proxy_url,
+        user_agent=user_agent,
+        request_type="get",
+        read_timeout=config_dict['index_proxy']['jackett']['read_timeout'],
+    )
+
+    # if jackett status code is not 200 then return false
+    if index_sites_status_code != 200:
+        logger.warning(f"Unable to access index proxy '{index_proxy}', retrying in {config_dict['schedule']['siphonator_thread']['schedule_time_mins']} minutes")
+        return False
+
+    else:
+
+        # parse xml from jackett
+        return elementTree.fromstring(index_sites_content)
+
+
+def check_qbittorrent():
+
+    torrent_client = config_dict['torrent_client']['selected']
+    if torrent_client != 'qbittorrent':
+        return False
+
+    host = config_dict['torrent_client']['qbittorrent']['host']
+    port = config_dict['torrent_client']['qbittorrent']['port']
+    username = config_dict['torrent_client']['qbittorrent']['username']
+    password = config_dict['torrent_client']['qbittorrent']['password']
+
+    try:
+
+        # instantiate a Client using the appropriate WebUI configuration
+        qbt_client = qbittorrentapi.Client(
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+        )
+
+        qbt_client.auth_log_in()
+
+    except qbittorrentapi.LoginFailed:
+        result_details = f"{torrent_client} login failed, retrying in {config_dict['schedule']['siphonator_thread']['schedule_time_mins']} minutes"
+        logger.warning(result_details)
+        return False
+
+    except qbittorrentapi.APIConnectionError:
+        result_details = f"{torrent_client} API connection error, retrying in {config_dict['schedule']['siphonator_thread']['schedule_time_mins']} minutes"
+        logger.warning(result_details)
+        return False
+
+    except qbittorrentapi.APIError:
+        result_details = f"{torrent_client} API error, retrying in {config_dict['schedule']['siphonator_thread']['schedule_time_mins']} minutes"
+        logger.warning(result_details)
+        return False
+
+    return qbt_client
 
 
 class SiphonatorPostProcessing(object):
@@ -93,7 +163,12 @@ class SiphonatorPostProcessing(object):
         current_time = siphonator_tools_various.current_time()
         self.logger_instance.info(f"Processing for post-processing started at '{current_time}'")
 
-        post_processing_run_instance = post_processing.PostProcess(self.logger_instance, self.config_dict, self.init_dict)
+        qbt_client = check_qbittorrent()
+
+        if not qbt_client:
+            return False
+
+        post_processing_run_instance = post_processing.PostProcess(self.logger_instance, self.config_dict, self.init_dict, qbt_client)
         post_processing_run_instance.post_process()
 
         # TODO put in elapsed time
@@ -149,7 +224,12 @@ class SiphonatorQueueManagement(object):
         current_time = siphonator_tools_various.current_time()
         self.logger_instance.info(f"Processing for queue management started at '{current_time}'")
 
-        queue_management_run_instance = queue_management.QueueManagement(self.logger_instance, self.config_dict, self.init_dict)
+        qbt_client = check_qbittorrent()
+
+        if not qbt_client:
+            return False
+
+        queue_management_run_instance = queue_management.QueueManagement(self.logger_instance, self.config_dict, self.init_dict, qbt_client)
         queue_management_run_instance.queue_management()
 
         # TODO put in elapsed time
@@ -205,6 +285,18 @@ class SiphonatorMain(object):
         current_time = siphonator_tools_various.current_time()
         self.logger_instance.info(f"Processing for siphonator started at '{current_time}'")
 
+        # ensure qbittorrent is operational
+        qbt_client = check_qbittorrent()
+
+        if not qbt_client:
+            return False
+
+        # ensure jackett is operational
+        jackett_index_sites_list_xml = check_jackett()
+
+        if not jackett_index_sites_list_xml:
+            return False
+
         library_path_list = self.config_dict['general']['library_path_list']
 
         if library_path_list:
@@ -228,32 +320,6 @@ class SiphonatorMain(object):
         elif db_sqlite_instance.get_pragma_user_version() != db_version:
 
             db_sqlite_instance.upgrade_database()
-
-        index_proxy = self.config_dict['index_proxy']['selected']
-        if index_proxy == 'jackett':
-
-            index_proxy_url = f"http://{self.config_dict['index_proxy']['jackett']['host']}:{self.config_dict['index_proxy']['jackett']['port']}/api/v2.0/indexers/all/results/torznab/api?configured=true&apikey={self.config_dict['index_proxy']['jackett']['api_key']}&t=indexers&q="
-
-            # download list of enabled index sites from jackett
-            index_sites_return_code, index_sites_status_code, index_sites_content = siphonator_tools_downloader.http_client(
-                self.logger_instance, url=index_proxy_url,
-                user_agent=user_agent,
-                request_type="get",
-                read_timeout=self.config_dict['index_proxy']['jackett']['read_timeout'],
-            )
-
-            # ensure jackett is operational by checking for status code 200
-            if index_sites_status_code != 200:
-                self.logger_instance.warning(f"Unable to access index site '{self.config_dict['index_proxy']['selected']}', retrying in {self.config_dict['schedule']['siphonator']['schedule_time_mins']} minutes")
-                return index_sites_status_code
-
-            # parse xml from jackett
-            jackett_index_sites_list_xml = elementTree.fromstring(index_sites_content)
-
-        else:
-
-            self.logger_instance.warning(f"Index Proxy option of '{index_proxy}' not supported, exiting...")
-            return 1
 
         # empty dict to store configured index sites
         index_sites_configured_dict = {}
@@ -324,7 +390,7 @@ class SiphonatorMain(object):
                         'category': search_category,
                     })
 
-                index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, self.init_dict, self.config_dict, index_site_dict, library_path_walk)
+                index_site_instance = siphonator_index_proxy.IndexProxy(self.logger_instance, self.init_dict, self.config_dict, index_site_dict, library_path_walk, qbt_client)
                 index_site_instance.jackett()
 
                 # revert back to the original category if it was overridden

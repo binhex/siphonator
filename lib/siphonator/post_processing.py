@@ -6,12 +6,13 @@ import lib.siphonator.db_sqlite as db_sqlite
 
 class PostProcess(object):
 
-    def __init__(self, logger_instance, config_dict, init_dict):
+    def __init__(self, logger_instance, config_dict, init_dict, qbt_client):
 
         self.logger_instance = logger_instance
         self.config_dict = config_dict
-        self.torrent_clients_instance = torrent_clients.TorrentClients(self.logger_instance, self.config_dict)
+        self.torrent_clients_instance = torrent_clients.TorrentClients(self.logger_instance, self.config_dict, qbt_client)
         self.db_sqlite_instance = db_sqlite.DbSqlite(self.logger_instance, init_dict)
+        self.qbt_client = qbt_client
 
     def post_process(self):
 

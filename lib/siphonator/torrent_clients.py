@@ -7,7 +7,7 @@ import datetime
 
 class TorrentClients(object):
 
-    def __init__(self, logger_instance, config_dict, result_dict=None, init_dict=None):
+    def __init__(self, logger_instance, config_dict, qbt_client, result_dict=None, init_dict=None):
 
         self.logger_instance = logger_instance
         self.config_dict = config_dict
@@ -15,47 +15,7 @@ class TorrentClients(object):
         self.init_dict = init_dict
         self.add_paused_bool = self.config_dict['torrent_client']['qbittorrent']['add_paused']
         self.category = self.config_dict['torrent_client']['qbittorrent']['category']
-        self.qbt_client = self.qbittorrent_connect()
-
-    def qbittorrent_connect(self):
-
-        torrent_client = self.config_dict['torrent_client']['selected']
-        if torrent_client != 'qbittorrent':
-            return None
-
-        host = self.config_dict['torrent_client']['qbittorrent']['host']
-        port = self.config_dict['torrent_client']['qbittorrent']['port']
-        username = self.config_dict['torrent_client']['qbittorrent']['username']
-        password = self.config_dict['torrent_client']['qbittorrent']['password']
-
-        try:
-
-            # instantiate a Client using the appropriate WebUI configuration
-            qbt_client = qbittorrentapi.Client(
-                host=host,
-                port=port,
-                username=username,
-                password=password,
-            )
-
-            qbt_client.auth_log_in()
-
-        except qbittorrentapi.LoginFailed:
-            result_details = f"Failed: qBittorrent login failed"
-            self.logger_instance.warning(result_details)
-            return None
-
-        except qbittorrentapi.APIConnectionError:
-            result_details = f"Failed: qBittorrent API connection error"
-            self.logger_instance.warning(result_details)
-            return None
-
-        except qbittorrentapi.APIError:
-            result_details = f"Failed: qBittorrent API error"
-            self.logger_instance.warning(result_details)
-            return None
-
-        return qbt_client
+        self.qbt_client = qbt_client
 
     def qbittorrent_connection_status(self):
 
@@ -152,9 +112,6 @@ class TorrentClients(object):
 
     def qbittorrent_identify_completed_torrents(self):
 
-        # get the global ratio limit
-        global_ratio_limit = self.qbt_client.app_preferences().max_ratio
-
         completed_torrent_dict_list = []
 
         # identify torrents in completed state with tags
@@ -175,6 +132,9 @@ class TorrentClients(object):
 
                     # get the torrent-specific ratio limit
                     user_ratio_limit = torrent.max_ratio
+
+                    # get the global ratio limit
+                    global_ratio_limit = self.qbt_client.app_preferences().max_ratio
 
                     # determine the effective ratio limit (torrent-specific if set, otherwise global)
                     effective_ratio_limit = user_ratio_limit if user_ratio_limit >= 0 else global_ratio_limit

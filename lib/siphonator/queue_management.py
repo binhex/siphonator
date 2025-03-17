@@ -3,12 +3,13 @@ import lib.siphonator.torrent_clients as torrent_clients
 
 class QueueManagement(object):
 
-    def __init__(self, logger_instance, config_dict, init_dict):
+    def __init__(self, logger_instance, config_dict, init_dict, qbt_client):
         self.logger_instance = logger_instance
         self.config_dict = config_dict
         self.init_dict = init_dict
         # note we specify 'init_dict=' here as we want to skip optional argument 'result_dict' but specify optional argument 'init_dict'
-        self.torrent_clients_instance = torrent_clients.TorrentClients(self.logger_instance, self.config_dict, init_dict=self.init_dict)
+        self.torrent_clients_instance = torrent_clients.TorrentClients(self.logger_instance, self.config_dict, qbt_client, init_dict=self.init_dict)
+        self.qbt_client = qbt_client
 
     def prerun_checks(self):
 

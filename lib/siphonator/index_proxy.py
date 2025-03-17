@@ -11,20 +11,16 @@ import lib.siphonator.notification_email as siphonator_notification_email
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
 
-# NOTES yourbittorrent looks like its torrent only but does not download from jackett!!
-# limtorrents also looks to be torrent only but wee know it does magnet!!, torrent does not download!! - magnet just not available via jackett!, use raincoat?
-# limetorrents magnet links work for prowlarr but not jackett
-# 1337x works for prowlarr torrent (and magnet?) but not for jackett
-
 class IndexProxy(object):
 
-    def __init__(self, logger_instance, init_dict, config_dict, index_site_dict, library_path_walk):
+    def __init__(self, logger_instance, init_dict, config_dict, index_site_dict, library_path_walk, qbt_client):
 
         self.init_dict = init_dict
         self.config_dict = config_dict
         self.index_site_dict = index_site_dict
         self.logger_instance = logger_instance
         self.library_path_walk = library_path_walk
+        self.qbt_client = qbt_client
 
     def jackett(self):
 
@@ -343,7 +339,7 @@ class IndexProxy(object):
                         notification_email_instance = siphonator_notification_email.NotificationEmail(self.logger_instance, result_dict, self.config_dict)
                         notification_email_instance.email_send()
 
-                    torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, self.config_dict, result_dict)
+                    torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, self.config_dict, result_dict, self.qbt_client)
                     result_dict = torrent_client_instance.qbittorrent_add_torrent()
 
                 # write to database
