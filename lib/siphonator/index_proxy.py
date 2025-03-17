@@ -339,7 +339,7 @@ class IndexProxy(object):
                         notification_email_instance = siphonator_notification_email.NotificationEmail(self.logger_instance, result_dict, self.config_dict)
                         notification_email_instance.email_send()
 
-                    torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, self.config_dict, result_dict, self.qbt_client)
+                    torrent_client_instance = siphonator_torrent_clients.TorrentClients(self.logger_instance, self.config_dict, self.qbt_client, result_dict)
                     result_dict = torrent_client_instance.qbittorrent_add_torrent()
 
                 # write to database
