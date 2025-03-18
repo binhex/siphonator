@@ -1,6 +1,7 @@
 import re
 import pycountry
 import omdb
+import requests
 
 
 def get_json_value(logger_instance, omdb_json, key):
@@ -59,6 +60,14 @@ def omdb_get_movie(logger_instance, config_dict, result_dict):
 
     except omdb.exceptions.OMDBException as e:
         result_details = f"Failed: Base exception for OMDb, error is '{e}'"
+        logger_instance.warning(result_details)
+        result_dict.update({'result': u'Failed'})
+        result_details_list.append(result_details)
+        result_dict.update({'result_details': result_details_list})
+        return result_dict, None
+
+    except requests.exceptions.ReadTimeout as e:
+        result_details = f"Failed: Requests module read timeout exception for OMDb, error is '{e}'"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)

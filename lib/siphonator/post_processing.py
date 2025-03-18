@@ -129,6 +129,8 @@ class PostProcess(object):
         # TODO WIP
         # get parent folder for largest file in the torrent
 
+        # check if largest movie file matches the name of the folder plus extension, if not rename to match
+
         # if parent folder is /data/completed then create imdb folder and move all files for torrent into folder (some may fail as they have been deleted).
 
         # create folder imdb_title_year if the torrent main video file is not in a folder and movie it there
