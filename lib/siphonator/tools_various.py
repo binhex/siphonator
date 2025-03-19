@@ -3,6 +3,7 @@ import json
 import datetime
 import ffmpeg
 import yaml
+import shutil
 from itertools import chain
 
 
@@ -86,3 +87,61 @@ def resolution_from_ffprobe(library_filepath, ffprobe_filepath):
         stream_height = '720'
 
     return stream_height
+
+
+def move_files_folders(logger_instance, src_path, dst_path):
+
+    try:
+        shutil.move(src_path, str(dst_path))
+        logger_instance.info(f"Successfully moved source path '{src_path}' to destination path '{dst_path}'")
+    except FileNotFoundError as e:
+        logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+    except PermissionError as e:
+        logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_path}', error is '{e}'")
+    except shutil.Error as e:
+        logger_instance.warning(f"General error, error is '{e}'")
+    except OSError as e:
+        logger_instance.warning(f"General OS error, error is '{e}'")
+
+
+def delete_files(logger_instance, path):
+
+    try:
+        os.remove(path)
+        logger_instance.info(f"Successfully deleted file '{path}'")
+    except FileNotFoundError as e:
+        logger_instance.warning(f"The file path '{path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+    except PermissionError as e:
+        logger_instance.warning(f"Permission denied while trying to delete '{path}', error is '{e}'")
+    except IsADirectoryError as e:
+        logger_instance.warning(f"'{path}' is a directory, not a file, error is '{e}'")
+    except OSError as e:
+        logger_instance.warning(f"General OS error, error is '{e}'")
+
+
+def rename_files_folders(logger_instance, src_path, dst_path):
+
+    try:
+        os.rename(src_path, dst_path)
+        logger_instance.info(f"Successfully renamed file/folder from '{src_path}' to '{dst_path}'")
+    except FileNotFoundError as e:
+        logger_instance.info(f"The folder '{src_path}' does not exist, error is '{e}'")
+    except PermissionError as e:
+        logger_instance.info(f"Permission denied while renaming '{src_path}' to '{dst_path}'. error is '{e}'")
+    except OSError as e:
+        logger_instance.info(f"General OS error, error is {e}")
+
+
+def get_first_level_directory(path):
+
+    # Normalize the path to handle different OS path separators
+    normalized_path = os.path.normpath(path)
+
+    # Split the path into its components
+    path_components = normalized_path.split(os.sep)
+
+    # Return the first-level directory name
+    if len(path_components) > 1:
+        return path_components[1]
+    else:
+        return path_components[0]

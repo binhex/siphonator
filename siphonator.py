@@ -12,27 +12,20 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import lib.siphonator.config as siphonator_config
 import lib.siphonator.post_processing as post_processing
 import lib.siphonator.queue_management as queue_management
-
-# check version of python is 3.x.x
-python_version = sys.version_info
-if python_version < (3, 10, 0):
-
-    sys.stderr.write(f"WARNING - You need Python 3.10.x or later installed to run Siphonator, your running version '{python_version, }'")
-    sys.exit(1)
-
-# define path to siphonator root path - required for linux
-root_dir = os.path.dirname(os.path.realpath(__file__))
-
-# -------------------- siphonator modules -----------------------------
-# this is req to allow import of local modules (pex bug):-
-# https://github.com/pantsbuild/pex/issues/340#issuecomment-358775440
-sys.path.append(f"{root_dir}/")
-
 import lib.siphonator.index_proxy as siphonator_index_proxy
 import lib.siphonator.tools_logging as siphonator_tools_logging
 import lib.siphonator.tools_various as siphonator_tools_various
 import lib.siphonator.tools_downloader as siphonator_tools_downloader
 import lib.siphonator.db_sqlite as siphonator_db_sqlite
+
+
+def check_python():
+    # check version of python is 3.x.x
+    python_version = sys.version_info
+    if python_version < (3, 11, 0):
+
+        sys.stderr.write(f"WARNING - You need Python 3.11.x or later installed to run {app_name}, your running version '{python_version, }'")
+        sys.exit(1)
 
 
 def create_path(path):
@@ -421,11 +414,17 @@ if __name__ == '__main__':
     # TODO rename config.yml genre_minimum_rating_dict to genre_override_dict and allow to override imdb rating AND votes sci-fi should be 6.0, votes should be 4000
 
     # set versioning for app, config, and db
-    app_version = '1.0.0'
-    config_version = '1.0.1'
+    app_name = 'siphonator'
+    app_friendly_name = app_name.capitalize()
+    app_version = '0.0.1'
+    config_version = '0.0.1'
     db_version = int(5)
-    user_agent = f"Siphonator/{app_version}; https://github.com/binhex/siphonator"
+    user_agent = f"{app_name}/{app_version}; https://github.com/binhex/{app_name}"
 
+    # ensure we are running python 3.11 or later
+    check_python()
+
+    # define root path for app
     app_root_path = os.path.dirname(os.path.realpath(__file__))
 
     # custom argparse to redirect user to help if unknown argument specified
@@ -437,7 +436,7 @@ if __name__ == '__main__':
             sys.exit(2)
 
     parser = ArgparseCustom(
-        prog=f"Siphonator v{app_version}",
+        prog=f"{app_friendly_name} v{app_version}",
         description="Welcome to %(prog)s - Coded by binhex.",
         formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=100)
     )
@@ -514,19 +513,19 @@ if __name__ == '__main__':
     # create path if it doesn't exist and set filepath
     log_path = args.log_path
     create_path(log_path)
-    logs_filepath = os.path.join(log_path, 'siphonator.log')
+    logs_filepath = os.path.join(log_path, f'{app_name}.log')
 
     # create path if it doesn't exist and set filepath
     db_path = args.db_path
     create_path(db_path)
-    db_filepath = os.path.join(db_path, 'siphonator.db')
+    db_filepath = os.path.join(db_path, f'{app_name}.db')
 
     # create path if it doesn't exist and set filepath
     pid_path = args.pid_path
     create_path(pid_path)
 
     # construct pid filepath for main and post-processing threads
-    pid_siphonator_filepath = os.path.join(pid_path, 'siphonator.pid')
+    pid_siphonator_filepath = os.path.join(pid_path, f'{app_name}.pid')
     pid_queue_management_filepath = os.path.join(pid_path, 'queue-management.pid')
     pid_post_processing_filepath = os.path.join(pid_path, 'post-process.pid')
 
@@ -571,10 +570,9 @@ if __name__ == '__main__':
     # update config.yml if required
     siphonator_config.update_config(init_dict, config_file_version)
 
-    # verify config.yml is valid
+    # TODO WIP verify config.yml is valid
     # siphonator_config.verify_config(logger, init_dict, config_dict)
 
-    # if daemon cli flag defined
     if args.daemon:
 
         daemon_mode = 'background'
@@ -618,7 +616,7 @@ if __name__ == '__main__':
     post_processing_instance = SiphonatorPostProcessing(logger)
     siphonator_instance = SiphonatorMain(logger)
 
-    logger.info(u"Welcome to Siphonator - Coded by binhex.")
+    logger.info(f"Welcome to {app_friendly_name} - Coded by binhex.")
     logger.info(f"Starting daemon in '{daemon_mode}' mode...")
 
     if daemon_mode == 'background':

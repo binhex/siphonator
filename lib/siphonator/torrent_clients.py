@@ -141,7 +141,7 @@ class TorrentClients(object):
 
                     # if torrent ratio is less than the user or global ratio limit then skip
                     if torrent_ratio < effective_ratio_limit:
-                        return None
+                        continue
 
                     # get hash and name
                     torrent_hash = torrent.hash
