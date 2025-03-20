@@ -33,11 +33,14 @@ class PostProcess(object):
             # do not uncomment this until we are sure its working!
             #self.remove_completed_torrents(torrent_completed_dict)
 
-            # get the list of files for the torrent
+            # remove unwanted files based on extension or file size
             self.delete_unwanted_files(torrent_completed_dict)
 
-            # rename completed files
-            self.rename_completed_files(torrent_completed_dict)
+            # rename completed folders and files
+            absolute_completed_path, imdb_title_year = self.rename_completed_files(torrent_completed_dict)
+
+            # move from completed to library
+            self.move_to_library(absolute_completed_path, imdb_title_year)
 
     def remove_completed_torrents(self, torrent_completed_dict):
 
@@ -104,9 +107,6 @@ class PostProcess(object):
 
     def rename_completed_files(self, torrent_completed_dict):
 
-        if not self.config_dict['post_process']['rename_completed']:
-            return False
-
         # send torrent_dict to db_sqlite to query db bsed on tag name for imdb name and year and append to dict and return here
         read_database_simple_bool, query_result = self.db_sqlite_instance.read_database_simple('history', 'torrent_tag', torrent_completed_dict.get('torrent_tag'))
 
@@ -122,69 +122,73 @@ class PostProcess(object):
         torrent_file_dict_list = torrent_completed_dict.get('torrent_file_list')
 
         # sort the list of dictionaries by 'file_size' in descending order (largest first)
-        sorted_file_size_torrent_file_dict_list = sorted(torrent_file_dict_list, key=lambda x: x['file_size'], reverse=True)
+        sorted_file_size_dict_list = sorted(torrent_file_dict_list, key=lambda x: x['file_size'], reverse=True)
 
         # get first dictionary from the list, as this is the largest file size
-        largest_torrent_file_dict = sorted_file_size_torrent_file_dict_list[0]
+        sorted_file_size_dict = sorted_file_size_dict_list[0]
 
-        # get filename and directory
-        largest_torrent_rel_file_path = largest_torrent_file_dict.get('file_name')
-
-        # get torrent file extension, [1:] removes period
-        largest_torrent_file_ext = os.path.splitext(largest_torrent_rel_file_path)[1][1:]
+        # get torrent file path
+        torrent_rel_file_path = sorted_file_size_dict.get('file_name')
 
         # get qbittorrent root save path
-        torrent_root_save_path = torrent_completed_dict.get('torrent_save_path')
+        root_save_path = torrent_completed_dict.get('torrent_save_path')
 
         # construct path to completed imdb path and file path
-        largest_torrent_abs_file_path = os.path.join(torrent_root_save_path, largest_torrent_rel_file_path)
+        torrent_abs_file_path = os.path.join(root_save_path, torrent_rel_file_path)
+
+        if not self.config_dict['post_process']['rename_completed']:
+
+            return torrent_abs_file_path, imdb_title_year
+
+        # get torrent file extension, [1:] removes period
+        torrent_file_ext = os.path.splitext(torrent_rel_file_path)[1][1:]
 
         # get filename from file path
-        largest_torrent_file_name = os.path.basename(largest_torrent_rel_file_path)
+        torrent_file_name = os.path.basename(torrent_rel_file_path)
 
         # get directory from file path
-        largest_torrent_dir_path = os.path.dirname(largest_torrent_rel_file_path)
+        torrent_dir_path = os.path.dirname(torrent_rel_file_path)
 
         # construct absolute path to imdb folder name in completed, used to create path to move the largest file to movie file or rename first level directory
-        torrent_root_save_path_plus_imdb_title_year = os.path.join(torrent_root_save_path, imdb_title_year)
-        torrent_root_save_path_plus_imdb_title_year_plus_file_path = os.path.join(torrent_root_save_path_plus_imdb_title_year, largest_torrent_file_name)
+        imdb_abs_path = os.path.join(root_save_path, imdb_title_year)
+        imdb_abs_file_path = os.path.join(imdb_abs_path, torrent_file_name)
 
-        if not largest_torrent_dir_path:
+        if not torrent_dir_path:
 
             # create dir from root save path with name of imdb title and year
-            pathlib.Path(torrent_root_save_path_plus_imdb_title_year).mkdir(parents=True, exist_ok=True)
+            pathlib.Path(imdb_abs_path).mkdir(parents=True, exist_ok=True)
 
             # move file in root of saved path to imdb named directory
-            tools_various.move_files_folders(self.logger_instance, largest_torrent_abs_file_path, torrent_root_save_path_plus_imdb_title_year_plus_file_path)
+            tools_various.move_files_folders(self.logger_instance, torrent_abs_file_path, imdb_abs_file_path, 'file')
 
         else:
 
             # get first level directory name
-            largest_torrent_first_dir = tools_various.get_first_level_directory(largest_torrent_dir_path)
+            torrent_first_dir_path = tools_various.get_first_level_directory(torrent_dir_path)
 
             # construct new file name based on directory name
-            largest_torrent_dir_file_name = f"{largest_torrent_first_dir}.{largest_torrent_file_ext}"
+            torrent_first_dir_file_name = f"{torrent_first_dir_path}.{torrent_file_ext}"
 
             # sometimes the filename can be missing information present in the directory name, thus we check and rename the file
-            if largest_torrent_file_name != largest_torrent_dir_file_name:
+            if torrent_file_name != torrent_first_dir_file_name:
 
                 # construct new file path based on directory name
-                largest_torrent_abs_dir_path = os.path.join(torrent_root_save_path, str(largest_torrent_dir_path))
-                largest_torrent_abs_dir_file_path = os.path.join(largest_torrent_abs_dir_path, largest_torrent_dir_file_name)
+                torrent_abs_dir_path = os.path.join(root_save_path, str(torrent_dir_path))
+                torrent_abs_first_dir_file_name = os.path.join(torrent_abs_dir_path, torrent_first_dir_file_name)
 
                 # if the directory name does not match the file name then rename the file to match
-                tools_various.rename_files_folders(self.logger_instance, largest_torrent_abs_file_path, largest_torrent_abs_dir_file_path)
+                tools_various.rename_files_folders(self.logger_instance, torrent_abs_file_path, torrent_abs_first_dir_file_name)
 
             # construct partial path to torrent file, using root save path and first level directory name
-            largest_torrent_abs_first_dir_path = os.path.join(torrent_root_save_path, largest_torrent_first_dir)
+            torrent_abs_first_dir_path = os.path.join(root_save_path, torrent_first_dir_path)
 
             # rename first level folder to imdb name
-            tools_various.rename_files_folders(self.logger_instance, largest_torrent_abs_first_dir_path, torrent_root_save_path_plus_imdb_title_year)
+            tools_various.rename_files_folders(self.logger_instance, torrent_abs_first_dir_path, imdb_abs_path)
 
-        # send new path created/renamed to move to library path
-        self.move_to_library(torrent_root_save_path_plus_imdb_title_year, imdb_title_year)
+        # return to be used in move_to_library function
+        return imdb_abs_path, imdb_title_year
 
-    def move_to_library(self, absolute_completed_path, imdb_title_year):
+    def move_to_library(self, src_path, imdb_title_year):
 
         if not self.config_dict['post_process']['move_completed']:
             return False
@@ -193,12 +197,17 @@ class PostProcess(object):
         if not move_library_path:
             return False
 
-        # check move destination path exists
+        # check destination library path exists
         if not os.path.isdir(move_library_path):
 
-            self.logger_instance.warning(f"Destination path '{move_library_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container")
+            self.logger_instance.warning(f"Destination library path '{move_library_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container")
+
+        # check source directory exists
+        if not os.path.isdir(src_path):
+
+            self.logger_instance.warning(f"Source path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container")
 
         absolute_dst_path = os.path.join(move_library_path, imdb_title_year)
 
-        # move completed to library
-        tools_various.move_files_folders(self.logger_instance, absolute_completed_path, str(absolute_dst_path))
+        # move completed folders to library
+        tools_various.move_files_folders(self.logger_instance, src_path, str(absolute_dst_path), 'dir')

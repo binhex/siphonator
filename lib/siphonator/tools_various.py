@@ -89,7 +89,12 @@ def resolution_from_ffprobe(library_filepath, ffprobe_filepath):
     return stream_height
 
 
-def move_files_folders(logger_instance, src_path, dst_path):
+def move_files_folders(logger_instance, src_path, dst_path, dst_type):
+
+    if dst_type is 'dir':
+        # Ensure the destination path ends with a directory separator
+        if not dst_path.endswith(os.sep):
+            dst_path += os.sep
 
     try:
         shutil.move(src_path, str(dst_path))
