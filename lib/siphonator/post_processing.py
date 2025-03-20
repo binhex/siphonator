@@ -147,13 +147,13 @@ class PostProcess(object):
         torrent_file_name = os.path.basename(torrent_rel_file_path)
 
         # get directory from file path
-        torrent_dir_path = os.path.dirname(torrent_rel_file_path)
+        torrent_path = os.path.dirname(torrent_rel_file_path)
 
         # construct absolute path to imdb folder name in completed, used to create path to move the largest file to movie file or rename first level directory
         imdb_abs_path = os.path.join(root_save_path, imdb_title_year)
         imdb_abs_file_path = os.path.join(imdb_abs_path, torrent_file_name)
 
-        if not torrent_dir_path:
+        if not torrent_path:
 
             # create dir from root save path with name of imdb title and year
             pathlib.Path(imdb_abs_path).mkdir(parents=True, exist_ok=True)
@@ -164,26 +164,26 @@ class PostProcess(object):
         else:
 
             # get first level directory name
-            torrent_first_dir_path = tools_various.get_first_level_directory(torrent_dir_path)
+            torrent_first_path = tools_various.get_first_level_directory(torrent_path)
 
             # construct new file name based on directory name
-            torrent_first_dir_file_name = f"{torrent_first_dir_path}.{torrent_file_ext}"
+            torrent_first_dir_file_name = f"{torrent_first_path}.{torrent_file_ext}"
 
             # sometimes the filename can be missing information present in the directory name, thus we check and rename the file
             if torrent_file_name != torrent_first_dir_file_name:
 
                 # construct new file path based on directory name
-                torrent_abs_dir_path = os.path.join(root_save_path, str(torrent_dir_path))
-                torrent_abs_first_dir_file_name = os.path.join(torrent_abs_dir_path, torrent_first_dir_file_name)
+                torrent_abs_path = os.path.join(root_save_path, str(torrent_path))
+                torrent_abs_first_dir_file_name = os.path.join(torrent_abs_path, torrent_first_dir_file_name)
 
                 # if the directory name does not match the file name then rename the file to match
                 tools_various.rename_files_folders(self.logger_instance, torrent_abs_file_path, torrent_abs_first_dir_file_name)
 
             # construct partial path to torrent file, using root save path and first level directory name
-            torrent_abs_first_dir_path = os.path.join(root_save_path, torrent_first_dir_path)
+            torrent_abs_parent_dir_path = os.path.join(root_save_path, torrent_first_path)
 
             # rename first level folder to imdb name
-            tools_various.rename_files_folders(self.logger_instance, torrent_abs_first_dir_path, imdb_abs_path)
+            tools_various.rename_files_folders(self.logger_instance, torrent_abs_parent_dir_path, imdb_abs_path)
 
         # return to be used in move_to_library function
         return imdb_abs_path, imdb_title_year
