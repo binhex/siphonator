@@ -118,10 +118,10 @@ class PostProcess(object):
             self.delete_unwanted_files(torrent_completed_dict)
 
             # rename completed folders and files
-            absolute_completed_path, imdb_title_year = self.rename_completed_files(torrent_completed_dict)
+            absolute_completed_path = self.rename_completed_files(torrent_completed_dict)
 
             # move from completed to library
-            self.move_to_library(absolute_completed_path, imdb_title_year)
+            self.move_to_library(torrent_completed_dict, absolute_completed_path)
 
     def remove_completed_torrents(self, torrent_completed_dict):
 
@@ -180,19 +180,19 @@ class PostProcess(object):
 
     def rename_completed_files(self, torrent_completed_dict):
 
-        # helper to get imdb title year
-        imdb_title_year = self.helper_get_imdb_title_year(torrent_completed_dict)
-
         # get qbittorrent root save path
         root_save_path = torrent_completed_dict.get('torrent_save_path')
 
         # helper to construct torrent file related file names and paths
         torrent_abs_file_path, torrent_rel_file_path, torrent_file_ext, torrent_file_name, torrent_path = helper_get_largest_file_dict(torrent_completed_dict, root_save_path)
 
-        # if we do not want to rename then return untouched absolute file path and imdb title year
+        # helper to get imdb title year
+        imdb_title_year = self.helper_get_imdb_title_year(torrent_completed_dict)
+
+        # if we do not want to rename then return untouched absolute file path
         if not self.config_dict['post_process']['rename_completed']:
 
-            return torrent_abs_file_path, imdb_title_year
+            return torrent_abs_file_path
 
         # helper to construct imdb paths
         imdb_abs_path, imdb_abs_file_path = helper_construct_imdb_paths(root_save_path, imdb_title_year, torrent_file_name)
@@ -203,7 +203,7 @@ class PostProcess(object):
             pathlib.Path(str(imdb_abs_path)).mkdir(parents=True, exist_ok=True)
 
             # move file in root of saved path to imdb named directory
-            tools_various.move_files_folders(self.logger_instance, torrent_abs_file_path, imdb_abs_file_path, 'file')
+            tools_various.move_files_folders(self.logger_instance, self.config_dict, torrent_abs_file_path, imdb_abs_file_path, 'file')
 
         else:
 
@@ -216,10 +216,10 @@ class PostProcess(object):
             # rename first level folder to imdb name
             tools_various.rename_files_folders(self.logger_instance, torrent_abs_parent_dir_path, imdb_abs_path)
 
-        # return to be used in move_to_library function
-        return imdb_abs_path, imdb_title_year
+        # return absolute imdb path
+        return imdb_abs_path
 
-    def move_to_library(self, src_path, imdb_title_year):
+    def move_to_library(self, torrent_completed_dict, src_path):
 
         if not self.config_dict['post_process']['move_completed']:
             return False
@@ -227,6 +227,9 @@ class PostProcess(object):
         move_library_path = self.config_dict['post_process']['move_library_path']
         if not move_library_path:
             return False
+
+        # helper to get imdb title year
+        imdb_title_year = self.helper_get_imdb_title_year(torrent_completed_dict)
 
         # check destination library path exists
         if not os.path.isdir(move_library_path):
@@ -241,4 +244,4 @@ class PostProcess(object):
         absolute_dst_path = os.path.join(move_library_path, imdb_title_year)
 
         # move completed folders to library
-        tools_various.move_files_folders(self.logger_instance, src_path, str(absolute_dst_path), 'dir')
+        tools_various.move_files_folders(self.logger_instance, self.config_dict, src_path, str(absolute_dst_path), 'dir')

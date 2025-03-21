@@ -89,28 +89,87 @@ def resolution_from_ffprobe(library_filepath, ffprobe_filepath):
     return stream_height
 
 
-def move_files_folders(logger_instance, src_path, dst_path, dst_type):
+def helper_get_directory_size(path):
 
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if os.path.exists(fp):
+                total_size += os.path.getsize(fp)
+    return total_size
+
+
+def remove_directory_with_safety_check(logger_instance, src_path, max_path_size_gb=150):
+
+    # calculate the size of the directory
+    path_size = helper_get_directory_size(src_path) / (1024 * 1024 * 1024)  # Convert to GB
+
+    # check if the size exceeds the threshold
+    if path_size < max_path_size_gb:
+
+        try:
+            shutil.rmtree(src_path)
+            logger_instance.info(f"Successfully removed source path '{src_path}'")
+        except FileNotFoundError as e:
+            logger_instance.warning(
+                f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+        except PermissionError as e:
+            logger_instance.warning(f"Permission denied while deleting '{src_path}', error is '{e}'")
+        except OSError as e:
+            logger_instance.warning(f"General OS error, error is '{e}'")
+
+    else:
+
+        logger_instance.warning(f"Refusing to remove source path '{src_path}', as path size '{path_size}GB' exceeds maximum size safety threshold of '{max_path_size_gb}GB'")
+
+
+def move_files_folders(logger_instance, config_dict, src_path, dst_path, dst_type):
+
+    # if the destination type is a directory then ensure we append seperator to force destination move to be a directory
     if dst_type is 'dir':
-        # Ensure the destination path ends with a directory separator
         if not dst_path.endswith(os.sep):
             dst_path += os.sep
 
-    try:
-        shutil.move(src_path, str(dst_path))
-        logger_instance.info(f"Successfully moved source path '{src_path}' to destination path '{dst_path}'")
-    except FileNotFoundError as e:
-        logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
-    except PermissionError as e:
-        logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_path}', error is '{e}'")
-    except shutil.Error as e:
-        logger_instance.warning(f"General error, error is '{e}'")
-    except OSError as e:
-        logger_instance.warning(f"General OS error, error is '{e}'")
+    # check if the destination exists, if yes use shutil.copytree, if noy use shutil.move
+    if os.path.isdir(dst_path):
+
+        # shutil.copytree will NOT create the destination path (use shutil.move instead), but does permit copying files/directories into an existing destination
+        try:
+            shutil.copytree(str(src_path), str(dst_path), dirs_exist_ok=True)
+            logger_instance.info(f"Successfully copied source path '{src_path}' to destination path '{dst_path}'")
+        except FileNotFoundError as e:
+            logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+        except PermissionError as e:
+            logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_path}', error is '{e}'")
+        except OSError as e:
+            logger_instance.warning(f"General OS error, error is '{e}'")
+
+        # get max path size and pass to deletion function
+        delete_max_path_size_gb = config_dict['post_process']['delete_max_path_size_gb']
+
+        # once copytree has successfully copied the data across we now need to delete the source path (with checks)
+        remove_directory_with_safety_check(logger_instance, src_path, max_path_size_gb=delete_max_path_size_gb)
+
+    else:
+
+        # shutil.move will create the destination path, but will error if the destination already exists (use shutil.copytree instead)
+        try:
+            shutil.move(str(src_path), str(dst_path))
+            logger_instance.info(f"Successfully moved source path '{src_path}' to destination path '{dst_path}'")
+        except FileNotFoundError as e:
+            logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+        except PermissionError as e:
+            logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_path}', error is '{e}'")
+        except shutil.Error as e:
+            logger_instance.warning(f"General error, error is '{e}'")
+        except OSError as e:
+            logger_instance.warning(f"General OS error, error is '{e}'")
 
 
 def delete_files(logger_instance, path):
 
+    # this is a non-recursive deletion of files only, this will not delete directories
     try:
         os.remove(path)
         logger_instance.info(f"Successfully deleted file '{path}'")
