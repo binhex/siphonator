@@ -208,7 +208,7 @@ class PostProcess(object):
         else:
 
             # helper to rename file if it does not match the first directory
-            torrent_first_path = self.helper_rename_file_to_dir(torrent_abs_file_path, torrent_path, torrent_file_ext, torrent_file_name, root_save_path)
+            torrent_first_path = self.helper_rename_file_to_dir(torrent_path, torrent_file_ext, torrent_file_name, root_save_path, torrent_abs_file_path)
 
             # construct partial path to torrent file, using root save path and first level directory name
             torrent_abs_parent_dir_path = os.path.join(root_save_path, torrent_first_path)
