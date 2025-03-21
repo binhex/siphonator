@@ -140,10 +140,13 @@ def move_files_folders(logger_instance, config_dict, src_path, dst_path, dst_typ
             logger_instance.info(f"Successfully copied source path '{src_path}' to destination path '{dst_path}'")
         except FileNotFoundError as e:
             logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+            return False
         except PermissionError as e:
             logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_path}', error is '{e}'")
+            return False
         except OSError as e:
             logger_instance.warning(f"General OS error, error is '{e}'")
+            return False
 
         # get max path size and pass to deletion function
         delete_max_path_size_gb = config_dict['post_process']['delete_max_path_size_gb']
