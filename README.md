@@ -1,5 +1,7 @@
 # Siphonator
 
+This softwsare is under *HEAVY* development right now, expect lack of documentation, major bugs and missing functionality.
+
 ## Description
 
 WIP
