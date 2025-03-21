@@ -1,0 +1,28 @@
+# Siphonator
+
+## Description
+
+WIP
+
+## Pre-requisities
+
+WIP
+
+## Installation
+
+WIP
+
+## Configuration
+
+[//]: # ('<tr></tr>' is used to disablee zebra striping)
+
+WIP
+
+| Description | YAML Path | Version | Type | Valid Values | Example |
+| :---------- | :-------- | :------ | :--- | :----------- | :------ |
+| Absolute path to existing media | general/library | 1.0.0 | String | N/A | `library_path: '/media'` <tr></tr> |
+| Daemonised mode | general/daemon_mode | 1.0.0 | String | `'foreground'`\|`'background'` | `daemon_mode: 'foreground'` <tr></tr> |
+
+## FAQ
+
+WIP

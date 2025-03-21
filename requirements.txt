@@ -1,0 +1,30 @@
+apscheduler             # Adds in scheduling to run the main process at set times in a crontab style format
+backoff                 # Function decorator for backoff and retry for requests
+colorama                # Colour support for consoloe output for all platforms
+diskcache               # Required by imdbpie, need to ensure we install latest due to Collections error
+daemonize               # Run application in foreground/background
+ffmpeg-python           # Used to identify resolution of existing media
+googlesearch-python     # Fallback mechanism to get IMDb ID for movies
+# imdbpie                 # Python IMDB client using the IMDB JSON web service made available for their iOS application
+imdbpie @ git+https://github.com/razsteinmetz/imdb-pie@master # pulls from forked imdbpie to attempt auth fixed, not fixed
+pycountry               # Handles country and language conversion to short two letter abreviation
+pyomdbapi               # A simple OMDB API python wrapper
+xmltodict               # xmltodict is a simple library that aims at making XML feel like working with JSON
+mako                    # Mako is a web template library written in Python
+nmdmail                 # Simplified email sender for Python
+uvicorn                 # Alternative to tornado, is async so much faster!
+tornado                 # Tornado is a Python web framework - non blocking i/o
+tornroutes              # Web server routes decorator
+requests                # HTTP library for humans
+urllib3                 # Referenced by requests
+sqlalchemy              # SQLAlchemy is the Python SQL toolkit and Object Relational Mapper that gives developers the full power and flexibility of SQL.
+sqlite-utils            # Python CLI utility and library for manipulating SQLite databases.
+validators              # Used to validate data from user e.g. email, url etc
+configobj               # Config reading, writing and validation
+ConfigArgParse          # Drop-in replacement for argparse that allows options to be set via cli, config files and/or environment variables
+qbittorrent-api         # API support to add torrents/magnets to qBittorrent
+Pytest                  # Test framework for Python
+PyYAML                  # Tool used to pretty print YAML/dict for debug
+Unidecode               # Transliterate from Unicode to ASCII
+prowlarr-py             # API interface to Prowlarr
+pydantic                # Data validation, used for dict merging and yaml validation
