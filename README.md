@@ -8,7 +8,9 @@ WIP
 
 ## Pre-requisities
 
-WIP
+- Python 3.1x
+- Jackett
+- qBittorrent
 
 ## Installation
 
