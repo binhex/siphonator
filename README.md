@@ -6,7 +6,7 @@ This softwsare is under *HEAVY* development right now, expect lack of documentat
 
 WIP
 
-## Pre-requisities
+## Prerequisites
 
 - Python 3.1x
 - Jackett
