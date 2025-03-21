@@ -111,8 +111,8 @@ class PostProcess(object):
         # iterate over completed torrents dict
         for torrent_completed_dict in torrent_completed_dict_list:
 
-            # do not uncomment this until we are sure its working!
-            # self.remove_completed_torrents(torrent_completed_dict)
+            # remove completed queued items from qbittorrent
+            self.remove_completed_torrents(torrent_completed_dict)
 
             # remove unwanted files based on extension or file size
             self.delete_unwanted_files(torrent_completed_dict)
