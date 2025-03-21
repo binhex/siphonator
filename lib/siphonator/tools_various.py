@@ -128,6 +128,8 @@ def move_files_folders(logger_instance, config_dict, src_path, dst_path, dst_typ
 
     # if the destination type is a directory then ensure we append seperator to force destination move to be a directory
     if dst_type is 'dir':
+        if not src_path.endswith(os.sep):
+            src_path += os.sep
         if not dst_path.endswith(os.sep):
             dst_path += os.sep
 
