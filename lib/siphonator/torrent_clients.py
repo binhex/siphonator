@@ -1,6 +1,6 @@
 import qbittorrentapi
 import lib.siphonator.tools_various as siphonator_tools_various
-import lib.siphonator.config as siphonator_config
+import lib.siphonator.config_manager as siphonator_config_manager
 import uuid
 import datetime
 
@@ -32,7 +32,7 @@ class TorrentClients(object):
             self.config_dict['queue_management']['internet_connection_down_datetime'] = current_datetime_string
 
             # write datetime string to config file
-            siphonator_config.write_config(self.init_dict, self.config_dict)
+            siphonator_config_manager.write_config(self.init_dict, self.config_dict)
 
             self.logger_instance.warn(f"qBittorrent connection status reported as not connected, skipping queue management")
             return False
@@ -114,10 +114,10 @@ class TorrentClients(object):
 
         completed_torrent_dict_list = []
 
-        # identify torrents in completed state with tags
+        # identify torrents that are 100% downloaded and in a 'stopped' state
         try:
-            # Get the list of torrents with status 'completed'
-            completed_torrents = self.qbt_client.torrents_info(status_filter='completed')
+            # Get the list of torrents with status 'stopped'
+            completed_torrents = self.qbt_client.torrents_info(status_filter='stopped')
 
             for torrent in completed_torrents:
 
@@ -127,20 +127,8 @@ class TorrentClients(object):
                 # ensure the torrent is tagged for siphonator
                 if 'siphonator' in torrent_tag:
 
-                    # get the selected torrents current ratio
-                    torrent_ratio = torrent.ratio
-
-                    # get the torrent-specific ratio limit
-                    user_ratio_limit = torrent.max_ratio
-
-                    # get the global ratio limit
-                    global_ratio_limit = self.qbt_client.app_preferences().max_ratio
-
-                    # determine the effective ratio limit (torrent-specific if set, otherwise global)
-                    effective_ratio_limit = user_ratio_limit if user_ratio_limit >= 0 else global_ratio_limit
-
-                    # if torrent ratio is less than the user or global ratio limit then skip
-                    if torrent_ratio < effective_ratio_limit:
+                    # check if the torrent is 100% downloaded
+                    if torrent.progress != 1.0:
                         continue
 
                     # get hash and name
