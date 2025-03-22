@@ -19,7 +19,9 @@ class ToolsFilters(object):
         self.helper_movie_title_year_and_end_regex = r'^(.+?\d{4}[\s\.\-\+,]?)(.*)'
         self.helper_file_extension_regex = r'\.[a-z0-9]{3}$'
         self.helper_spaces_start_and_end = r'^\s+|\s+$'
-        self.helper_website_regex = r'www[\s\.\-\_][a-zA-Z0-9]+[\s\.\-\_][a-zA-Z0-9]{3,}'
+        self.helper_website_regex = r'(?i)www[\s\.\-\_][a-zA-Z0-9]+[\s\.\-\_][a-zA-Z0-9]{3,}'
+        self.helper_start_date_regex = r'^(\d{2,4}\s){3}'
+        self.helper_tt_number_regex = r'(?i)tt\d{7,}'
 
         # various regex
         self.compare_movie_title_regex = r'[\s\.\-\_\:\+]+'
@@ -157,6 +159,12 @@ class ToolsFilters(object):
 
         helper_website_regex = re.compile(self.helper_website_regex)
         result = helper_website_regex.sub('', result)
+
+        helper_start_date_regex = re.compile(self.helper_start_date_regex)
+        result = helper_start_date_regex.sub('', result)
+
+        helper_tt_number_regex = re.compile(self.helper_tt_number_regex)
+        result = helper_tt_number_regex.sub('', result)
 
         # remove 2+ whitespace
         result = ' '.join(result.split())
