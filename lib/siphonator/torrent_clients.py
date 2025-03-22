@@ -114,10 +114,10 @@ class TorrentClients(object):
 
         completed_torrent_dict_list = []
 
-        # identify torrents that are 100% downloaded and in a 'stopped' state
+        # identify torrents that are 100% downloaded and in a 'completed' state
         try:
-            # Get the list of torrents with status 'stopped'
-            completed_torrents = self.qbt_client.torrents_info(status_filter='stopped')
+            # Get the list of torrents with status 'completed'
+            completed_torrents = self.qbt_client.torrents_info(status_filter='completed')
 
             for torrent in completed_torrents:
 
