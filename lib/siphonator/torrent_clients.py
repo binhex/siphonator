@@ -114,10 +114,10 @@ class TorrentClients(object):
 
         completed_torrent_dict_list = []
 
-        # identify torrents that are 100% downloaded and in a 'completed' state
+        # identify torrents that are 100% downloaded and in a 'stopped' state
         try:
-            # Get the list of torrents with status 'completed'
-            completed_torrents = self.qbt_client.torrents_info(status_filter='completed')
+            # Get the list of torrents with status 'stopped'
+            completed_torrents = self.qbt_client.torrents_info(status_filter='stopped')
 
             for torrent in completed_torrents:
 
@@ -125,38 +125,39 @@ class TorrentClients(object):
                 torrent_tag = torrent.tags
 
                 # ensure the torrent is tagged for siphonator
-                if 'siphonator' in torrent_tag:
+                if 'siphonator' not in torrent_tag:
+                    continue
 
-                    # check if the torrent is 100% downloaded
-                    if torrent.progress != 1.0:
-                        continue
+                # check if the torrent has completed
+                if not torrent.completed_on:
+                    continue
 
-                    # get hash and name
-                    torrent_hash = torrent.hash
-                    torrent_name = torrent.name
+                # get hash and name
+                torrent_hash = torrent.hash
+                torrent_name = torrent.name
 
-                    # get the torrents files for the hashed torrent
-                    torrents_files = self.qbt_client.torrents_files(torrent.hash)
+                # get the torrents files for the hashed torrent
+                torrents_files = self.qbt_client.torrents_files(torrent.hash)
 
-                    # get the torrents properties for the hashed torrent
-                    torrents_properties = self.qbt_client.torrents_properties(torrent.hash)
-                    torrent_save_path = torrents_properties.save_path
+                # get the torrents properties for the hashed torrent
+                torrents_properties = self.qbt_client.torrents_properties(torrent.hash)
+                torrent_save_path = torrents_properties.save_path
 
-                    torrent_file_list = []
+                torrent_file_list = []
 
-                    for torrents_file in torrents_files:
+                for torrents_file in torrents_files:
 
-                        # add filename and file sizes to dict, used in post-processing to remove unwanted files
-                        torrent_file_dict = {'file_name': torrents_file.name, 'file_size': torrents_file.size}
+                    # add filename and file sizes to dict, used in post-processing to remove unwanted files
+                    torrent_file_dict = {'file_name': torrents_file.name, 'file_size': torrents_file.size}
 
-                        # append dict of filenames to list
-                        torrent_file_list.append(torrent_file_dict)
+                    # append dict of filenames to list
+                    torrent_file_list.append(torrent_file_dict)
 
-                    # create dictionary including all required info from torrent, as well as inclusion of the torrent file dict list
-                    completed_torrent_dict = {'torrent_name': torrent_name, 'torrent_hash': torrent_hash, 'torrent_tag': torrent_tag, 'torrent_file_list': torrent_file_list, 'torrent_save_path': torrent_save_path}
+                # create dictionary including all required info from torrent, as well as inclusion of the torrent file dict list
+                completed_torrent_dict = {'torrent_name': torrent_name, 'torrent_hash': torrent_hash, 'torrent_tag': torrent_tag, 'torrent_file_list': torrent_file_list, 'torrent_save_path': torrent_save_path}
 
-                    # append dict including all info for torrent to the list
-                    completed_torrent_dict_list.append(completed_torrent_dict)
+                # append dict including all info for torrent to the list
+                completed_torrent_dict_list.append(completed_torrent_dict)
 
         except qbittorrentapi.APIError as e:
             self.logger_instance.warn(f"Failed to connect to qBittorrent API, error was '{e}'")
