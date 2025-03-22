@@ -9,7 +9,7 @@ import xml.etree.ElementTree as elementTree
 from daemonize import Daemonize
 from apscheduler.schedulers.background import BlockingScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
-import lib.siphonator.config as siphonator_config
+import lib.siphonator.config_manager as siphonator_config_manager
 import lib.siphonator.post_processing as post_processing
 import lib.siphonator.queue_management as queue_management
 import lib.siphonator.index_proxy as siphonator_index_proxy
@@ -554,8 +554,14 @@ if __name__ == '__main__':
         'ffprobe_filepath': ffprobe_filepath,
     })
 
+    # TODO WIP create config.yml if it doesnt exist
+    # siphonator_config_manager.create_config_file(init_dict)
+
+    # TODO WIP update config.yml if required
+    # siphonator_config.update_config(init_dict, config_file_version)
+
     # send init_dict and return config_dict read from config.yml
-    config_dict = siphonator_config.read_config(init_dict)
+    config_dict = siphonator_config_manager.read_config(init_dict)
 
     # get logging level from config
     log_level_file = config_dict['general']['log_level_file']
@@ -566,12 +572,6 @@ if __name__ == '__main__':
 
     # read in config version from config file
     config_file_version = config_dict['general']['config_version']
-
-    # update config.yml if required
-    siphonator_config.update_config(init_dict, config_file_version)
-
-    # TODO WIP verify config.yml is valid
-    # siphonator_config.verify_config(logger, init_dict, config_dict)
 
     if args.daemon:
 
