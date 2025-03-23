@@ -22,10 +22,9 @@ class ToolsFilters(object):
         self.helper_website_regex = r'(?i)www[\s\.\-\_][a-zA-Z0-9]+[\s\.\-\_][a-zA-Z0-9]{3,}'
         self.helper_start_date_regex = r'^(\d{2,4}\s){3}'
         self.helper_tt_number_regex = r'(?i)tt\d{7,}'
-        self.helper_quotes_regex = r'\'\"'
 
         # various regex
-        self.compare_movie_title_regex = r'[\s\.\-\_\:\+]+'
+        self.compare_movie_title_regex = r'[\s\.\-\_\:\+\'\"]+'
         self.seperator_movie_title_regex = r'[\.\-\_,]+'
         self.sqlite_regex = r'\.|_|-|\s|&'
         self.resolution_regex = r'\d{3,4}(?=p)'
@@ -166,9 +165,6 @@ class ToolsFilters(object):
 
         helper_tt_number_regex = re.compile(self.helper_tt_number_regex)
         result = helper_tt_number_regex.sub('', result)
-
-        helper_quotes_regex = re.compile(self.helper_quotes_regex)
-        result = helper_quotes_regex.sub('', result)
 
         # remove 2+ whitespace
         result = ' '.join(result.split())
