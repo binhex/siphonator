@@ -111,9 +111,6 @@ class PostProcess(object):
         # iterate over completed torrents dict
         for torrent_completed_dict in torrent_completed_dict_list:
 
-            # remove completed queued items from qbittorrent
-            self.remove_completed_torrents(torrent_completed_dict)
-
             # remove unwanted files based on extension or file size
             self.delete_unwanted_files(torrent_completed_dict)
 
@@ -122,6 +119,9 @@ class PostProcess(object):
 
             # move from completed to library
             self.move_to_library(torrent_completed_dict, absolute_completed_path)
+
+            # remove completed queued items from qbittorrent
+            self.remove_completed_torrents(torrent_completed_dict)
 
     def remove_completed_torrents(self, torrent_completed_dict):
 
@@ -189,7 +189,7 @@ class PostProcess(object):
         # helper to get imdb title year
         imdb_title_year = self.helper_get_imdb_title_year(torrent_completed_dict)
 
-        # if we do not want to rename then return untouched absolute file path
+        # if we do not want to rename the source return untouched absolute file path
         if not self.config_dict['post_process']['rename_completed']:
 
             return torrent_abs_file_path
