@@ -129,7 +129,7 @@ class TorrentClients(object):
                     continue
 
                 # check if the torrent has completed
-                if not torrent.completed_on:
+                if int(torrent.amount_left) != 0:
                     continue
 
                 # get hash and name
