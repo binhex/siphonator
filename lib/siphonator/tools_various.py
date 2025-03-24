@@ -4,6 +4,8 @@ import datetime
 import ffmpeg
 import yaml
 import shutil
+import hashlib
+import pathlib
 from itertools import chain
 
 
@@ -100,6 +102,26 @@ def helper_get_directory_size(path):
     return total_size
 
 
+def helper_generate_file_checksum(file_path, algorithm='sha256'):
+
+    hash_func = hashlib.new(algorithm)
+    with open(file_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b''):
+            hash_func.update(chunk)
+    return hash_func.hexdigest()
+
+
+def helper_generate_directory_checksum(folder_path, algorithm='sha256'):
+
+    hash_func = hashlib.new(algorithm)
+    for root, dirs, files in os.walk(folder_path):
+        for file in sorted(files):
+            file_path = os.path.join(root, file)
+            file_checksum = helper_generate_file_checksum(file_path, algorithm)
+            hash_func.update(file_checksum.encode())
+    return hash_func.hexdigest()
+
+
 def remove_directory_with_safety_check(logger_instance, src_path, max_path_size_gb=150):
 
     # calculate the size of the directory
@@ -133,43 +155,46 @@ def move_files_folders(logger_instance, config_dict, src_path, dst_path, dst_typ
         if not dst_path.endswith(os.sep):
             dst_path += os.sep
 
-    # check if the destination exists, if yes use shutil.copytree, if noy use shutil.move
-    if os.path.isdir(dst_path):
+    # create destination path as shutil.copytree does not create the destination
+    path = pathlib.Path(dst_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
 
-        # shutil.copytree will NOT create the destination path (use shutil.move instead), but does permit copying files/directories into an existing destination
-        try:
-            shutil.copytree(str(src_path), str(dst_path), dirs_exist_ok=True)
-            logger_instance.info(f"Successfully copied source path '{src_path}' to destination path '{dst_path}'")
-        except FileNotFoundError as e:
-            logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
-            return False
-        except PermissionError as e:
-            logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_path}', error is '{e}'")
-            return False
-        except OSError as e:
-            logger_instance.warning(f"General OS error, error is '{e}'")
-            return False
+    # shutil.copytree will NOT create the destination path, but does permit copying files/directories into an existing destination
+    try:
+        shutil.copytree(str(src_path), str(dst_path), dirs_exist_ok=True)
+        logger_instance.info(f"Successfully copied source path '{src_path}' to destination path '{dst_path}'")
+    except FileNotFoundError as e:
+        logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+        return False
+    except PermissionError as e:
+        logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_path}', error is '{e}'")
+        return False
+    except OSError as e:
+        logger_instance.warning(f"General OS error, error is '{e}'")
+        return False
 
-        # get max path size and pass to deletion function
-        delete_max_path_size_gb = config_dict['post_process']['delete_max_path_size_gb']
-
-        # once copytree has successfully copied the data across we now need to delete the source path (with checks)
-        remove_directory_with_safety_check(logger_instance, src_path, max_path_size_gb=delete_max_path_size_gb)
-
+    # ensure checksums for src and dst match before deletion
+    if dst_type == 'dir':
+        src_sha256 = helper_generate_directory_checksum(src_path)
+        dst_sha256 = helper_generate_directory_checksum(dst_path)
+    elif dst_type == 'file':
+        src_sha256 = helper_generate_file_checksum(src_path)
+        dst_sha256 = helper_generate_file_checksum(dst_path)
     else:
+        logger_instance.warning(f"Unknown destination type '{dst_type}'")
+        return False
 
-        # shutil.move will create the destination path, but will error if the destination already exists (use shutil.copytree instead)
-        try:
-            shutil.move(str(src_path), str(dst_path))
-            logger_instance.info(f"Successfully moved source path '{src_path}' to destination path '{dst_path}'")
-        except FileNotFoundError as e:
-            logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
-        except PermissionError as e:
-            logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_path}', error is '{e}'")
-        except shutil.Error as e:
-            logger_instance.warning(f"General error, error is '{e}'")
-        except OSError as e:
-            logger_instance.warning(f"General OS error, error is '{e}'")
+    if int(src_sha256) != int(dst_sha256):
+        logger_instance.warning(f"Source path '{src_path}' checksum '{src_sha256}' and destination path '{dst_path}' checksum '{dst_sha256}' do not match, skipping source deletion")
+        return False
+
+    logger_instance.info(f"Source path '{src_path}' checksum '{src_sha256}' and destination path '{dst_path}' checksum '{dst_sha256}' match, proceeding to source deletion")
+
+    # get max path size and pass to deletion function
+    delete_max_path_size_gb = config_dict['post_process']['delete_max_path_size_gb']
+
+    # once copytree has successfully copied the data across we now need to delete the source path (with max size checks)
+    remove_directory_with_safety_check(logger_instance, src_path, max_path_size_gb=delete_max_path_size_gb)
 
 
 def delete_files(logger_instance, path):
