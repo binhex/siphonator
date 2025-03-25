@@ -99,7 +99,7 @@ def helper_get_directory_size(path):
             fp = os.path.join(dirpath, f)
             if os.path.exists(fp):
                 total_size += os.path.getsize(fp)
-    return total_size
+    return int(total_size)
 
 
 def helper_generate_file_checksum(file_path, algorithm='sha256'):
@@ -111,28 +111,33 @@ def helper_generate_file_checksum(file_path, algorithm='sha256'):
     return hash_func.hexdigest()
 
 
-def remove_directory_with_safety_check(logger_instance, src_path, max_path_size_mb=500):
+def remove_directory_with_safety_check(logger_instance, src_path, max_path_size_gb=200):
 
     # calculate the size of the directory
-    path_size_mb = helper_get_directory_size(src_path) / (1024 * 1024)  # Convert to MB
+    path_size_gb = helper_get_directory_size(src_path) / (1024 * 1024 * 1024)  # Convert to GB
 
     # check if the size exceeds the threshold
-    if path_size_mb < max_path_size_mb:
+    if path_size_gb < max_path_size_gb:
 
         try:
             shutil.rmtree(src_path)
             logger_instance.info(f"Successfully removed source path '{src_path}'")
         except FileNotFoundError as e:
-            logger_instance.warning(
-                f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+            logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+            return False
         except PermissionError as e:
             logger_instance.warning(f"Permission denied while deleting '{src_path}', error is '{e}'")
+            return False
         except OSError as e:
             logger_instance.warning(f"General OS error, error is '{e}'")
+            return False
 
     else:
 
-        logger_instance.warning(f"Refusing to remove source path '{src_path}', as path size '{path_size_mb}MB' exceeds maximum size safety threshold of '{max_path_size_mb}MB'")
+        logger_instance.warning(f"Refusing to remove source path '{src_path}', as path size '{path_size_gb}GB' exceeds maximum size safety threshold of '{max_path_size_gb}GB'")
+        return False
+
+    return True
 
 
 def move_files(logger_instance, src_path, dst_file_path):
@@ -193,12 +198,18 @@ def delete_files(logger_instance, path):
         logger_instance.info(f"Successfully deleted file '{path}'")
     except FileNotFoundError as e:
         logger_instance.warning(f"The file path '{path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+        return False
     except PermissionError as e:
         logger_instance.warning(f"Permission denied while trying to delete '{path}', error is '{e}'")
+        return False
     except IsADirectoryError as e:
         logger_instance.warning(f"'{path}' is a directory, not a file, error is '{e}'")
+        return False
     except OSError as e:
         logger_instance.warning(f"General OS error, error is '{e}'")
+        return False
+
+    return True
 
 
 def get_first_level_directory(path):

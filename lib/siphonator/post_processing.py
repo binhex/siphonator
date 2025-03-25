@@ -187,7 +187,8 @@ class PostProcess(object):
         for src_delete_file in src_delete_files_list:
 
             self.logger_instance.info(f"Deleting source file path '{src_delete_file}', file is in unwanted list")
-            tools_various.delete_files(self.logger_instance, src_delete_file)
+            if not tools_various.delete_files(self.logger_instance, src_delete_file):
+                return False
 
         return True
 
@@ -195,6 +196,8 @@ class PostProcess(object):
 
         if not self.config_dict['post_process']['delete_unwanted_files']:
             return False
+
+        delete_max_path_size_gb = self.config_dict['post_process']['delete_max_path_size_gb']
 
         # get qbittorrent root save path
         torrent_save_path = torrent_completed_dict.get('torrent_save_path')
@@ -210,7 +213,9 @@ class PostProcess(object):
         torrent_abs_parent_path = os.path.join(str(torrent_save_path), str(torrent_parent_path))
 
         # delete recursively with safety
-        tools_various.remove_directory_with_safety_check(self.logger_instance, torrent_abs_parent_path)
+        if not tools_various.remove_directory_with_safety_check(self.logger_instance, torrent_abs_parent_path, max_path_size_gb=delete_max_path_size_gb):
+            return False
+
         return True
 
     def delete_torrents_stopped(self, torrent_completed_dict):
@@ -221,5 +226,7 @@ class PostProcess(object):
         torrent_hash = torrent_completed_dict.get('torrent_hash')
 
         # remove torrent from qbittorrent queue with status stopped, as the files have been moved and it will error otherwise
-        self.torrent_clients_instance.qbittorrent_delete_torrent(torrent_hash, False, 'stopped')
+        if not self.torrent_clients_instance.qbittorrent_delete_torrent(torrent_hash, False, 'stopped'):
+            return False
+
         return True

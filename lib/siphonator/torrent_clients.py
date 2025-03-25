@@ -210,15 +210,17 @@ class TorrentClients(object):
 
         try:
             self.qbt_client.torrents_delete(delete_files=delete_torrent_data, torrent_hashes=torrent_hash)
-            # TODO would be nice to see name of torrent as well as hash when logging
-            if delete_torrent_data:
-                self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' and data with state '{state}'")
-            else:
-                self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' with state '{state}'")
-            return True
         except qbittorrentapi.APIError as e:
             self.logger_instance.info(f"Failed to delete torrent hash '{torrent_hash}', error was '{e}'")
             return False
+
+        # TODO would be nice to see name of torrent as well as hash when logging
+        if delete_torrent_data:
+            self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' and data with state '{state}'")
+        else:
+            self.logger_instance.info(f"Successfully deleted torrent hash '{torrent_hash}' with state '{state}'")
+
+        return True
 
     def qbittorrent_delete_stalled_torrents(self, qbittorrent_identify_torrents_for_deletion_dict, state):
 
