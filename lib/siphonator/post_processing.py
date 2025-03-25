@@ -1,11 +1,11 @@
 import os
-import pathlib
+import re
 import lib.siphonator.torrent_clients as torrent_clients
 import lib.siphonator.db_sqlite as db_sqlite
 import lib.siphonator.tools_various as tools_various
 
 
-def helper_get_largest_file_dict(torrent_completed_dict, root_save_path):
+def helper_get_src_parent_path(torrent_completed_dict):
 
     # get list of files in torrent
     torrent_file_dict_list = torrent_completed_dict.get('torrent_file_list')
@@ -19,28 +19,17 @@ def helper_get_largest_file_dict(torrent_completed_dict, root_save_path):
     # get torrent file path
     torrent_rel_file_path = sorted_file_size_dict.get('file_name')
 
-    # get torrent file extension, [1:] removes period
-    torrent_file_ext = os.path.splitext(torrent_rel_file_path)[1][1:]
-
-    # get filename from file path
-    torrent_file_name = os.path.basename(torrent_rel_file_path)
-
     # get directory from file path
     torrent_path = os.path.dirname(torrent_rel_file_path)
 
-    # construct path to completed imdb path and file path
-    torrent_abs_file_path = os.path.join(root_save_path, torrent_rel_file_path)
+    # get first level directory name from source path
+    torrent_parent_path = tools_various.get_first_level_directory(torrent_path)
 
-    return torrent_abs_file_path, torrent_rel_file_path, torrent_file_ext, torrent_file_name, torrent_path
+    # if there is no first level directory (saved to root of save path) then nothing to delete
+    if not torrent_parent_path:
+        return False
 
-
-def helper_construct_imdb_paths(root_save_path, imdb_title_year, torrent_file_name):
-
-    # construct absolute path to imdb folder name in completed, used to create path to move the largest file to movie file or rename first level directory
-    imdb_abs_path = os.path.join(root_save_path, imdb_title_year)
-    imdb_abs_file_path = os.path.join(str(imdb_abs_path), str(torrent_file_name))
-
-    return imdb_abs_path, imdb_abs_file_path
+    return torrent_parent_path
 
 
 class PostProcess(object):
@@ -52,26 +41,6 @@ class PostProcess(object):
         self.torrent_clients_instance = torrent_clients.TorrentClients(self.logger_instance, self.config_dict, qbt_client)
         self.db_sqlite_instance = db_sqlite.DbSqlite(self.logger_instance, init_dict)
         self.qbt_client = qbt_client
-
-    def helper_rename_file_to_dir(self, torrent_path, torrent_file_ext, torrent_file_name, root_save_path, torrent_abs_file_path):
-
-        # get first level directory name
-        torrent_first_path = tools_various.get_first_level_directory(torrent_path)
-
-        # construct new file name based on directory name
-        torrent_first_dir_file_name = f"{torrent_first_path}.{torrent_file_ext}"
-
-        # sometimes the filename can be missing information present in the directory name, thus we check and rename the file
-        if torrent_file_name != torrent_first_dir_file_name:
-
-            # construct new file path based on directory name
-            torrent_abs_path = os.path.join(root_save_path, str(torrent_path))
-            torrent_abs_first_dir_file_name = os.path.join(torrent_abs_path, torrent_first_dir_file_name)
-
-            # if the directory name does not match the file name then rename the file to match
-            tools_various.rename_files_folders(self.logger_instance, torrent_abs_file_path, torrent_abs_first_dir_file_name)
-
-        return torrent_first_path
 
     def helper_get_imdb_title_year(self, torrent_completed_dict):
 
@@ -88,14 +57,6 @@ class PostProcess(object):
 
         return imdb_title_year
 
-    def helper_delete_file(self, path):
-
-        if not os.path.isfile(path):
-
-            self.logger_instance.info(f"Failed to delete file from path '{path}' as the file does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for the 'Default save path' match qBittorrent")
-
-        tools_various.delete_files(self.logger_instance, path)
-
     def post_process(self):
 
         if not self.config_dict['post_process']['post_process_enabled']:
@@ -111,59 +72,56 @@ class PostProcess(object):
         # iterate over completed torrents dict
         for torrent_completed_dict in torrent_completed_dict_list:
 
-            # remove unwanted files based on extension or file size
-            self.delete_unwanted_files(torrent_completed_dict)
+            # loop over list of files and generate move files list and delete files list
+            src_move_files_list, src_delete_files_list = self.create_move_delete_lists(torrent_completed_dict)
 
-            # rename completed folders and files
-            absolute_completed_path = self.rename_completed_files(torrent_completed_dict)
+            # move filtered list of files to imdb title year named destination folder in library
+            if not self.move_files_dst(torrent_completed_dict, src_move_files_list):
+                continue
 
-            # move from completed to library
-            self.move_to_library(torrent_completed_dict, absolute_completed_path)
+            # delete completed files in the delete files list
+            if not self.delete_files_src(src_delete_files_list):
+                continue
 
-            # remove completed queued items from qbittorrent
-            self.remove_completed_torrents(torrent_completed_dict)
+            # delete completed parent folder and subfolders
+            if not self.delete_dir_src(torrent_completed_dict):
+                continue
 
-    def remove_completed_torrents(self, torrent_completed_dict):
+            # remove stopped queued items from qbittorrent
+            if not self.delete_torrents_stopped(torrent_completed_dict):
+                continue
 
-        if not self.config_dict['post_process']['remove_completed']:
-            return False
-
-        torrent_hash = torrent_completed_dict.get('torrent_hash')
-
-        # remove torrent from completed, this is required before performing rename/move operations, otherwise the torrent will be a missing files state (error)
-        self.torrent_clients_instance.qbittorrent_delete_torrent(torrent_hash, False, 'completed')
-
-    def delete_unwanted_files(self, torrent_completed_dict):
-
-        if not self.config_dict['post_process']['delete_unwanted_files']:
-            return False
+    def create_move_delete_lists(self, torrent_completed_dict):
 
         torrent_file_dict_list = torrent_completed_dict.get('torrent_file_list')
         torrent_save_path = torrent_completed_dict.get('torrent_save_path')
 
-        delete_unwanted_ext_list = self.config_dict['post_process']['delete_unwanted_ext_list']
+        delete_unwanted_regex_list = self.config_dict['post_process']['delete_unwanted_regex_list']
         delete_unwanted_min_kb = self.config_dict['post_process']['delete_unwanted_min_kb']
+
+        src_move_files_list = []
+        src_delete_files_list = []
 
         # iterate over list containing dictionary of files in the torrent
         for torrent_file_dict in torrent_file_dict_list:
 
             torrent_file_name = torrent_file_dict.get('file_name')
-            torrent_completed_dict.get('torrent_file_list')
-
             torrent_file_path = os.path.join(torrent_save_path, torrent_file_name)
 
-            # get torrent file extension, [1] gets second part of split filename (extension), and [1:] removes period
-            torrent_file_ext = os.path.splitext(torrent_file_path)[1][1:]
+            if delete_unwanted_regex_list:
 
-            if delete_unwanted_ext_list:
+                for delete_unwanted_regex in delete_unwanted_regex_list:
 
-                for delete_unwanted_ext in delete_unwanted_ext_list:
+                    # perform regex search against filename, if match found then append to delete list
+                    regex = re.compile(delete_unwanted_regex)
+                    delete_unwanted_regex_match = regex.search(torrent_file_name)
 
-                    # check config delete extension matches file extension in torrent file path
-                    if delete_unwanted_ext == torrent_file_ext:
+                    # check if filename matches regex to delete
+                    if delete_unwanted_regex_match:
 
-                        self.logger_instance.info(f"file extension '{torrent_file_ext}' for torrent completed filepath '{torrent_file_path}' matches delete file extension '{delete_unwanted_ext}' from config, deleting file...")
-                        self.helper_delete_file(torrent_file_path)
+                        src_delete_files_list.append(torrent_file_path)
+                        self.logger_instance.info(f"Filename '{torrent_file_name}' matches regex '{delete_unwanted_regex}' for deletion defined in config file, added to delete list '{src_delete_files_list}'")
+                        continue
 
             if delete_unwanted_min_kb:
 
@@ -175,51 +133,16 @@ class PostProcess(object):
                 # if torrent file_size is less than minimum size defined in config then delete
                 if int(torrent_file_size_kb) < int(delete_unwanted_min_kb):
 
-                    self.logger_instance.info(f"file size {torrent_file_size_kb}KB for torrent completed filepath '{torrent_file_path}' is less than minimum file size {delete_unwanted_min_kb}KB defined in config file, deleting file...")
-                    self.helper_delete_file(torrent_file_path)
+                    src_delete_files_list.append(torrent_file_path)
+                    self.logger_instance.info(f"File size {torrent_file_size_kb}KB for torrent completed filepath '{torrent_file_path}' is less than minimum file size {delete_unwanted_min_kb}KB defined in config file, added to delete list '{src_delete_files_list}'")
+                    continue
 
-    def rename_completed_files(self, torrent_completed_dict):
+            src_move_files_list.append(torrent_file_path)
+            self.logger_instance.info(f"Filename '{torrent_file_path}' is to be moved to the library, added to move list '{src_move_files_list}'")
 
-        # get qbittorrent root save path
-        root_save_path = torrent_completed_dict.get('torrent_save_path')
+        return src_move_files_list, src_delete_files_list
 
-        # helper to construct torrent file related file names and paths
-        torrent_abs_file_path, torrent_rel_file_path, torrent_file_ext, torrent_file_name, torrent_path = helper_get_largest_file_dict(torrent_completed_dict, root_save_path)
-
-        # helper to get imdb title year
-        imdb_title_year = self.helper_get_imdb_title_year(torrent_completed_dict)
-
-        # if we do not want to rename the source return untouched absolute file path
-        if not self.config_dict['post_process']['rename_completed']:
-
-            return torrent_abs_file_path
-
-        # helper to construct imdb paths
-        imdb_abs_path, imdb_abs_file_path = helper_construct_imdb_paths(root_save_path, imdb_title_year, torrent_file_name)
-
-        if not torrent_path:
-
-            # create dir from root save path with name of imdb title and year
-            pathlib.Path(str(imdb_abs_path)).mkdir(parents=True, exist_ok=True)
-
-            # move file in root of saved path to imdb named directory
-            tools_various.move_files_folders(self.logger_instance, self.config_dict, torrent_abs_file_path, imdb_abs_file_path, 'file')
-
-        else:
-
-            # helper to rename file if it does not match the first directory
-            torrent_first_path = self.helper_rename_file_to_dir(torrent_path, torrent_file_ext, torrent_file_name, root_save_path, torrent_abs_file_path)
-
-            # construct partial path to torrent file, using root save path and first level directory name
-            torrent_abs_parent_dir_path = os.path.join(root_save_path, torrent_first_path)
-
-            # rename first level folder to imdb name
-            tools_various.rename_files_folders(self.logger_instance, torrent_abs_parent_dir_path, imdb_abs_path)
-
-        # return absolute imdb path
-        return imdb_abs_path
-
-    def move_to_library(self, torrent_completed_dict, src_path):
+    def move_files_dst(self, torrent_completed_dict, src_move_files_list):
 
         if not self.config_dict['post_process']['move_completed']:
             return False
@@ -228,20 +151,75 @@ class PostProcess(object):
         if not move_library_path:
             return False
 
-        # helper to get imdb title year
+        # get imdb title and year - used to construct destination path
         imdb_title_year = self.helper_get_imdb_title_year(torrent_completed_dict)
 
-        # check destination library path exists
-        if not os.path.isdir(move_library_path):
+        # if query result from sqlite for imdb title and year is false then return
+        if not imdb_title_year:
+            return False
 
-            self.logger_instance.warning(f"Destination library path '{move_library_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container")
+        # construct absolute path to destination
+        dst_move_path = os.path.join(move_library_path, imdb_title_year)
 
-        # check source directory exists
-        if not os.path.isdir(src_path):
+        # loop over list of files to move
+        for src_move_file_path in src_move_files_list:
 
-            self.logger_instance.warning(f"Source path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container")
+            # get file name from src file path
+            src_move_file = os.path.basename(src_move_file_path)
 
-        absolute_dst_path = os.path.join(move_library_path, imdb_title_year)
+            # check source file exists
+            if not os.path.isfile(src_move_file_path):
+                self.logger_instance.warning(f"Source file path '{src_move_file_path}' does not exist, file may of been moved in previous run")
+                continue
 
-        # move completed folders to library
-        tools_various.move_files_folders(self.logger_instance, self.config_dict, src_path, str(absolute_dst_path), 'dir')
+            dst_move_file_path = os.path.join(dst_move_path, src_move_file)
+            self.logger_instance.info(f"Moving source file path '{src_move_file_path}' to destination file path '{dst_move_file_path}'")
+            if not tools_various.move_files(self.logger_instance, src_move_file_path, dst_move_file_path):
+                return False
+
+        return True
+
+    def delete_files_src(self, src_delete_files_list):
+
+        if not self.config_dict['post_process']['delete_unwanted_files']:
+            return False
+
+        for src_delete_file in src_delete_files_list:
+
+            self.logger_instance.info(f"Deleting source file path '{src_delete_file}', file is in unwanted list")
+            tools_various.delete_files(self.logger_instance, src_delete_file)
+
+        return True
+
+    def delete_dir_src(self, torrent_completed_dict):
+
+        if not self.config_dict['post_process']['delete_unwanted_files']:
+            return False
+
+        # get qbittorrent root save path
+        torrent_save_path = torrent_completed_dict.get('torrent_save_path')
+
+        # get source parent path
+        torrent_parent_path = helper_get_src_parent_path(torrent_completed_dict)
+
+        # if the torrent parent path does not exist then we have nothing to delete
+        if not torrent_parent_path:
+            return True
+
+        # construct parent path using root save path and first level directory name
+        torrent_abs_parent_path = os.path.join(str(torrent_save_path), str(torrent_parent_path))
+
+        # delete recursively with safety
+        tools_various.remove_directory_with_safety_check(self.logger_instance, torrent_abs_parent_path)
+        return True
+
+    def delete_torrents_stopped(self, torrent_completed_dict):
+
+        if not self.config_dict['post_process']['remove_completed']:
+            return False
+
+        torrent_hash = torrent_completed_dict.get('torrent_hash')
+
+        # remove torrent from qbittorrent queue with status stopped, as the files have been moved and it will error otherwise
+        self.torrent_clients_instance.qbittorrent_delete_torrent(torrent_hash, False, 'stopped')
+        return True

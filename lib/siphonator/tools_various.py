@@ -111,24 +111,13 @@ def helper_generate_file_checksum(file_path, algorithm='sha256'):
     return hash_func.hexdigest()
 
 
-def helper_generate_directory_checksum(folder_path, algorithm='sha256'):
-
-    hash_func = hashlib.new(algorithm)
-    for root, dirs, files in os.walk(folder_path):
-        for file in sorted(files):
-            file_path = os.path.join(root, file)
-            file_checksum = helper_generate_file_checksum(file_path, algorithm)
-            hash_func.update(file_checksum.encode())
-    return hash_func.hexdigest()
-
-
-def remove_directory_with_safety_check(logger_instance, src_path, max_path_size_gb=150):
+def remove_directory_with_safety_check(logger_instance, src_path, max_path_size_mb=500):
 
     # calculate the size of the directory
-    path_size = helper_get_directory_size(src_path) / (1024 * 1024 * 1024)  # Convert to GB
+    path_size_mb = helper_get_directory_size(src_path) / (1024 * 1024)  # Convert to MB
 
     # check if the size exceeds the threshold
-    if path_size < max_path_size_gb:
+    if path_size_mb < max_path_size_mb:
 
         try:
             shutil.rmtree(src_path)
@@ -143,58 +132,57 @@ def remove_directory_with_safety_check(logger_instance, src_path, max_path_size_
 
     else:
 
-        logger_instance.warning(f"Refusing to remove source path '{src_path}', as path size '{path_size}GB' exceeds maximum size safety threshold of '{max_path_size_gb}GB'")
+        logger_instance.warning(f"Refusing to remove source path '{src_path}', as path size '{path_size_mb}MB' exceeds maximum size safety threshold of '{max_path_size_mb}MB'")
 
 
-def move_files_folders(logger_instance, config_dict, src_path, dst_path, dst_type):
+def move_files(logger_instance, src_path, dst_file_path):
 
-    # if the destination type is a directory then ensure we append seperator to force destination move to be a directory
-    if dst_type == 'dir':
-        if not src_path.endswith(os.sep):
-            src_path += os.sep
-        if not dst_path.endswith(os.sep):
-            dst_path += os.sep
+    # get directory name from path
+    dst_path = os.path.dirname(dst_file_path)
 
     # create destination path as shutil.copytree does not create the destination
     path = pathlib.Path(dst_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
+    path.mkdir(parents=True, exist_ok=True)
 
-    # shutil.copytree will NOT create the destination path, but does permit copying files/directories into an existing destination
+    if os.path.isfile(dst_file_path):
+
+        # if the destination file path already exists then checksum it, if it matches the return, else delete.
+        src_sha256 = helper_generate_file_checksum(src_path)
+        dst_sha256 = helper_generate_file_checksum(dst_file_path)
+
+        # if the destination file path does exist and the checksums do match then return True, nothing to do.
+        if int(src_sha256) == int(dst_sha256):
+            logger_instance.info(f"Source path '{src_path}' with checksum '{src_sha256}' matches existing destination path '{dst_file_path}' with checksum '{dst_sha256}', skipping copy to destination")
+            return True
+
+        # if the destination file path does exist but the checksums do not match then delete the destination file.
+        logger_instance.warning(f"Source path '{src_path}' with checksum '{src_sha256}' does not match existing destination path '{dst_file_path}' with checksum '{dst_sha256}', deleting partial destination file")
+        delete_files(logger_instance, dst_file_path)
+
+    # shutil.copy will NOT create the destination path, but does permit copying files/directories into an existing destination
     try:
-        shutil.copytree(str(src_path), str(dst_path), dirs_exist_ok=True)
-        logger_instance.info(f"Successfully copied source path '{src_path}' to destination path '{dst_path}'")
+        shutil.copy(str(src_path), str(dst_file_path))
+        logger_instance.info(f"Successfully copied source path '{src_path}' to destination path '{dst_file_path}'")
     except FileNotFoundError as e:
         logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
         return False
     except PermissionError as e:
-        logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_path}', error is '{e}'")
+        logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_file_path}', error is '{e}'")
         return False
     except OSError as e:
         logger_instance.warning(f"General OS error, error is '{e}'")
         return False
 
     # ensure checksums for src and dst match before deletion
-    if dst_type == 'dir':
-        src_sha256 = helper_generate_directory_checksum(src_path)
-        dst_sha256 = helper_generate_directory_checksum(dst_path)
-    elif dst_type == 'file':
-        src_sha256 = helper_generate_file_checksum(src_path)
-        dst_sha256 = helper_generate_file_checksum(dst_path)
-    else:
-        logger_instance.warning(f"Unknown destination type '{dst_type}'")
-        return False
+    src_sha256 = helper_generate_file_checksum(src_path)
+    dst_sha256 = helper_generate_file_checksum(dst_file_path)
 
     if int(src_sha256) != int(dst_sha256):
-        logger_instance.warning(f"Source path '{src_path}' checksum '{src_sha256}' and destination path '{dst_path}' checksum '{dst_sha256}' do not match, skipping source deletion")
+        logger_instance.warning(f"Source path '{src_path}' with checksum '{src_sha256}' does not match destination path '{dst_file_path}' with checksum '{dst_sha256}' after copy operation, reporting failure")
         return False
 
-    logger_instance.info(f"Source path '{src_path}' checksum '{src_sha256}' and destination path '{dst_path}' checksum '{dst_sha256}' match, proceeding to source deletion")
-
-    # get max path size and pass to deletion function
-    delete_max_path_size_gb = config_dict['post_process']['delete_max_path_size_gb']
-
-    # once copytree has successfully copied the data across we now need to delete the source path (with max size checks)
-    remove_directory_with_safety_check(logger_instance, src_path, max_path_size_gb=delete_max_path_size_gb)
+    logger_instance.info(f"Source path '{src_path}' with checksum '{src_sha256}' does match destination path '{dst_file_path}' with checksum '{dst_sha256}' after copy operation")
+    return True
 
 
 def delete_files(logger_instance, path):
@@ -211,19 +199,6 @@ def delete_files(logger_instance, path):
         logger_instance.warning(f"'{path}' is a directory, not a file, error is '{e}'")
     except OSError as e:
         logger_instance.warning(f"General OS error, error is '{e}'")
-
-
-def rename_files_folders(logger_instance, src_path, dst_path):
-
-    try:
-        os.rename(src_path, dst_path)
-        logger_instance.info(f"Successfully renamed file/folder from '{src_path}' to '{dst_path}'")
-    except FileNotFoundError as e:
-        logger_instance.info(f"The folder '{src_path}' does not exist, error is '{e}'")
-    except PermissionError as e:
-        logger_instance.info(f"Permission denied while renaming '{src_path}' to '{dst_path}'. error is '{e}'")
-    except OSError as e:
-        logger_instance.info(f"General OS error, error is {e}")
 
 
 def get_first_level_directory(path):
