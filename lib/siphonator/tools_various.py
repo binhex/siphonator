@@ -151,7 +151,7 @@ def move_files(logger_instance, src_path, dst_file_path):
         dst_sha256 = helper_generate_file_checksum(dst_file_path)
 
         # if the destination file path does exist and the checksums do match then return True, nothing to do.
-        if int(src_sha256) == int(dst_sha256):
+        if str(src_sha256) == str(dst_sha256):
             logger_instance.info(f"Source path '{src_path}' with checksum '{src_sha256}' matches existing destination path '{dst_file_path}' with checksum '{dst_sha256}', skipping copy to destination")
             return True
 
