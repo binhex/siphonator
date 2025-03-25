@@ -24,7 +24,7 @@ class ToolsFilters(object):
         self.helper_tt_number_regex = r'(?i)tt\d{7,}'
 
         # various regex
-        self.compare_movie_title_regex = r'[\s\.\-\_\:\+\'\"]+'
+        self.compare_movie_title_regex = r'[\s\.\-\_\:\+\'\"\!\,\@\#]+'
         self.seperator_movie_title_regex = r'[\.\-\_,]+'
         self.sqlite_regex = r'\.|_|-|\s|&'
         self.resolution_regex = r'\d{3,4}(?=p)'
