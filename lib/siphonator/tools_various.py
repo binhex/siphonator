@@ -177,7 +177,7 @@ def move_files(logger_instance, src_path, dst_file_path):
     src_sha256 = helper_generate_file_checksum(src_path)
     dst_sha256 = helper_generate_file_checksum(dst_file_path)
 
-    if int(src_sha256) != int(dst_sha256):
+    if str(src_sha256) != str(dst_sha256):
         logger_instance.warning(f"Source path '{src_path}' with checksum '{src_sha256}' does not match destination path '{dst_file_path}' with checksum '{dst_sha256}' after copy operation, reporting failure")
         return False
 
