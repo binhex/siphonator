@@ -126,14 +126,11 @@ def create_config_file(init_dict):
         },
         'post_process': {
             'post_process_enabled': True,
-            'rename_completed': True,
-            'move_completed': True,
+            'copy_completed': True,
             'remove_completed': True,
-            'delete_unwanted_files': False,
-            'delete_unwanted_min_kb': 10000,
-            'delete_max_path_size_gb': 150,
-            'delete_unwanted_ext_list': None,
-            'move_library_path': None
+            'exclude_file_min_kb': 10000,
+            'exclude_file_regex_list': None,
+            'copy_library_path': None,
         }
     }
 
