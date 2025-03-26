@@ -1,11 +1,12 @@
 import os
+import pathlib
 import re
 import lib.siphonator.torrent_clients as torrent_clients
 import lib.siphonator.db_sqlite as db_sqlite
 import lib.siphonator.tools_various as tools_various
 
 
-def helper_get_src_parent_path(torrent_completed_dict):
+def helper_get_largest_file_path(torrent_completed_dict):
 
     # get list of files in torrent
     torrent_file_dict_list = torrent_completed_dict.get('torrent_file_list')
@@ -19,17 +20,43 @@ def helper_get_src_parent_path(torrent_completed_dict):
     # get torrent file path
     torrent_rel_file_path = sorted_file_size_dict.get('file_name')
 
+    # get filename from file path
+    torrent_file_name = os.path.basename(torrent_rel_file_path)
+
     # get directory from file path
     torrent_path = os.path.dirname(torrent_rel_file_path)
 
-    # get first level directory name from source path
-    torrent_parent_path = tools_various.get_first_level_directory(torrent_path)
+    return torrent_file_name, torrent_path
 
-    # if there is no first level directory (saved to root of save path) then nothing to delete
-    if not torrent_parent_path:
+
+def helper_get_largest_parent_dir(logger_instance, torrent_file_name, torrent_path):
+
+    # get first level directory name from source path
+    torrent_parent_dir = tools_various.get_first_level_directory(torrent_path)
+
+    # if there is no first level directory (saved to root of save path) then we cannot use the dir name
+    if not torrent_parent_dir:
+        logger_instance.debug(f"Torrent file path '{torrent_path}' does not contain parent directory")
         return False
 
-    return torrent_parent_path
+    # if the file extension is not a video container then we cannot safely use the dir name for te file name
+    if not torrent_file_name.lower().endswith(('.mkv', '.mp4', '.avi')):
+        logger_instance.debug(f"Torrent file name '{torrent_file_name}' is not a video container")
+        return False
+
+    # get length of parent path and filename for comparison
+    char_length_parent_path = len(torrent_parent_dir)
+    char_length_torrent_file_name = len(torrent_file_name)
+
+    # if length of parent directory is less than torrent filename then do not use the dir name for the file name
+    if int(char_length_parent_path) < int(char_length_torrent_file_name):
+        logger_instance.debug(f"Torrent file name '{torrent_file_name}' char length '{char_length_torrent_file_name}' is greater than torrent parent directory '{torrent_parent_dir}' char length '{char_length_parent_path}'")
+        return False
+
+    # get extension from filename, as we need this to construct the new file name
+    torrent_file_extension = pathlib.Path(torrent_file_name).suffix
+
+    return torrent_parent_dir, torrent_file_extension
 
 
 class PostProcess(object):
@@ -150,21 +177,39 @@ class PostProcess(object):
         if not imdb_title_year:
             return False
 
+        # get the largest torrent file name and path
+        torrent_largest_file_name, torrent_path = helper_get_largest_file_path(torrent_completed_dict)
+
         # construct absolute path to destination
         dst_copy_path = os.path.join(copy_library_path, imdb_title_year)
 
         # loop over list of files to copy
         for src_copy_file_path in src_copy_files_list:
 
-            # get file name from src file path
-            src_copy_file = os.path.basename(src_copy_file_path)
-
             # check source file exists
             if not os.path.isfile(src_copy_file_path):
                 self.logger_instance.warning(f"Source file path '{src_copy_file_path}' does not exist, file may of been copy in previous run")
                 continue
 
-            dst_copy_file_path = os.path.join(dst_copy_path, src_copy_file)
+            # get file name from src file path
+            src_copy_file = os.path.basename(src_copy_file_path)
+
+            # if source file path does not match the largest file path then use existing file name
+            if src_copy_file != torrent_largest_file_name:
+                dst_copy_file_path = os.path.join(dst_copy_path, src_copy_file)
+
+            else:
+                # get the largest parent path name
+                torrent_largest_parent_dir, torrent_file_extension = helper_get_largest_parent_dir(self.logger_instance, torrent_largest_file_name, torrent_path)
+
+                # if parent dir does not exist, length of parent dir is shorter than filename, or file type is not container (returns False for all) then use existing file name
+                if not torrent_largest_parent_dir:
+                    dst_copy_file_path = os.path.join(dst_copy_path, src_copy_file)
+
+                else:
+                    # construct full file path with new parent path name as the file name
+                    dst_copy_file_path = os.path.join(dst_copy_path, f"{torrent_largest_parent_dir}{torrent_file_extension}")
+
             self.logger_instance.info(f"Moving source file path '{src_copy_file_path}' to destination file path '{dst_copy_file_path}'")
             if not tools_various.copy_files(self.logger_instance, src_copy_file_path, dst_copy_file_path):
                 return False
