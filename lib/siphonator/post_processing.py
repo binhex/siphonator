@@ -72,35 +72,27 @@ class PostProcess(object):
         # iterate over completed torrents dict
         for torrent_completed_dict in torrent_completed_dict_list:
 
-            # loop over list of files and generate move files list and delete files list
-            src_move_files_list, src_delete_files_list = self.create_move_delete_lists(torrent_completed_dict)
+            # loop over list of files and generate copy files list and delete files list
+            src_copy_files_list, src_delete_files_list = self.create_copy_exclude_lists(torrent_completed_dict)
 
-            # move filtered list of files to imdb title year named destination folder in library
-            if not self.move_files_dst(torrent_completed_dict, src_move_files_list):
+            # copy filtered list of files to imdb title year named destination folder in library
+            if not self.copy_files_dst(torrent_completed_dict, src_copy_files_list):
                 continue
 
-            # delete completed files in the delete files list
-            if not self.delete_files_src(src_delete_files_list):
+            # remove stopped queued items from qbittorrent and data
+            if not self.delete_torrent_and_data(torrent_completed_dict):
                 continue
 
-            # delete completed parent folder and subfolders
-            if not self.delete_dir_src(torrent_completed_dict):
-                continue
-
-            # remove stopped queued items from qbittorrent
-            if not self.delete_torrents_stopped(torrent_completed_dict):
-                continue
-
-    def create_move_delete_lists(self, torrent_completed_dict):
+    def create_copy_exclude_lists(self, torrent_completed_dict):
 
         torrent_file_dict_list = torrent_completed_dict.get('torrent_file_list')
         torrent_save_path = torrent_completed_dict.get('torrent_save_path')
 
-        delete_unwanted_regex_list = self.config_dict['post_process']['delete_unwanted_regex_list']
-        delete_unwanted_min_kb = self.config_dict['post_process']['delete_unwanted_min_kb']
+        exclude_file_regex_list = self.config_dict['post_process']['exclude_file_regex_list']
+        exclude_file_min_kb = self.config_dict['post_process']['exclude_file_min_kb']
 
-        src_move_files_list = []
-        src_delete_files_list = []
+        src_copy_files_list = []
+        src_exclude_files_list = []
 
         # iterate over list containing dictionary of files in the torrent
         for torrent_file_dict in torrent_file_dict_list:
@@ -108,9 +100,9 @@ class PostProcess(object):
             torrent_file_name = torrent_file_dict.get('file_name')
             torrent_file_path = os.path.join(torrent_save_path, torrent_file_name)
 
-            if delete_unwanted_regex_list:
+            if exclude_file_regex_list:
 
-                for delete_unwanted_regex in delete_unwanted_regex_list:
+                for delete_unwanted_regex in exclude_file_regex_list:
 
                     # perform regex search against filename, if match found then append to delete list
                     regex = re.compile(delete_unwanted_regex)
@@ -119,11 +111,11 @@ class PostProcess(object):
                     # check if filename matches regex to delete
                     if delete_unwanted_regex_match:
 
-                        src_delete_files_list.append(torrent_file_path)
-                        self.logger_instance.info(f"Filename '{torrent_file_name}' matches regex '{delete_unwanted_regex}' for deletion defined in config file, added to delete list '{src_delete_files_list}'")
+                        src_exclude_files_list.append(torrent_file_path)
+                        self.logger_instance.info(f"Filename '{torrent_file_name}' matches regex '{delete_unwanted_regex}' defined in config file, added to exclude list '{src_exclude_files_list}'")
                         continue
 
-            if delete_unwanted_min_kb:
+            if exclude_file_min_kb:
 
                 torrent_file_size = torrent_file_dict.get('file_size')
 
@@ -131,24 +123,24 @@ class PostProcess(object):
                 torrent_file_size_kb = torrent_file_size >> 10
 
                 # if torrent file_size is less than minimum size defined in config then delete
-                if int(torrent_file_size_kb) < int(delete_unwanted_min_kb):
+                if int(torrent_file_size_kb) < int(exclude_file_min_kb):
 
-                    src_delete_files_list.append(torrent_file_path)
-                    self.logger_instance.info(f"File size {torrent_file_size_kb}KB for torrent completed filepath '{torrent_file_path}' is less than minimum file size {delete_unwanted_min_kb}KB defined in config file, added to delete list '{src_delete_files_list}'")
+                    src_exclude_files_list.append(torrent_file_path)
+                    self.logger_instance.info(f"File size {torrent_file_size_kb}KB for torrent completed filepath '{torrent_file_path}' is less than minimum file size {exclude_file_min_kb}KB defined in config file, added to exclude list '{src_exclude_files_list}'")
                     continue
 
-            src_move_files_list.append(torrent_file_path)
-            self.logger_instance.info(f"Filename '{torrent_file_path}' is to be moved to the library, added to move list '{src_move_files_list}'")
+            src_copy_files_list.append(torrent_file_path)
+            self.logger_instance.info(f"Filename '{torrent_file_path}' is to be copy to the library, added to copy list '{src_copy_files_list}'")
 
-        return src_move_files_list, src_delete_files_list
+        return src_copy_files_list, src_exclude_files_list
 
-    def move_files_dst(self, torrent_completed_dict, src_move_files_list):
+    def copy_files_dst(self, torrent_completed_dict, src_copy_files_list):
 
-        if not self.config_dict['post_process']['move_completed']:
+        if not self.config_dict['post_process']['copy_completed']:
             return False
 
-        move_library_path = self.config_dict['post_process']['move_library_path']
-        if not move_library_path:
+        copy_library_path = self.config_dict['post_process']['copy_library_path']
+        if not copy_library_path:
             return False
 
         # get imdb title and year - used to construct destination path
@@ -159,66 +151,27 @@ class PostProcess(object):
             return False
 
         # construct absolute path to destination
-        dst_move_path = os.path.join(move_library_path, imdb_title_year)
+        dst_copy_path = os.path.join(copy_library_path, imdb_title_year)
 
-        # loop over list of files to move
-        for src_move_file_path in src_move_files_list:
+        # loop over list of files to copy
+        for src_copy_file_path in src_copy_files_list:
 
             # get file name from src file path
-            src_move_file = os.path.basename(src_move_file_path)
+            src_copy_file = os.path.basename(src_copy_file_path)
 
             # check source file exists
-            if not os.path.isfile(src_move_file_path):
-                self.logger_instance.warning(f"Source file path '{src_move_file_path}' does not exist, file may of been moved in previous run")
+            if not os.path.isfile(src_copy_file_path):
+                self.logger_instance.warning(f"Source file path '{src_copy_file_path}' does not exist, file may of been copy in previous run")
                 continue
 
-            dst_move_file_path = os.path.join(dst_move_path, src_move_file)
-            self.logger_instance.info(f"Moving source file path '{src_move_file_path}' to destination file path '{dst_move_file_path}'")
-            if not tools_various.move_files(self.logger_instance, src_move_file_path, dst_move_file_path):
+            dst_copy_file_path = os.path.join(dst_copy_path, src_copy_file)
+            self.logger_instance.info(f"Moving source file path '{src_copy_file_path}' to destination file path '{dst_copy_file_path}'")
+            if not tools_various.copy_files(self.logger_instance, src_copy_file_path, dst_copy_file_path):
                 return False
 
         return True
 
-    def delete_files_src(self, src_delete_files_list):
-
-        if not self.config_dict['post_process']['delete_unwanted_files']:
-            return False
-
-        for src_delete_file in src_delete_files_list:
-
-            self.logger_instance.info(f"Deleting source file path '{src_delete_file}', file is in unwanted list")
-            if not tools_various.delete_files(self.logger_instance, src_delete_file):
-                return False
-
-        return True
-
-    def delete_dir_src(self, torrent_completed_dict):
-
-        if not self.config_dict['post_process']['delete_unwanted_files']:
-            return False
-
-        delete_max_path_size_gb = self.config_dict['post_process']['delete_max_path_size_gb']
-
-        # get qbittorrent root save path
-        torrent_save_path = torrent_completed_dict.get('torrent_save_path')
-
-        # get source parent path
-        torrent_parent_path = helper_get_src_parent_path(torrent_completed_dict)
-
-        # if the torrent parent path does not exist then we have nothing to delete
-        if not torrent_parent_path:
-            return True
-
-        # construct parent path using root save path and first level directory name
-        torrent_abs_parent_path = os.path.join(str(torrent_save_path), str(torrent_parent_path))
-
-        # delete recursively with safety
-        if not tools_various.remove_directory_with_safety_check(self.logger_instance, torrent_abs_parent_path, max_path_size_gb=delete_max_path_size_gb):
-            return False
-
-        return True
-
-    def delete_torrents_stopped(self, torrent_completed_dict):
+    def delete_torrent_and_data(self, torrent_completed_dict):
 
         if not self.config_dict['post_process']['remove_completed']:
             return False
@@ -226,7 +179,7 @@ class PostProcess(object):
         torrent_hash = torrent_completed_dict.get('torrent_hash')
 
         # remove torrent from qbittorrent queue with status stopped, as the files have been moved and it will error otherwise
-        if not self.torrent_clients_instance.qbittorrent_delete_torrent(torrent_hash, False, 'stopped'):
+        if not self.torrent_clients_instance.qbittorrent_delete_torrent(torrent_hash, True, 'stopped'):
             return False
 
         return True

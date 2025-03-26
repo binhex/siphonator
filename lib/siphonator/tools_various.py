@@ -91,17 +91,6 @@ def resolution_from_ffprobe(library_filepath, ffprobe_filepath):
     return stream_height
 
 
-def helper_get_directory_size(path):
-
-    total_size = 0
-    for dirpath, dirnames, filenames in os.walk(path):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
-            if os.path.exists(fp):
-                total_size += os.path.getsize(fp)
-    return int(total_size)
-
-
 def helper_generate_file_checksum(file_path, algorithm='sha256'):
 
     hash_func = hashlib.new(algorithm)
@@ -111,41 +100,7 @@ def helper_generate_file_checksum(file_path, algorithm='sha256'):
     return hash_func.hexdigest()
 
 
-def remove_directory_with_safety_check(logger_instance, path, max_path_size_gb=200):
-
-    # if the source path has already been deleted then return true
-    if not os.path.isdir(path):
-        logger_instance.debug(f"Path '{path}' does not exist, assuming already deleted")
-        return True
-
-    # calculate the size of the directory
-    path_size_gb = helper_get_directory_size(path) / (1024 * 1024 * 1024)  # Convert to GB
-
-    # check if the size exceeds the threshold
-    if path_size_gb < max_path_size_gb:
-
-        try:
-            shutil.rmtree(path)
-            logger_instance.info(f"Successfully removed path '{path}'")
-        except FileNotFoundError as e:
-            logger_instance.warning(f"The path '{path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
-            return False
-        except PermissionError as e:
-            logger_instance.warning(f"Permission denied while deleting '{path}', error is '{e}'")
-            return False
-        except OSError as e:
-            logger_instance.warning(f"General OS error, error is '{e}'")
-            return False
-
-    else:
-
-        logger_instance.warning(f"Refusing to remove path '{path}', as path size '{path_size_gb}GB' exceeds maximum size safety threshold of '{max_path_size_gb}GB'")
-        return False
-
-    return True
-
-
-def move_files(logger_instance, src_path, dst_file_path):
+def copy_files(logger_instance, src_path, dst_file_path):
 
     # get directory name from path
     dst_path = os.path.dirname(dst_file_path)
