@@ -199,14 +199,16 @@ class PostProcess(object):
                 dst_copy_file_path = os.path.join(dst_copy_path, src_copy_file)
 
             else:
-                # get the largest parent path name
-                torrent_largest_parent_dir, torrent_file_extension = helper_get_largest_parent_dir(self.logger_instance, torrent_largest_file_name, torrent_path)
 
                 # if parent dir does not exist, length of parent dir is shorter than filename, or file type is not container (returns False for all) then use existing file name
-                if not torrent_largest_parent_dir:
+                if not helper_get_largest_parent_dir(self.logger_instance, torrent_largest_file_name, torrent_path):
                     dst_copy_file_path = os.path.join(dst_copy_path, src_copy_file)
 
                 else:
+
+                    # get the largest parent path name
+                    torrent_largest_parent_dir, torrent_file_extension = helper_get_largest_parent_dir(self.logger_instance, torrent_largest_file_name, torrent_path)
+
                     # construct full file path with new parent path name as the file name
                     dst_copy_file_path = os.path.join(dst_copy_path, f"{torrent_largest_parent_dir}{torrent_file_extension}")
 
