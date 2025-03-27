@@ -133,9 +133,9 @@ class DbSqlite(object):
             # if sqlite query already in database then return True
             if sqlite_query in (sqlite_result.get(sqlite_column)):
 
-                return True, sqlite_result
+                return sqlite_result
 
-        return False, None
+        return None
 
     def read_database_adv(self, sqlite_table, sqlite_column, sqlite_query):
 

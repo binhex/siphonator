@@ -72,14 +72,14 @@ class PostProcess(object):
     def helper_get_imdb_title_year(self, torrent_completed_dict):
 
         # send torrent_dict to db_sqlite to query db bsed on tag name for imdb name and year and append to dict and return here
-        read_database_simple_bool, query_result = self.db_sqlite_instance.read_database_simple('history', 'torrent_tag', torrent_completed_dict.get('torrent_tag'))
+        read_database_simple_bool = self.db_sqlite_instance.read_database_simple('history', 'torrent_tag', torrent_completed_dict.get('torrent_tag'))
 
         # get imdb title ad year, used for rename
-        if not query_result:
+        if not read_database_simple_bool:
             return False
 
-        imdb_title = query_result.get('imdb_title')
-        imdb_year = query_result.get('imdb_year')
+        imdb_title = read_database_simple_bool.get('imdb_title')
+        imdb_year = read_database_simple_bool.get('imdb_year')
         imdb_title_year = f"{imdb_title} ({imdb_year})"
 
         return imdb_title_year
