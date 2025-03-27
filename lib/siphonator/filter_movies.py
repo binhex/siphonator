@@ -604,7 +604,7 @@ class FilterMovies(object):
     def filter_quality_check(self, library_file):
 
         index_title_sanitised = self.result_dict.get('index_title_sanitised')
-        library_file_sanitised = self.tools_filters_instance.sanitise(library_file)
+        library_filename_sanitised = self.tools_filters_instance.sanitise(library_file)
 
         index_title_after_year_to_end = self.tools_filters_instance.index_title_after_year_to_end(index_title_sanitised)
 
@@ -618,12 +618,12 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return False
 
-        library_filename_after_year_to_end = self.tools_filters_instance.index_title_after_year_to_end(library_file_sanitised)
+        library_filename_after_year_to_end = self.tools_filters_instance.index_title_after_year_to_end(library_filename_sanitised)
 
         # if library filename year to end is not none (maybe mangled) then return
         if library_filename_after_year_to_end is None:
 
-            result_details = f"Failed: Cannot identify after year to end for library filename '{library_file_sanitised}'"
+            result_details = f"Failed: Cannot identify after year to end for library filename '{library_filename_sanitised}'"
             self.logger_instance.info(result_details)
             self.result_dict.update({'result': u'Failed'})
             self.result_details_list.append(result_details)
@@ -635,7 +635,7 @@ class FilterMovies(object):
         library_filename_score = self.filter_quality_score(library_filename_after_year_to_end)
 
         # check if index/library filename contain preferred group
-        if self.filter_index_preferred_group(library_file_sanitised):
+        if self.filter_index_preferred_group(library_filename_sanitised):
 
             index_title_score += 10
             result_details = f"Index title '{index_title_after_year_to_end}' does contain preferred index group, and library filename '{library_filename_after_year_to_end}' does not contain preferred index group, adding to score"
@@ -648,7 +648,7 @@ class FilterMovies(object):
             self.logger_instance.info(result_details)
 
         # check if index/library filename contain special edition
-        if self.filter_special_editions(library_file_sanitised, index_title_sanitised):
+        if self.filter_special_editions(library_filename_sanitised, index_title_sanitised):
 
             index_title_score += 10
             result_details = f"Passed: Index title '{index_title_after_year_to_end}' does contain special edition, and library filename '{library_filename_after_year_to_end}' does not contain special edition, adding to score"

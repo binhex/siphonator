@@ -145,6 +145,10 @@ class DbSqlite(object):
         sqlite_query_sanitised = tools_filters_instance.sanitise(sqlite_query)
         sqlite_query_compare = tools_filters_instance.compare(sqlite_query_sanitised)
 
+        # if the sanitised title is none (badly formatted index title) then return
+        if not sqlite_query_compare:
+            return False
+
         # construct sqlite query with sqlite wildcard char '%'
         custom_title_sqlite_query = tools_filters_instance.sqlite_query(sqlite_query)
         self.logger_instance.debug(f"Database query is '{custom_title_sqlite_query}'")
@@ -166,9 +170,9 @@ class DbSqlite(object):
 
             # compare sqlite query against sqlite query index title
             if sqlite_query_compare in sqlite_result_column_filter_compare:
-                return True, sqlite_result
+                return sqlite_result
 
-        return False, None
+        return None
 
     def upgrade_database(self):
 

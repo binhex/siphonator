@@ -147,12 +147,17 @@ class IndexProxy(object):
                     self.logger_instance.info(f"Index title '{title}' not found in sqlite database using simple match, performing adv sqlite match...")
                     read_database_adv_bool, query_result = db_sqlite_instance.read_database_adv('history', 'index_title', title)
 
+                    if read_database_adv_bool is False:
+
+                        self.logger_instance.warning(f"Index title '{title}' is empty when sanitised (badly formed index title), skipping movie")
+                        continue
+
                     if read_database_adv_bool:
 
                         self.logger_instance.info(f"Index title '{title}' found in sqlite database using adv match, skipping movie")
                         continue
 
-                self.logger_instance.info(f"Index title '{title}' not in sqlite database, continuing...")
+                self.logger_instance.info(f"Index title '{title}' not in Sqlite database, continuing...")
 
                 try:
 
