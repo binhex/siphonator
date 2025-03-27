@@ -1,5 +1,5 @@
 import os
-import yaml
+from ruamel.yaml import YAML
 
 
 def create_config_file(init_dict):
@@ -134,7 +134,12 @@ def create_config_file(init_dict):
         }
     }
 
-    # get filepath to config.yml
+    yaml = YAML()
+
+    # Preserve quotes and formatting
+    yaml.preserve_quotes = True
+
+    # get the absolute path to config.yml
     config_filepath = init_dict.get('config_filepath')
 
     # if the config.yml does not exist then create it
@@ -142,7 +147,7 @@ def create_config_file(init_dict):
         print(f"configuration file '{config_filepath}' does not exist, creating default configuration...")
         # write the configuration data to config.yml
         with open(config_filepath, 'w') as config_file:
-            yaml.dump(config_data, config_file, default_flow_style=False, sort_keys=False)
+            yaml.dump(config_data, config_file)
         return True
     else:
         print(f"configuration file '{config_filepath}' already exists, skipping creation")
@@ -152,6 +157,7 @@ def create_config_file(init_dict):
 # TODO WIP
 def update_config(init_dict, config_file_version):
 
+    # get the absolute path to config.yml
     config_version = init_dict['config_version']
 
     if config_version != config_file_version:
@@ -167,25 +173,49 @@ def update_config(init_dict, config_file_version):
 
 # read in init_dict as arg, get location of config.yml and return as dict
 def read_config(init_dict):
+    """
+    Read the YAML configuration file and return its contents as a dictionary.
 
-    # get absolute path to config.yml
+    :param init_dict: Dictionary containing the path to the YAML file.
+    :return: Dictionary representation of the YAML file.
+    """
+    yaml = YAML()
+
+    # Preserve quotes and formatting
+    yaml.preserve_quotes = True
+
+    # get the absolute path to config.yml
     config_filepath = init_dict['config_filepath']
 
-    # read in existing config data
+    # Read the existing config data
     with open(config_filepath, "r") as config_file:
-        # convert from yaml to python dict
-        config_dict = yaml.safe_load(config_file)
+        # Load the YAML file into a Python dictionary
+        config_dict = yaml.load(config_file)
 
     return config_dict
 
 
-# read in config_dict as arg, then write back to config.yml
-def write_config(init_dict, config_dict):
+# read in config file, then write back specified key path and value
+def write_config(init_dict, key_path, new_value):
 
-    # get absolute path to config.yml
+    yaml = YAML()
+
+    # preserve quotes and formatting
+    yaml.preserve_quotes = True
+
+    # get the absolute path to config.yml
     config_filepath = init_dict['config_filepath']
 
-    # write modified data back to the config file
-    with open(config_filepath, "w") as config_file:
-        # convert from python dict to yaml
-        yaml.safe_dump(config_dict, config_file, sort_keys=False)
+    # load the YAML file
+    with open(config_filepath, 'r') as file:
+        data = yaml.load(file)
+
+    # navigate to the desired key and update the value
+    current = data
+    for key in key_path[:-1]:
+        current = current[key]
+    current[key_path[-1]] = new_value
+
+    # write the updated YAML back to the file
+    with open(config_filepath, 'w') as file:
+        yaml.dump(data, file)

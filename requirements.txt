@@ -12,6 +12,7 @@ pyomdbapi               # A simple OMDB API python wrapper
 xmltodict               # xmltodict is a simple library that aims at making XML feel like working with JSON
 mako                    # Mako is a web template library written in Python
 nmdmail                 # Simplified email sender for Python
+ruamel.yaml             # YAML editor that permits roundtripping without loss of formatting
 uvicorn                 # Alternative to tornado, is async so much faster!
 tornado                 # Tornado is a Python web framework - non blocking i/o
 tornroutes              # Web server routes decorator

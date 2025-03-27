@@ -32,7 +32,7 @@ class TorrentClients(object):
             self.config_dict['queue_management']['internet_connection_down_datetime'] = current_datetime_string
 
             # write datetime string to config file
-            siphonator_config_manager.write_config(self.init_dict, self.config_dict)
+            siphonator_config_manager.write_config(self.init_dict, ['queue_management', 'internet_connection_down_datetime'], current_datetime_string)
 
             self.logger_instance.warn(f"qBittorrent connection status reported as not connected, skipping queue management")
             return False
