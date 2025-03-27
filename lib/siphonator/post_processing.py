@@ -115,32 +115,55 @@ class PostProcess(object):
         torrent_file_dict_list = torrent_completed_dict.get('torrent_file_list')
         torrent_save_path = torrent_completed_dict.get('torrent_save_path')
 
-        exclude_file_regex_list = self.config_dict['post_process']['exclude_file_regex_list']
         exclude_file_min_kb = self.config_dict['post_process']['exclude_file_min_kb']
+        exclude_file_regex_list = self.config_dict['post_process']['exclude_file_regex_list']
+        exclude_folder_regex_list = self.config_dict['post_process']['exclude_folder_regex_list']
 
         src_copy_files_list = []
-        src_exclude_files_list = []
+        src_exclude_list = []
 
         # iterate over list containing dictionary of files in the torrent
         for torrent_file_dict in torrent_file_dict_list:
 
-            torrent_file_name = torrent_file_dict.get('file_name')
-            torrent_file_path = os.path.join(torrent_save_path, torrent_file_name)
+            torrent_rel_file_path = torrent_file_dict.get('file_name')
+            torrent_abs_file_path = os.path.join(torrent_save_path, torrent_rel_file_path)
+            torrent_path = os.path.dirname(torrent_rel_file_path)
 
             if exclude_file_regex_list:
 
-                for delete_unwanted_regex in exclude_file_regex_list:
+                for exclude_file_regex in exclude_file_regex_list:
 
                     # perform regex search against filename, if match found then append to delete list
-                    regex = re.compile(delete_unwanted_regex)
-                    delete_unwanted_regex_match = regex.search(torrent_file_name)
+                    regex = re.compile(exclude_file_regex)
+                    exclude_file_regex_match = regex.search(torrent_rel_file_path)
 
                     # check if filename matches regex to delete
-                    if delete_unwanted_regex_match:
+                    if exclude_file_regex_match:
 
-                        src_exclude_files_list.append(torrent_file_path)
-                        self.logger_instance.info(f"Filename '{torrent_file_name}' matches regex '{delete_unwanted_regex}' defined in config file, added to exclude list '{src_exclude_files_list}'")
-                        continue
+                        # check if file path is not already in the exclude list, as we only want it to be added once
+                        if torrent_abs_file_path not in src_exclude_list:
+
+                            src_exclude_list.append(torrent_abs_file_path)
+                            self.logger_instance.info(f"Filename '{torrent_rel_file_path}' matches regex '{exclude_file_regex}' defined in config file, added to exclude list '{src_exclude_list}'")
+                            continue
+
+            if exclude_folder_regex_list:
+
+                for exclude_folder_regex in exclude_folder_regex_list:
+
+                    # perform regex search against filename, if match found then append to delete list
+                    regex = re.compile(exclude_folder_regex)
+                    exclude_folder_regex_match = regex.search(torrent_path)
+
+                    # check if path matches regex to delete
+                    if exclude_folder_regex_match:
+
+                        # check if file path is not already in the exclude list, as we only want it to be added once
+                        if torrent_abs_file_path not in src_exclude_list:
+
+                            src_exclude_list.append(torrent_abs_file_path)
+                            self.logger_instance.info(f"Path '{torrent_path}' matches regex '{exclude_folder_regex_match}' defined in config file, added to exclude list '{src_exclude_list}'")
+                            continue
 
             if exclude_file_min_kb:
 
@@ -152,14 +175,17 @@ class PostProcess(object):
                 # if torrent file_size is less than minimum size defined in config then delete
                 if int(torrent_file_size_kb) < int(exclude_file_min_kb):
 
-                    src_exclude_files_list.append(torrent_file_path)
-                    self.logger_instance.info(f"File size {torrent_file_size_kb}KB for torrent completed filepath '{torrent_file_path}' is less than minimum file size {exclude_file_min_kb}KB defined in config file, added to exclude list '{src_exclude_files_list}'")
-                    continue
+                    # check if file path is not already in the exclude list, as we only want it to be added once
+                    if torrent_abs_file_path not in src_exclude_list:
 
-            src_copy_files_list.append(torrent_file_path)
-            self.logger_instance.info(f"Filename '{torrent_file_path}' is to be copy to the library, added to copy list '{src_copy_files_list}'")
+                        src_exclude_list.append(torrent_abs_file_path)
+                        self.logger_instance.info(f"File size {torrent_file_size_kb}KB for torrent completed filepath '{torrent_abs_file_path}' is less than minimum file size {exclude_file_min_kb}KB defined in config file, added to exclude list '{src_exclude_list}'")
+                        continue
 
-        return src_copy_files_list, src_exclude_files_list
+            src_copy_files_list.append(torrent_abs_file_path)
+            self.logger_instance.info(f"Filename '{torrent_abs_file_path}' is to be copy to the library, added to copy list '{src_copy_files_list}'")
+
+        return src_copy_files_list, src_exclude_list
 
     def copy_files_dst(self, torrent_completed_dict, src_copy_files_list):
 

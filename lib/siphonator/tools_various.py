@@ -105,13 +105,13 @@ def copy_files(logger_instance, src_path, dst_file_path):
     # get directory name from path
     dst_path = os.path.dirname(dst_file_path)
 
-    # create destination path as shutil.copytree does not create the destination
+    # create destination path as shutil.copy does not do this
     path = pathlib.Path(dst_path)
     path.mkdir(parents=True, exist_ok=True)
 
     if os.path.isfile(dst_file_path):
 
-        # if the destination file path already exists then checksum it, if it matches the return, else delete.
+        logger_instance.info(f"Existing destination file found, performing sha256 comparison to verify source file '{src_path}' and destination file '{dst_file_path}' match....")
         src_sha256 = helper_generate_file_checksum(src_path)
         dst_sha256 = helper_generate_file_checksum(dst_file_path)
 
@@ -138,7 +138,7 @@ def copy_files(logger_instance, src_path, dst_file_path):
         logger_instance.warning(f"General OS error, error is '{e}'")
         return False
 
-    # ensure checksums for src and dst match before deletion
+    logger_instance.info(f"Copy complete, performing sha256 comparison to verify source file '{src_path}' and destination file '{dst_file_path}' match...")
     src_sha256 = helper_generate_file_checksum(src_path)
     dst_sha256 = helper_generate_file_checksum(dst_file_path)
 
