@@ -49,6 +49,10 @@ def helper_get_largest_parent_dir(logger_instance, torrent_file_name, torrent_pa
     tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger_instance)
     torrent_parent_dir = tools_filters_instance.sanitise(torrent_parent_dir)
 
+    if not torrent_parent_dir:
+        logger_instance.debug(f"Torrent parent directory is empty or None after sanitisation")
+        return False
+
     # get length of parent path and filename for comparison
     char_length_parent_path = len(torrent_parent_dir)
     char_length_torrent_file_name = len(torrent_file_name)
