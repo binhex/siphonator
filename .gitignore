@@ -1,3 +1,6 @@
+# files
+####
+
 # ignore comments files
 todo.txt
 notes.txt
@@ -11,5 +14,14 @@ notes.txt
 # ignore compiled python scripts
 *.pyc
 
+# folders
+####
+
 # ignore virtual env
 venv
+
+# ignore pytest cache
+.pytest_cache/
+
+# ignore cache
+__pycache__/
