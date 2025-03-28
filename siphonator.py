@@ -416,7 +416,7 @@ if __name__ == '__main__':
     # set versioning for app, config, and db
     app_name = 'siphonator'
     app_friendly_name = app_name.capitalize()
-    app_version = '0.0.1'
+    app_version = '0.0.2'
     config_version = '0.0.1'
     db_version = int(5)
     user_agent = f"{app_name}/{app_version}; https://github.com/binhex/{app_name}"
