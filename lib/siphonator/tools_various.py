@@ -121,8 +121,9 @@ def copy_files(logger_instance, src_path, dst_file_path):
             return True
 
         # if the destination file path does exist but the checksums do not match then delete the destination file.
-        logger_instance.warning(f"Source path '{src_path}' with checksum '{src_sha256}' does not match existing destination path '{dst_file_path}' with checksum '{dst_sha256}', deleting partial destination file")
-        delete_files(logger_instance, dst_file_path)
+        logger_instance.warning(f"Source path '{src_path}' with checksum '{src_sha256}' does not match existing destination path '{dst_file_path}' with checksum '{dst_sha256}', deleting partially copied destination file..")
+        if not delete_files(logger_instance, dst_file_path):
+            return False
 
     # shutil.copy will NOT create the destination path, but does permit copying files/directories into an existing destination
     try:
@@ -138,15 +139,15 @@ def copy_files(logger_instance, src_path, dst_file_path):
         logger_instance.warning(f"General OS error, error is '{e}'")
         return False
 
-    logger_instance.info(f"Copy complete, performing sha256 comparison to verify source file '{src_path}' and destination file '{dst_file_path}' match...")
+    logger_instance.info(f"Copy complete, performing sha256 checksum comparison to verify source file '{src_path}' and destination file '{dst_file_path}' match...")
     src_sha256 = helper_generate_file_checksum(src_path)
     dst_sha256 = helper_generate_file_checksum(dst_file_path)
 
     if str(src_sha256) != str(dst_sha256):
-        logger_instance.warning(f"Source path '{src_path}' with checksum '{src_sha256}' does not match destination path '{dst_file_path}' with checksum '{dst_sha256}' after copy operation, reporting failure")
+        logger_instance.warning(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does not match destination path '{dst_file_path}' with sha256 checksum '{dst_sha256}' after copy operation, copy failure")
         return False
 
-    logger_instance.info(f"Source path '{src_path}' with checksum '{src_sha256}' does match destination path '{dst_file_path}' with checksum '{dst_sha256}' after copy operation")
+    logger_instance.info(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does match destination path '{dst_file_path}' with sha256 checksum '{dst_sha256}' after copy operation. copy success")
     return True
 
 
