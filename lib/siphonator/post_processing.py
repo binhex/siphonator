@@ -4,6 +4,7 @@ import re
 import lib.siphonator.torrent_clients as torrent_clients
 import lib.siphonator.db_sqlite as db_sqlite
 import lib.siphonator.tools_various as tools_various
+import lib.siphonator.tools_filters as siphonator_tools_filters
 
 
 def helper_get_largest_file_path(torrent_completed_dict):
@@ -43,6 +44,10 @@ def helper_get_largest_parent_dir(logger_instance, torrent_file_name, torrent_pa
     if not torrent_file_name.lower().endswith(('.mkv', '.mp4', '.avi')):
         logger_instance.debug(f"Torrent file name '{torrent_file_name}' is not a video container")
         return False
+
+    # sanitise parent directory
+    tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger_instance)
+    torrent_parent_dir = tools_filters_instance.sanitise(torrent_parent_dir)
 
     # get length of parent path and filename for comparison
     char_length_parent_path = len(torrent_parent_dir)

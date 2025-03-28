@@ -616,7 +616,7 @@ if __name__ == '__main__':
     post_processing_instance = SiphonatorPostProcessing(logger)
     siphonator_instance = SiphonatorMain(logger)
 
-    logger.info(f"Welcome to {app_friendly_name} - Coded by binhex.")
+    logger.info(f"Welcome to {app_friendly_name} v{app_version} - Coded by binhex.")
     logger.info(f"Starting daemon in '{daemon_mode}' mode...")
 
     if daemon_mode == 'background':
