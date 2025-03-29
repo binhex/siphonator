@@ -8,7 +8,7 @@ class ToolsFilters(object):
         self.logger_instance = logger_instance
 
         # comparison helpers
-        self.helper_invalid_windows_filename_chars_regex = r'\?|<|>|:|\"|\/|\\|\||\*'
+        self.helper_invalid_windows_filename_chars_regex = r'[<>:"/\\|?*]+'
 
         # movie_title, year and group helpers
         self.helper_non_ascii_chars_regex = r'[\.\s\-\_]?(\s?\[?[^\x00-\x7F]{2,}).*([^\x00-\x7F]{2,}\]?\s?)[\.\s\-\_]?'

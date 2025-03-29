@@ -6,6 +6,8 @@ import yaml
 import shutil
 import hashlib
 import pathlib
+import platform
+import re
 from itertools import chain
 
 
@@ -105,49 +107,53 @@ def copy_files(logger_instance, src_path, dst_file_path):
     # get directory name from path
     dst_path = os.path.dirname(dst_file_path)
 
+    # sanitise destination file and path for os
+    dst_file_path_sanitised_os = sanitize_os(dst_file_path)
+    dst_path_sanitised_os = sanitize_os(dst_path)
+
     # create destination path as shutil.copy does not do this
-    path = pathlib.Path(dst_path)
+    path = pathlib.Path(dst_path_sanitised_os)
     path.mkdir(parents=True, exist_ok=True)
 
-    if os.path.isfile(dst_file_path):
+    if os.path.isfile(dst_file_path_sanitised_os):
 
-        logger_instance.info(f"Existing destination file found, performing sha256 comparison to verify source file '{src_path}' and destination file '{dst_file_path}' match....")
+        logger_instance.info(f"Existing destination file found, performing sha256 comparison to verify source file '{src_path}' and destination file '{dst_file_path_sanitised_os}' match....")
         src_sha256 = helper_generate_file_checksum(src_path)
-        dst_sha256 = helper_generate_file_checksum(dst_file_path)
+        dst_sha256 = helper_generate_file_checksum(dst_file_path_sanitised_os)
 
         # if the destination file path does exist and the checksums do match then return True, nothing to do.
         if str(src_sha256) == str(dst_sha256):
-            logger_instance.info(f"Source path '{src_path}' with checksum '{src_sha256}' matches existing destination path '{dst_file_path}' with checksum '{dst_sha256}', skipping copy to destination")
+            logger_instance.info(f"Source path '{src_path}' with checksum '{src_sha256}' matches existing destination path '{dst_file_path_sanitised_os}' with checksum '{dst_sha256}', skipping copy to destination")
             return True
 
         # if the destination file path does exist but the checksums do not match then delete the destination file.
-        logger_instance.warning(f"Source path '{src_path}' with checksum '{src_sha256}' does not match existing destination path '{dst_file_path}' with checksum '{dst_sha256}', deleting partially copied destination file..")
-        if not delete_files(logger_instance, dst_file_path):
+        logger_instance.warning(f"Source path '{src_path}' with checksum '{src_sha256}' does not match existing destination path '{dst_file_path_sanitised_os}' with checksum '{dst_sha256}', deleting partially copied destination file..")
+        if not delete_files(logger_instance, dst_file_path_sanitised_os):
             return False
 
     # shutil.copy will NOT create the destination path, but does permit copying files/directories into an existing destination
     try:
-        shutil.copy(str(src_path), str(dst_file_path))
-        logger_instance.info(f"Successfully copied source path '{src_path}' to destination path '{dst_file_path}'")
+        shutil.copy(str(src_path), str(dst_file_path_sanitised_os))
+        logger_instance.info(f"Successfully copied source path '{src_path}' to destination path '{dst_file_path_sanitised_os}'")
     except FileNotFoundError as e:
         logger_instance.warning(f"The source file path '{src_path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
         return False
     except PermissionError as e:
-        logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_file_path}', error is '{e}'")
+        logger_instance.warning(f"Permission denied while moving '{src_path}' to '{dst_file_path_sanitised_os}', error is '{e}'")
         return False
     except OSError as e:
         logger_instance.warning(f"General OS error, error is '{e}'")
         return False
 
-    logger_instance.info(f"Copy complete, performing sha256 checksum comparison to verify source file '{src_path}' and destination file '{dst_file_path}' match...")
+    logger_instance.info(f"Copy complete, performing sha256 checksum comparison to verify source file '{src_path}' and destination file '{dst_file_path_sanitised_os}' match...")
     src_sha256 = helper_generate_file_checksum(src_path)
-    dst_sha256 = helper_generate_file_checksum(dst_file_path)
+    dst_sha256 = helper_generate_file_checksum(dst_file_path_sanitised_os)
 
     if str(src_sha256) != str(dst_sha256):
-        logger_instance.warning(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does not match destination path '{dst_file_path}' with sha256 checksum '{dst_sha256}' after copy operation, copy failure")
+        logger_instance.warning(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does not match destination path '{dst_file_path_sanitised_os}' with sha256 checksum '{dst_sha256}' after copy operation, copy failure")
         return False
 
-    logger_instance.info(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does match destination path '{dst_file_path}' with sha256 checksum '{dst_sha256}' after copy operation. copy success")
+    logger_instance.info(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does match destination path '{dst_file_path_sanitised_os}' with sha256 checksum '{dst_sha256}' after copy operation. copy success")
     return True
 
 
@@ -191,3 +197,27 @@ def get_first_level_directory(path):
         return path_components[1]
     else:
         return path_components[0]
+
+
+def sanitize_os(file_or_path):
+
+    # Get the current operating system
+    current_os = platform.system()
+
+    # Define invalid characters for each OS
+    if current_os == "Windows":
+
+        # Remove invalid characters for Windows
+        invalid_chars = r'[<>:"/\\|?*]+'
+        file_or_path = re.sub(invalid_chars, '', file_or_path)
+
+        # Remove trailing dots and spaces (not allowed in Windows)
+        file_or_path = file_or_path.rstrip(". ")
+
+    elif current_os in ["Linux", "Darwin"]:  # macOS is "Darwin"
+
+        # Remove invalid characters for Linux/macOS
+        invalid_chars = r'/'
+        file_or_path = re.sub(invalid_chars, '', file_or_path)
+
+    return file_or_path
