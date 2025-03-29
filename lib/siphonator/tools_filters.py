@@ -14,6 +14,8 @@ class ToolsFilters(object):
         self.helper_non_ascii_chars_regex = r'[\.\s\-\_]?(\s?\[?[^\x00-\x7F]{2,}).*([^\x00-\x7F]{2,}\]?\s?)[\.\s\-\_]?'
         self.helper_brackets_at_start_regex = r'^([\s\.\-\_]+)?\[.+?\]'
         self.helper_brackets_at_end_regex = r'\[[^\[]+\]([\s\.\-\_]+)?$'
+        self.helper_braces_at_start_regex = r'^([\s\.\-\_]+)?\{.+?\}'
+        self.helper_braces_at_end_regex = r'\{[^\{]+\}([\s\.\-\_]+)?$'
         self.helper_end_tags_regex = r'[\s\.\-\_]\[[a-zA-Z]+\]$|@[a-zA-Z0-9]+$'
         self.helper_round_square_brackets_regex = r'[\[\]\(\)]+'
         self.helper_movie_title_year_and_end_regex = r'^(.+?\d{4}[\s\.\-\+,]?)(.*)'
@@ -145,6 +147,12 @@ class ToolsFilters(object):
 
         helper_brackets_at_end_regex = re.compile(self.helper_brackets_at_end_regex)
         result = helper_brackets_at_end_regex.sub('', result)
+
+        helper_braces_at_start_regex = re.compile(self.helper_braces_at_start_regex)
+        result = helper_braces_at_start_regex.sub('', result)
+
+        helper_braces_at_end_regex = re.compile(self.helper_braces_at_end_regex)
+        result = helper_braces_at_end_regex.sub('', result)
 
         helper_invalid_windows_filename_chars_regex = re.compile(self.helper_invalid_windows_filename_chars_regex)
         result = helper_invalid_windows_filename_chars_regex.sub('', result)
