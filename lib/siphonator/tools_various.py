@@ -6,9 +6,8 @@ import yaml
 import shutil
 import hashlib
 import pathlib
-import platform
-import re
 from itertools import chain
+from pathvalidate import sanitize_filepath
 
 
 def current_time():
@@ -104,16 +103,13 @@ def helper_generate_file_checksum(file_path, algorithm='sha256'):
 
 def copy_files(logger_instance, src_path, dst_file_path):
 
-    # get directory name from path
-    dst_path = os.path.dirname(dst_file_path)
+    # sanitise destination file and path
+    dst_file_path_sanitised_os = sanitize_filepath(dst_file_path)
 
-    # sanitise destination file and path for os
-    dst_file_path_sanitised_os = sanitize_os(dst_file_path)
-    dst_path_sanitised_os = sanitize_os(dst_path)
-
-    # create destination path as shutil.copy does not do this
-    path = pathlib.Path(dst_path_sanitised_os)
-    path.mkdir(parents=True, exist_ok=True)
+    # if the destination path does not exist then sanitise it and create it (shutil.copy does not create path)
+    dst_path_sanitised_os = os.path.dirname(dst_file_path_sanitised_os)
+    if not make_path(logger_instance, dst_path_sanitised_os):
+        return False
 
     if os.path.isfile(dst_file_path_sanitised_os):
 
@@ -157,6 +153,30 @@ def copy_files(logger_instance, src_path, dst_file_path):
     return True
 
 
+def make_path(logger_instance, path):
+
+    path = pathlib.Path(path)
+
+    # create destination path
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+        logger_instance.info(f"Successfully created path '{path}'")
+    except FileNotFoundError as e:
+        logger_instance.warning(f"The parent directory for path '{path}' does not exist, if running Siphonator in a Docker container ensure the Docker bind mounts for qBittorrent 'Default save path' match for this container, error is '{e}'")
+        return False
+    except PermissionError as e:
+        logger_instance.warning(f"Permission denied while trying to create '{path}', error is '{e}'")
+        return False
+    except FileExistsError as e:
+        logger_instance.warning(f"'{path}' already exists, error is '{e}'")
+        return False
+    except OSError as e:
+        logger_instance.warning(f"General OS error, error is '{e}'")
+        return False
+
+    return True
+
+
 def delete_files(logger_instance, filepath):
 
     # if the file has already been deleted then return true
@@ -197,27 +217,3 @@ def get_first_level_directory(path):
         return path_components[1]
     else:
         return path_components[0]
-
-
-def sanitize_os(file_or_path):
-
-    # Get the current operating system
-    current_os = platform.system()
-
-    # Define invalid characters for each OS
-    if current_os == "Windows":
-
-        # Remove invalid characters for Windows
-        invalid_chars = r'[<>:"/\\|?*]+'
-        file_or_path = re.sub(invalid_chars, '', file_or_path)
-
-        # Remove trailing dots and spaces (not allowed in Windows)
-        file_or_path = file_or_path.rstrip(". ")
-
-    elif current_os in ["Linux", "Darwin"]:  # macOS is "Darwin"
-
-        # Remove invalid characters for Linux/macOS
-        invalid_chars = r'/'
-        file_or_path = re.sub(invalid_chars, '', file_or_path)
-
-    return file_or_path
