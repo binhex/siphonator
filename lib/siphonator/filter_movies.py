@@ -46,8 +46,8 @@ class FilterMovies(object):
         if not filter_bad_movie_title_result:
             return self.result_dict
 
-        filter_downloaded_iterate_files_result = self.filter_library_iterate_files()
-        if not filter_downloaded_iterate_files_result:
+        filter_library_result = self.filter_library()
+        if not filter_library_result:
             return self.result_dict
 
         return self.result_dict
@@ -472,7 +472,7 @@ class FilterMovies(object):
 
                 identify_walk_files_filepath_list.append(library_files_abs_filepath)
 
-        return {'identify_walk_files_filepath_list': identify_walk_files_filepath_list}
+        return identify_walk_files_filepath_list
 
     def filter_library_dir(self):
 
@@ -527,7 +527,7 @@ class FilterMovies(object):
 
                         identify_walk_files_filepath_list.append(library_files_abs_filepath)
 
-        return {'identify_walk_dirs_filepath_list': identify_walk_files_filepath_list}
+        return identify_walk_files_filepath_list
 
     def filter_library_year_and_title(self, library_filename):
 
@@ -706,7 +706,7 @@ class FilterMovies(object):
         self.logger_instance.debug(f"Library filename resolution identified as '{str(library_filename_resolution_string)}' using filename/ffprobe for library file '{library_filename_sanitised}'")
         return library_filename_resolution_string
 
-    def filter_library_iterate_files(self):
+    def filter_library(self):
 
         index_title = self.result_dict.get('index_title')
 
@@ -735,9 +735,7 @@ class FilterMovies(object):
             return True
 
         # constructs a list of library filenames that match the index title and year
-        identify_walk_files_filepath_dict = self.filter_library_file()
-
-        library_filepath_list = identify_walk_files_filepath_dict['identify_walk_files_filepath_list']
+        library_filepath_list = self.filter_library_file()
 
         # if libray path is defined (not None) then process, else return True
         if self.library_path_walk is not None:
@@ -802,8 +800,7 @@ class FilterMovies(object):
             else:
 
                 # constructs a list of library filenames that exist in a directory, NO matching of index and year
-                identify_walk_dirs_filepath_dict = self.filter_library_dir()
-                library_filepath_list = identify_walk_dirs_filepath_dict['identify_walk_dirs_filepath_list']
+                library_filepath_list = self.filter_library_dir()
 
                 # if identify_walk_dirs_filepath_dict value is not empty then get filepaths from dirs
                 if library_filepath_list:
