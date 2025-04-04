@@ -58,17 +58,18 @@ def library_path_walk(library_path_list):
     return filter_library_path_walk
 
 
-def resolution_from_ffprobe(library_filepath, ffprobe_filepath):
+def resolution_from_ffprobe(logger_instance, library_filepath, ffprobe_filepath):
 
     try:
 
         # get resolution of media
         video_streams = (
-            ffmpeg
-            .probe(library_filepath, cmd=ffprobe_filepath, select_streams="v")
+            ffmpeg.probe(library_filepath, cmd=ffprobe_filepath, select_streams="v")
         )
 
-    except FileNotFoundError:
+    except ffmpeg.Error as e:
+
+        logger_instance.warning(f"Failed to identify resolution using ffmpeg probe '{ffprobe_filepath}' on file '{library_filepath}', error is '{e}'")
         return None
 
     stream_width = video_streams['streams'][0]['width']

@@ -35,7 +35,7 @@ class ToolsFilters(object):
         # core regex
         self.tv_season_or_episode_regex = r'(?i)s[\d]{2,3}(e[\d]{2,3})|s[\d]{2,3}|ep[\d]{2,3}'
         self.movie_title_regex = r'^(.*?)(?=[\s\.\-\_]\d{4})'
-        self.year_regex = r'(?<=[\(\s\.\-\_])\d{4}(?=[\s\.\-\_\)])'
+        self.year_regex = r'(?<=[\(\s\.\-\_])\d{4}(?=[\s\.\-\_\)]|$)'
         self.group_regex = r'[a-zA-Z0-9]+$'
 
     def sqlite_query(self, string):
