@@ -178,6 +178,12 @@ def http_client(logger_instance, **kwargs):
         logger_instance.warning(f"Read timeout for URL '{url}' with error '{content}'")
         return 1, status_code, content
 
+    except requests.exceptions.JSONDecodeError as content:
+
+        # catch any other exceptions thrown by requests
+        logger_instance.warning(f"Json decode error for URL '{url}' with error '{content}'")
+        return 1, status_code, content
+
     except requests.exceptions.RequestException as content:
 
         # catch any other exceptions thrown by requests
