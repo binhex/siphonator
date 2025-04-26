@@ -102,10 +102,18 @@ def helper_generate_file_checksum(file_path, algorithm='sha256'):
     return hash_func.hexdigest()
 
 
-def copy_files(logger_instance, src_path, dst_file_path):
+def copy_files(logger_instance, src_path, dst_file_paths, db_sqlite_instance, torrent_tag):
+
+    # get verified status from database
+    read_verified = db_sqlite_instance.read_database_value('history', 'verified', 'torrent_tag', torrent_tag)
+
+    if read_verified:
+
+        logger_instance.info(f"Torrent tag '{torrent_tag}' is verified, skipping copy operation")
+        return True
 
     # sanitise destination file and path
-    dst_file_path_sanitised_os = sanitize_filepath(dst_file_path)
+    dst_file_path_sanitised_os = sanitize_filepath(dst_file_paths)
 
     # if the destination path does not exist then sanitise it and create it (shutil.copy does not create path)
     dst_path_sanitised_os = os.path.dirname(dst_file_path_sanitised_os)
@@ -118,9 +126,10 @@ def copy_files(logger_instance, src_path, dst_file_path):
         src_sha256 = helper_generate_file_checksum(src_path)
         dst_sha256 = helper_generate_file_checksum(dst_file_path_sanitised_os)
 
-        # if the destination file path does exist and the checksums do match then return True, nothing to do.
+        # if the destination file path does exist and the checksums do match then mark as verified and skip the copy
         if str(src_sha256) == str(dst_sha256):
-            logger_instance.info(f"Source path '{src_path}' with checksum '{src_sha256}' matches existing destination path '{dst_file_path_sanitised_os}' with checksum '{dst_sha256}', skipping copy to destination")
+            logger_instance.info(f"Source path '{src_path}' with checksum '{src_sha256}' matches existing destination path '{dst_file_path_sanitised_os}' with checksum '{dst_sha256}', marking as verified in database, skipping copy to destination")
+            db_sqlite_instance.write_database_value('history', 'verified', 'true', 'torrent_tag', torrent_tag)
             return True
 
         # if the destination file path does exist but the checksums do not match then delete the destination file.
@@ -150,7 +159,8 @@ def copy_files(logger_instance, src_path, dst_file_path):
         logger_instance.warning(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does not match destination path '{dst_file_path_sanitised_os}' with sha256 checksum '{dst_sha256}' after copy operation, copy failure")
         return False
 
-    logger_instance.info(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does match destination path '{dst_file_path_sanitised_os}' with sha256 checksum '{dst_sha256}' after copy operation. copy success")
+    logger_instance.info(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does match destination path '{dst_file_path_sanitised_os}' with sha256 checksum '{dst_sha256}' after copy operation. copy success, marking as verified in database")
+    db_sqlite_instance.write_database_value('history', 'verified', 'true', 'torrent_tag', torrent_tag)
     return True
 
 

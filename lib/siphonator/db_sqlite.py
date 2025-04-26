@@ -32,6 +32,7 @@ class DbSqlite(object):
             "torrent_tag": str,
             "magnet_url": str,
             "category": str,
+            "verified": str,
             "imdb_id": str,
             "imdb_title": str,
             "imdb_year": str,
@@ -71,6 +72,7 @@ class DbSqlite(object):
             "torrent_tag": (self.result_dict.get('torrent_tag')),
             "magnet_url": (self.result_dict.get('magnet_url')),
             "category": (self.result_dict.get('category')),
+            "verified": (self.result_dict.get('verified')),
             "imdb_id": (self.result_dict.get('imdb_id')),
             "imdb_title": (self.result_dict.get('imdb_title')),
             "imdb_year": (self.result_dict.get('imdb_year')),
@@ -103,6 +105,7 @@ class DbSqlite(object):
             "torrent_tag",
             "magnet_url",
             "category",
+            "verified",
             "imdb_id",
             "imdb_title",
             "imdb_year",
@@ -174,10 +177,64 @@ class DbSqlite(object):
 
         return None
 
-    def upgrade_database(self):
+    def read_database_value(self, table_name, column_name, condition_column, condition_value):
+        """
+        Read a specific value from a database table and column.
 
-        # get db version on disk
-        pragma_user_version = self.get_pragma_user_version()
+        :param table_name: Name of the table to read from.
+        :param column_name: Name of the column to read.
+        :param condition_column: The column to use in the WHERE clause.
+        :param condition_value: The value to match in the WHERE clause.
+        :return: The value from the specified column, or None if no match is found.
+        """
+        try:
+            # Construct the SQL query
+            query = f"SELECT {column_name} FROM {table_name} WHERE {condition_column} = ?"
+
+            # Execute the query with parameterized values to prevent SQL injection
+            result = self.db_sqlite_connection.query(query, (condition_value,))
+
+            # Fetch the first result
+            for row in result:
+                return row.get(column_name)
+
+            # If no result is found, return None
+            return None
+        except Exception as e:
+            # Log the error
+            self.logger_instance.error(f"Failed to read from database: {e}")
+            return None
+
+    def write_database_value(self, table_name, column_name, value, condition_column, condition_value):
+        """
+        Write a specific value in a database table and column.
+
+        :param table_name: Name of the table to update.
+        :param column_name: Name of the column to update.
+        :param value: The new value to set.
+        :param condition_column: The column to use in the WHERE clause.
+        :param condition_value: The value to match in the WHERE clause.
+        :return: True if the update was successful, False otherwise.
+        """
+        try:
+            # Construct the SQL query
+            query = f"UPDATE {table_name} SET {column_name} = ? WHERE {condition_column} = ?"
+
+            # Execute the query with parameterized values to prevent SQL injection
+            self.db_sqlite_connection.execute(query, (value, condition_value))
+
+            # Commit the transaction to save changes
+            self.db_sqlite_connection.conn.commit()
+
+            # Log the update
+            self.logger_instance.info(f"Updated table '{table_name}', set '{column_name}' = '{value}' where '{condition_column}' = '{condition_value}'")
+            return True
+        except Exception as e:
+            # Log the error
+            self.logger_instance.error(f"Failed to update database: {e}")
+            return False
+
+    def upgrade_database(self, pragma_user_version):
 
         # if database is up-to-date then do nothing
         if self.db_version == pragma_user_version:
@@ -211,21 +268,36 @@ class DbSqlite(object):
             self.db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN torrent_tag text")
             self.set_db_version(5)
 
+        # if v5 then upgrade to v6 by adding in the missing column
+        if pragma_user_version == 5:
+            self.logger_instance.debug(f"Upgrading db version on disk '{pragma_user_version}' to '{int(pragma_user_version)+1}'...")
+            self.db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN verified text")
+            self.set_db_version(6)
+
     def set_db_version(self, version):
 
         # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
         self.db_sqlite_connection.execute("PRAGMA user_version = {v:d}".format(v=version))
 
     def get_pragma_user_version(self):
+        """
+        Get the user version of the database.
+        :return: The integer value of the user version.
+        """
+        try:
+            # Execute the PRAGMA query to get the user version
+            pragma_user_version_gen = self.db_sqlite_connection.query("PRAGMA user_version")
 
-        # get db_version from existing database
-        pragma_user_version_gen = self.db_sqlite_connection.query("PRAGMA user_version")
+            # Extract the user_version from the generator
+            for row in pragma_user_version_gen:
+                return row.get('user_version', False)  # Default to False if 'user_version' is not found
 
-        # get db on disk version
-        pragma_user_version_list = [(i.get('user_version')) for i in pragma_user_version_gen]
-        pragma_user_version = pragma_user_version_list[0]
-
-        return pragma_user_version
+            # If no rows are returned, default to False
+            return False
+        except Exception as e:
+            # Log the error and return False as a fallback
+            self.logger_instance.error(f"Failed to get PRAGMA user_version: {e}")
+            return False
 
     def vacuum_database(self):
 

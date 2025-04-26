@@ -107,7 +107,7 @@ class PostProcess(object):
 
             # if dict is empty due to not reaching ratio or bad qbt client then return
             if not torrent_completed_dict_list:
-                return False
+                continue
 
             # iterate over completed torrents dict
             for torrent_completed_dict in torrent_completed_dict_list:
@@ -243,8 +243,9 @@ class PostProcess(object):
                     # construct full file path with new parent path name as the file name
                     dst_copy_file_path = os.path.join(dst_copy_path, f"{torrent_largest_parent_dir}{torrent_file_extension}")
 
-            self.logger_instance.info(f"Moving source file path '{src_copy_file_path}' to destination file path '{dst_copy_file_path}'")
-            if not tools_various.copy_files(self.logger_instance, src_copy_file_path, dst_copy_file_path):
+            self.logger_instance.info(f"Copying source file path '{src_copy_file_path}' to destination file path '{dst_copy_file_path}'")
+
+            if not tools_various.copy_files(self.logger_instance, src_copy_file_path, dst_copy_file_path, self.db_sqlite_instance, torrent_completed_dict.get('torrent_tag')):
                 return False
 
         return True

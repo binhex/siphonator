@@ -301,19 +301,6 @@ class SiphonatorMain(object):
 
             library_path_walk = None
 
-        # create db instance
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict)
-
-        # if db filepath is a sqlite database but pragma user version is '0' then create initial tables
-        if db_sqlite_instance.get_pragma_user_version() == 0:
-
-            db_sqlite_instance.create_tables()
-
-        # else if pragma user version is not equal to db version (version we want) then upgrade
-        elif db_sqlite_instance.get_pragma_user_version() != db_version:
-
-            db_sqlite_instance.upgrade_database()
-
         # empty dict to store configured index sites
         index_sites_configured_dict = {}
 
@@ -392,7 +379,6 @@ class SiphonatorMain(object):
                 })
 
         # compress (vacuum) database
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(self.logger_instance, self.init_dict)
         db_sqlite_instance.vacuum_database()
 
         # close database
@@ -418,7 +404,7 @@ if __name__ == '__main__':
     app_friendly_name = app_name.capitalize()
     app_version = '0.0.2'
     config_version = '0.0.1'
-    db_version = int(5)
+    db_version = int(6)
     user_agent = f"{app_name}/{app_version}; https://github.com/binhex/{app_name}"
 
     # ensure we are running python 3.11 or later
@@ -573,6 +559,22 @@ if __name__ == '__main__':
     # read in config version from config file
     config_file_version = config_dict['general']['config_version']
 
+    # create db instance
+    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger, init_dict)
+
+    # get db user version
+    pragma_user_version = db_sqlite_instance.get_pragma_user_version()
+
+    # if db filepath is a sqlite database but pragma user version is '0' then create initial tables
+    if pragma_user_version == int(0):
+
+        db_sqlite_instance.create_tables()
+
+    # else if pragma user version is not equal to db version (version we want) then upgrade
+    elif pragma_user_version != db_version:
+
+        db_sqlite_instance.upgrade_database(pragma_user_version)
+
     if args.daemon:
 
         daemon_mode = 'background'
@@ -594,16 +596,19 @@ if __name__ == '__main__':
         exit(return_code)
 
     # setup siphonator scheduler
+    siphonator_enabled = config_dict['schedule']['siphonator_thread']['enabled']
     siphonator_schedule_mode = config_dict['schedule']['siphonator_thread']['schedule_mode'].lower()
     siphonator_schedule_time_units = config_dict['schedule']['siphonator_thread']['schedule_time_units']
     siphonator_schedule_time_mins = config_dict['schedule']['siphonator_thread']['schedule_time_mins']
 
     # setup queue management scheduler
+    queue_management_enabled = config_dict['schedule']['queue_management_thread']['enabled']
     queue_management_schedule_mode = config_dict['schedule']['queue_management_thread']['schedule_mode'].lower()
     queue_management_schedule_time_units = config_dict['schedule']['queue_management_thread']['schedule_time_units']
     queue_management_schedule_time_mins = config_dict['schedule']['queue_management_thread']['schedule_time_mins']
 
     # setup post-processing scheduler
+    post_processing_enabled = config_dict['schedule']['post_processing_thread']['enabled']
     post_processing_schedule_mode = config_dict['schedule']['post_processing_thread']['schedule_mode'].lower()
     post_processing_schedule_time_units = config_dict['schedule']['post_processing_thread']['schedule_time_units']
     post_processing_schedule_time_mins = config_dict['schedule']['post_processing_thread']['schedule_time_mins']
@@ -625,31 +630,38 @@ if __name__ == '__main__':
         # 'keep_fds' prevents daemonize of file descriptors, such as logger, otherwise logging stops
         keep_fds = [file_handler.stream.fileno(), console_handler.stream.fileno()]
 
-        post_processing_daemonize_bg = Daemonize(app="siphonator-post-processing", pid=pid_post_processing_filepath, keep_fds=keep_fds, action=post_processing_instance.schedule_run)
-        post_processing_daemonize_bg.start()
+        if post_processing_enabled:
+            post_processing_daemonize_bg = Daemonize(app="siphonator-post-processing", pid=pid_post_processing_filepath, keep_fds=keep_fds, action=post_processing_instance.schedule_run)
+            post_processing_daemonize_bg.start()
 
-        queue_management_daemonize_bg = Daemonize(app="siphonator-queue-management", pid=pid_queue_management_filepath, keep_fds=keep_fds, action=queue_management_instance.schedule_run)
-        queue_management_daemonize_bg.start()
+        if queue_management_enabled:
+            queue_management_daemonize_bg = Daemonize(app="siphonator-queue-management", pid=pid_queue_management_filepath, keep_fds=keep_fds, action=queue_management_instance.schedule_run)
+            queue_management_daemonize_bg.start()
 
-        siphonator_daemonize_bg = Daemonize(app="siphonator-main", pid=pid_siphonator_filepath, keep_fds=keep_fds, action=siphonator_instance.schedule_run)
-        siphonator_daemonize_bg.start()
+        if siphonator_enabled:
+            siphonator_daemonize_bg = Daemonize(app="siphonator-main", pid=pid_siphonator_filepath, keep_fds=keep_fds, action=siphonator_instance.schedule_run)
+            siphonator_daemonize_bg.start()
 
     else:
 
-        # note when calling method in class for 'action' drop '()'
-        post_processing_daemonize_fg = Daemonize(app="siphonator-post-processing", pid=pid_post_processing_filepath, foreground=post_processing_schedule_mode, action=post_processing_instance.schedule_run)
-        queue_management_daemonize_fg = Daemonize(app="siphonator-queue-management", pid=pid_queue_management_filepath, foreground=queue_management_schedule_mode, action=queue_management_instance.schedule_run)
-        siphonator_daemonize_fg = Daemonize(app="siphonator-main", pid=pid_siphonator_filepath, foreground=siphonator_schedule_mode, action=siphonator_instance.schedule_run)
-
         try:
-
-            post_processing_daemonize_fg.start()
-            queue_management_daemonize_fg.start()
-            siphonator_daemonize_fg.start()
+            # note when calling method in class for 'action' drop '()'
+            if post_processing_enabled:
+                post_processing_daemonize_fg = Daemonize(app="siphonator-post-processing", pid=pid_post_processing_filepath, foreground=post_processing_schedule_mode, action=post_processing_instance.schedule_run)
+                post_processing_daemonize_fg.start()
+            if queue_management_enabled:
+                queue_management_daemonize_fg = Daemonize(app="siphonator-queue-management", pid=pid_queue_management_filepath, foreground=queue_management_schedule_mode, action=queue_management_instance.schedule_run)
+                queue_management_daemonize_fg.start()
+            if siphonator_enabled:
+                siphonator_daemonize_fg = Daemonize(app="siphonator-main", pid=pid_siphonator_filepath, foreground=siphonator_schedule_mode, action=siphonator_instance.schedule_run)
+                siphonator_daemonize_fg.start()
 
         except (KeyboardInterrupt, SystemExit):
 
             # cleanup pid file
-            post_processing_daemonize_fg.exit()
-            queue_management_daemonize_fg.exit()
-            siphonator_daemonize_fg.exit()
+            if post_processing_enabled:
+                post_processing_daemonize_fg.exit()
+            if queue_management_enabled:
+                queue_management_daemonize_fg.exit()
+            if siphonator_enabled:
+                siphonator_daemonize_fg.exit()
