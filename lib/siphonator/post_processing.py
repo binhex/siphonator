@@ -98,30 +98,35 @@ class PostProcess(object):
         if not self.config_dict['post_process']['post_process_enabled']:
             return False
 
-        # returns dict of all torrents in completed state with torrent_name, torrent_hash, torrent_tag and torrent_file_list
-        torrent_completed_dict_list = self.torrent_clients_instance.qbittorrent_identify_completed_torrents()
+        status_filter_list = ['stopped', 'completed']
 
-        # if dict is empty due to not reaching ratio or bad qbt client then return
-        if not torrent_completed_dict_list:
-            return False
+        for status_filter in status_filter_list:
 
-        # iterate over completed torrents dict
-        for torrent_completed_dict in torrent_completed_dict_list:
+            # returns dict of all torrents in completed state with torrent_name, torrent_hash, torrent_tag and torrent_file_list
+            torrent_completed_dict_list = self.torrent_clients_instance.qbittorrent_identify_completed_torrents(status_filter)
 
-            # loop over list of files and generate copy files list and delete files list
-            src_copy_files_list = self.create_copy_exclude_lists(torrent_completed_dict)
+            # if dict is empty due to not reaching ratio or bad qbt client then return
+            if not torrent_completed_dict_list:
+                return False
 
-            # if the returned list of files to copy is empty then continue
-            if not src_copy_files_list:
-                continue
+            # iterate over completed torrents dict
+            for torrent_completed_dict in torrent_completed_dict_list:
 
-            # copy filtered list of files to imdb title year named destination folder in library
-            if not self.copy_files_dst(torrent_completed_dict, src_copy_files_list):
-                continue
+                # loop over list of files and generate copy files list and delete files list
+                src_copy_files_list = self.create_copy_exclude_lists(torrent_completed_dict)
 
-            # remove stopped queued items from qbittorrent and data
-            if not self.delete_torrent_and_data(torrent_completed_dict):
-                continue
+                # if the returned list of files to copy is empty then continue
+                if not src_copy_files_list:
+                    continue
+
+                # copy filtered list of files to imdb title year named destination folder in library
+                if not self.copy_files_dst(torrent_completed_dict, src_copy_files_list):
+                    continue
+
+                # remove stopped queued items from qbittorrent and data
+                if status_filter == 'stopped':
+                    if not self.delete_torrent_and_data(torrent_completed_dict):
+                        continue
 
     def create_copy_exclude_lists(self, torrent_completed_dict):
 
@@ -251,7 +256,7 @@ class PostProcess(object):
 
         torrent_hash = torrent_completed_dict.get('torrent_hash')
 
-        # remove torrent from qbittorrent queue with status stopped, as the files have been moved and it will error otherwise
+        # remove torrent from qbittorrent queue with status stopped
         if not self.torrent_clients_instance.qbittorrent_delete_torrent(torrent_hash, True, 'stopped'):
             return False
 
