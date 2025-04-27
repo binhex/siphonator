@@ -290,6 +290,24 @@ class SiphonatorMain(object):
         if not jackett_index_sites_list_xml:
             return False
 
+        # create db instance, do not move to main and call vacuum_database etc. from this thread,
+        # otherwise this will lead to the error:
+        # 'SQLite objects created in a thread can only be used in that same thread'
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger, init_dict)
+
+        # get db user version
+        pragma_user_version = db_sqlite_instance.get_pragma_user_version()
+
+        # if db filepath is a sqlite database but pragma user version is '0' then create initial tables
+        if pragma_user_version == int(0):
+
+            db_sqlite_instance.create_tables()
+
+        # else if pragma user version is not equal to db version (version we want) then upgrade
+        elif pragma_user_version != db_version:
+
+            db_sqlite_instance.upgrade_database(pragma_user_version)
+
         library_path_list = self.config_dict['general']['library_path_list']
 
         if library_path_list:
@@ -559,22 +577,6 @@ if __name__ == '__main__':
     # read in config version from config file
     config_file_version = config_dict['general']['config_version']
 
-    # create db instance
-    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger, init_dict)
-
-    # get db user version
-    pragma_user_version = db_sqlite_instance.get_pragma_user_version()
-
-    # if db filepath is a sqlite database but pragma user version is '0' then create initial tables
-    if pragma_user_version == int(0):
-
-        db_sqlite_instance.create_tables()
-
-    # else if pragma user version is not equal to db version (version we want) then upgrade
-    elif pragma_user_version != db_version:
-
-        db_sqlite_instance.upgrade_database(pragma_user_version)
-
     if args.daemon:
 
         daemon_mode = 'background'
@@ -643,6 +645,11 @@ if __name__ == '__main__':
             siphonator_daemonize_bg.start()
 
     else:
+
+        # Initialize variables to None
+        post_processing_daemonize_fg = None
+        queue_management_daemonize_fg = None
+        siphonator_daemonize_fg = None
 
         try:
             # note when calling method in class for 'action' drop '()'
