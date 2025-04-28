@@ -4,10 +4,10 @@ import sys
 import argparse
 import datetime
 import pytest
+import time
 import qbittorrentapi
 import xml.etree.ElementTree as elementTree
 from daemonize import Daemonize
-from apscheduler.schedulers.background import BlockingScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
 import lib.siphonator.config_manager as siphonator_config_manager
 import lib.siphonator.post_processing as post_processing
@@ -110,6 +110,34 @@ def check_qbittorrent():
     return qbt_client
 
 
+def run_scheduler():
+    """
+    Function to start the scheduler and keep it running.
+    """
+    scheduler = BackgroundScheduler()
+
+    # Schedule tasks
+    if post_processing_enabled:
+        post_processing_instance.schedule_run(scheduler)
+
+    if queue_management_enabled:
+        queue_management_instance.schedule_run(scheduler)
+
+    if siphonator_enabled:
+        siphonator_instance.schedule_run(scheduler)
+
+    # Start the scheduler
+    scheduler.start()
+
+    try:
+        # Keep the main thread alive
+        while True:
+            time.sleep(1)
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Shutting down scheduler...")
+        scheduler.shutdown()
+
+
 class SiphonatorPostProcessing(object):
 
     def __init__(self, logger_instance):
@@ -118,25 +146,17 @@ class SiphonatorPostProcessing(object):
         self.init_dict = init_dict
         self.config_dict = config_dict
 
-    def schedule_run(self):
+    def schedule_run(self, scheduler):
 
-        # set to blocking scheduler if set to foreground
-        if post_processing_schedule_mode == 'foreground':
-            schedule = BlockingScheduler()
-        else:
-            schedule = BackgroundScheduler()
-
-        self.logger_instance.info(f"Running schedule in '{post_processing_schedule_mode}' mode")
-
-        try:
-
-            schedule.add_job(post_processing_instance.run, 'interval', minutes=self.config_dict['schedule']['post_processing_thread']['schedule_time_mins'], next_run_time=datetime.datetime.now(), max_instances=1)
-            schedule.start()
-
-        except (KeyboardInterrupt, SystemExit):
-
-            self.logger_instance.info(u"Keyboard interrupt or system exit detected, shutting down...")
-            schedule.shutdown()
+        self.logger_instance.info("Scheduling post-processing task...")
+        scheduler.add_job(
+            self.run,
+            'interval',
+            minutes=int(self.config_dict['schedule']['post_processing_thread']['schedule_time_mins']),
+            next_run_time=datetime.datetime.now(),
+            max_instances=1,
+            id="post_processing_task"
+        )
 
     def schedule_msg(self):
 
@@ -149,7 +169,7 @@ class SiphonatorPostProcessing(object):
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(f"Schedule for post-processing running in '{self.config_dict['schedule']['post_processing_thread']['schedule_mode']}' mode every '{self.config_dict['schedule']['post_processing_thread']['schedule_time_mins']} {self.config_dict['schedule']['post_processing_thread']['schedule_time_units']}', next run at '{schedule_run_converted}'")
+        self.logger_instance.info(f"Schedule for post-processing running in background mode every '{self.config_dict['schedule']['post_processing_thread']['schedule_time_mins']} {self.config_dict['schedule']['post_processing_thread']['schedule_time_units']}', next run at '{schedule_run_converted}'")
 
     def run(self):
 
@@ -179,25 +199,17 @@ class SiphonatorQueueManagement(object):
         self.init_dict = init_dict
         self.config_dict = config_dict
 
-    def schedule_run(self):
+    def schedule_run(self, scheduler):
 
-        # set to blocking scheduler if set to foreground
-        if queue_management_schedule_mode == 'foreground':
-            schedule = BlockingScheduler()
-        else:
-            schedule = BackgroundScheduler()
-
-        self.logger_instance.info(f"Running schedule in '{queue_management_schedule_mode}' mode")
-
-        try:
-
-            schedule.add_job(queue_management_instance.run, 'interval', minutes=self.config_dict['schedule']['queue_management_thread']['schedule_time_mins'], next_run_time=datetime.datetime.now(), max_instances=1)
-            schedule.start()
-
-        except (KeyboardInterrupt, SystemExit):
-
-            self.logger_instance.info(u"Keyboard interrupt or system exit detected, shutting down...")
-            schedule.shutdown()
+        self.logger_instance.info("Scheduling Queue Management task...")
+        scheduler.add_job(
+            self.run,
+            'interval',
+            minutes=int(self.config_dict['schedule']['queue_management_thread']['schedule_time_mins']),
+            next_run_time=datetime.datetime.now(),
+            max_instances=1,
+            id="queue_management_task"
+        )
 
     def schedule_msg(self):
 
@@ -210,7 +222,7 @@ class SiphonatorQueueManagement(object):
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(f"Schedule for queue management is running in '{self.config_dict['schedule']['queue_management_thread']['schedule_mode']}' mode every '{self.config_dict['schedule']['queue_management_thread']['schedule_time_mins']} {self.config_dict['schedule']['queue_management_thread']['schedule_time_units']}', next run at '{schedule_run_converted}'")
+        self.logger_instance.info(f"Schedule for queue management is running in background mode every '{self.config_dict['schedule']['queue_management_thread']['schedule_time_mins']} {self.config_dict['schedule']['queue_management_thread']['schedule_time_units']}', next run at '{schedule_run_converted}'")
 
     def run(self):
 
@@ -240,25 +252,17 @@ class SiphonatorMain(object):
         self.init_dict = init_dict
         self.config_dict = config_dict
 
-    def schedule_run(self):
+    def schedule_run(self, scheduler):
 
-        # set to blocking scheduler if set to foreground
-        if siphonator_schedule_mode == 'foreground':
-            schedule = BlockingScheduler()
-        else:
-            schedule = BackgroundScheduler()
-
-        self.logger_instance.info(f"Running schedule in '{siphonator_schedule_mode}' mode")
-
-        try:
-
-            schedule.add_job(siphonator_instance.run, 'interval', minutes=self.config_dict['schedule']['siphonator_thread']['schedule_time_mins'], next_run_time=datetime.datetime.now(), max_instances=1)
-            schedule.start()
-
-        except (KeyboardInterrupt, SystemExit):
-
-            self.logger_instance.info(u"Keyboard interrupt or system exit detected, shutting down...")
-            schedule.shutdown()
+        self.logger_instance.info("Scheduling siphonator task...")
+        scheduler.add_job(
+            self.run,
+            'interval',
+            minutes=int(self.config_dict['schedule']['siphonator_thread']['schedule_time_mins']),
+            next_run_time=datetime.datetime.now(),
+            max_instances=1,
+            id="siphonator_task"
+        )
 
     def schedule_msg(self):
 
@@ -271,7 +275,7 @@ class SiphonatorMain(object):
         # convert to human-readable format dd/mm/YY H:M:S
         schedule_run_converted = next_schedule_run.strftime("%d/%m/%Y %H:%M:%S")
 
-        self.logger_instance.info(f"Schedule for siphonator is running in '{self.config_dict['schedule']['siphonator_thread']['schedule_mode']}' mode every '{self.config_dict['schedule']['siphonator_thread']['schedule_time_mins']} {self.config_dict['schedule']['siphonator_thread']['schedule_time_units']}', next run at '{schedule_run_converted}'")
+        self.logger_instance.info(f"Schedule for siphonator is running in background mode every '{self.config_dict['schedule']['siphonator_thread']['schedule_time_mins']} {self.config_dict['schedule']['siphonator_thread']['schedule_time_units']}', next run at '{schedule_run_converted}'")
 
     def run(self):
 
@@ -529,9 +533,7 @@ if __name__ == '__main__':
     create_path(pid_path)
 
     # construct pid filepath for main and post-processing threads
-    pid_siphonator_filepath = os.path.join(pid_path, f'{app_name}.pid')
-    pid_queue_management_filepath = os.path.join(pid_path, 'queue-management.pid')
-    pid_post_processing_filepath = os.path.join(pid_path, 'post-process.pid')
+    pid_filepath = os.path.join(pid_path, f'{app_name}.pid')
 
     # create path if it doesn't exist and set filepath
     config_path = args.config_path
@@ -545,9 +547,7 @@ if __name__ == '__main__':
         'log_path': log_path,
         'log_filepath': logs_filepath,
         'pid_path': pid_path,
-        'pid_siphonator_filepath': pid_siphonator_filepath,
-        'pid_queue_management_filepath': pid_queue_management_filepath,
-        'pid_post_processing_filepath': pid_post_processing_filepath,
+        'pid_filepath': pid_filepath,
         'db_path': db_path,
         'db_filepath': db_filepath,
         'db_version': db_version,
@@ -599,19 +599,16 @@ if __name__ == '__main__':
 
     # setup siphonator scheduler
     siphonator_enabled = config_dict['schedule']['siphonator_thread']['enabled']
-    siphonator_schedule_mode = config_dict['schedule']['siphonator_thread']['schedule_mode'].lower()
     siphonator_schedule_time_units = config_dict['schedule']['siphonator_thread']['schedule_time_units']
     siphonator_schedule_time_mins = config_dict['schedule']['siphonator_thread']['schedule_time_mins']
 
     # setup queue management scheduler
     queue_management_enabled = config_dict['schedule']['queue_management_thread']['enabled']
-    queue_management_schedule_mode = config_dict['schedule']['queue_management_thread']['schedule_mode'].lower()
     queue_management_schedule_time_units = config_dict['schedule']['queue_management_thread']['schedule_time_units']
     queue_management_schedule_time_mins = config_dict['schedule']['queue_management_thread']['schedule_time_mins']
 
     # setup post-processing scheduler
     post_processing_enabled = config_dict['schedule']['post_processing_thread']['enabled']
-    post_processing_schedule_mode = config_dict['schedule']['post_processing_thread']['schedule_mode'].lower()
     post_processing_schedule_time_units = config_dict['schedule']['post_processing_thread']['schedule_time_units']
     post_processing_schedule_time_mins = config_dict['schedule']['post_processing_thread']['schedule_time_mins']
 
@@ -624,51 +621,31 @@ if __name__ == '__main__':
     siphonator_instance = SiphonatorMain(logger)
 
     logger.info(f"Welcome to {app_friendly_name} v{app_version} - Coded by binhex.")
-    logger.info(f"Starting daemon in '{daemon_mode}' mode...")
+    logger.info(f"Running in {daemon_mode} mode...")
 
     if daemon_mode == 'background':
 
-        # note when calling method in class for 'action' drop '()'
-        # 'keep_fds' prevents daemonize of file descriptors, such as logger, otherwise logging stops
+        # keep logger file descriptors open otherwise logging stops
         keep_fds = [file_handler.stream.fileno(), console_handler.stream.fileno()]
 
-        if post_processing_enabled:
-            post_processing_daemonize_bg = Daemonize(app="siphonator-post-processing", pid=pid_post_processing_filepath, keep_fds=keep_fds, action=post_processing_instance.schedule_run)
-            post_processing_daemonize_bg.start()
+        # remove previous pid file if it was there due to crash
+        if os.path.exists(pid_filepath):
+            os.remove(pid_filepath)
 
-        if queue_management_enabled:
-            queue_management_daemonize_bg = Daemonize(app="siphonator-queue-management", pid=pid_queue_management_filepath, keep_fds=keep_fds, action=queue_management_instance.schedule_run)
-            queue_management_daemonize_bg.start()
-
-        if siphonator_enabled:
-            siphonator_daemonize_bg = Daemonize(app="siphonator-main", pid=pid_siphonator_filepath, keep_fds=keep_fds, action=siphonator_instance.schedule_run)
-            siphonator_daemonize_bg.start()
-
-    else:
-
-        # Initialize variables to None
-        post_processing_daemonize_fg = None
-        queue_management_daemonize_fg = None
-        siphonator_daemonize_fg = None
+        # note when calling function/method drop '()'
+        daemon = Daemonize(app="siphonator-daemon", pid=pid_filepath, action=run_scheduler, keep_fds=keep_fds)
 
         try:
-            # note when calling method in class for 'action' drop '()'
-            if post_processing_enabled:
-                post_processing_daemonize_fg = Daemonize(app="siphonator-post-processing", pid=pid_post_processing_filepath, foreground=post_processing_schedule_mode, action=post_processing_instance.schedule_run)
-                post_processing_daemonize_fg.start()
-            if queue_management_enabled:
-                queue_management_daemonize_fg = Daemonize(app="siphonator-queue-management", pid=pid_queue_management_filepath, foreground=queue_management_schedule_mode, action=queue_management_instance.schedule_run)
-                queue_management_daemonize_fg.start()
-            if siphonator_enabled:
-                siphonator_daemonize_fg = Daemonize(app="siphonator-main", pid=pid_siphonator_filepath, foreground=siphonator_schedule_mode, action=siphonator_instance.schedule_run)
-                siphonator_daemonize_fg.start()
+            # Run in background mode
+            daemon.start()
 
         except (KeyboardInterrupt, SystemExit):
 
             # cleanup pid file
             if post_processing_enabled:
-                post_processing_daemonize_fg.exit()
-            if queue_management_enabled:
-                queue_management_daemonize_fg.exit()
-            if siphonator_enabled:
-                siphonator_daemonize_fg.exit()
+                daemon.exit()
+
+    else:
+
+        # Run in foreground mode
+        run_scheduler()
