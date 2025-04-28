@@ -692,7 +692,7 @@ class FilterMovies(object):
         if not library_filename_resolution_string:
 
             # get resolution of library file by analysing file using ffprobe
-            library_filename_resolution_string = siphonator_tools_various.resolution_from_ffprobe(library_filepath, ffprobe_filepath)
+            library_filename_resolution_string = siphonator_tools_various.resolution_from_ffprobe(self.logger_instance, library_filepath, ffprobe_filepath)
 
             if not library_filename_resolution_string:
 
