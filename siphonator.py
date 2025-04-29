@@ -138,6 +138,26 @@ def run_scheduler():
         scheduler.shutdown()
 
 
+def db_checks():
+
+    # create db instance, this must be created in the same thread as its used, otherwise you will see the error
+    # 'SQLite objects created in a thread can only be used in that same thread'
+    db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger, init_dict)
+
+    # get db user version
+    pragma_user_version = db_sqlite_instance.get_pragma_user_version()
+
+    # if db filepath is a sqlite database but pragma user version is '0' then create initial tables
+    if pragma_user_version == int(0):
+
+        db_sqlite_instance.create_tables()
+
+    # else if pragma user version is not equal to db version (version we want) then upgrade
+    elif pragma_user_version != db_version:
+
+        db_sqlite_instance.upgrade_database(pragma_user_version)
+
+
 class SiphonatorPostProcessing(object):
 
     def __init__(self, logger_instance):
@@ -294,24 +314,6 @@ class SiphonatorMain(object):
         if not jackett_index_sites_list_xml:
             return False
 
-        # create db instance, do not move to main and call vacuum_database etc. from this thread,
-        # otherwise this will lead to the error:
-        # 'SQLite objects created in a thread can only be used in that same thread'
-        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger, init_dict)
-
-        # get db user version
-        pragma_user_version = db_sqlite_instance.get_pragma_user_version()
-
-        # if db filepath is a sqlite database but pragma user version is '0' then create initial tables
-        if pragma_user_version == int(0):
-
-            db_sqlite_instance.create_tables()
-
-        # else if pragma user version is not equal to db version (version we want) then upgrade
-        elif pragma_user_version != db_version:
-
-            db_sqlite_instance.upgrade_database(pragma_user_version)
-
         library_path_list = self.config_dict['general']['library_path_list']
 
         if library_path_list:
@@ -399,6 +401,10 @@ class SiphonatorMain(object):
                 index_site_dict.update({
                     'category': search_category,
                 })
+
+        # create db instance, this must be created in the same thread as its used, otherwise you will see the error
+        # 'SQLite objects created in a thread can only be used in that same thread'
+        db_sqlite_instance = siphonator_db_sqlite.DbSqlite(logger, init_dict)
 
         # compress (vacuum) database
         db_sqlite_instance.vacuum_database()
@@ -577,6 +583,9 @@ if __name__ == '__main__':
     # read in config version from config file
     config_file_version = config_dict['general']['config_version']
 
+    # perform sqlite db checks and upgrades
+    db_checks()
+
     if args.daemon:
 
         daemon_mode = 'background'
@@ -611,9 +620,6 @@ if __name__ == '__main__':
     post_processing_enabled = config_dict['schedule']['post_processing_thread']['enabled']
     post_processing_schedule_time_units = config_dict['schedule']['post_processing_thread']['schedule_time_units']
     post_processing_schedule_time_mins = config_dict['schedule']['post_processing_thread']['schedule_time_mins']
-
-    # TODO should move both main and post process to their own respective methods so that logging shows the function
-    #  name, as they are currently both 'Siphontator'
 
     # define instances of classes to run
     queue_management_instance = SiphonatorQueueManagement(logger)
