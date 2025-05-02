@@ -74,6 +74,14 @@ def omdb_get_movie(logger_instance, config_dict, result_dict):
         result_dict.update({'result_details': result_details_list})
         return result_dict, None
 
+    except requests.exceptions.JSONDecodeError as e:
+        result_details = f"Failed: Requests module JSON decoder error exception for OMDb, error is '{e}'"
+        logger_instance.warning(result_details)
+        result_dict.update({'result': u'Failed'})
+        result_details_list.append(result_details)
+        result_dict.update({'result_details': result_details_list})
+        return result_dict, None
+
     return result_dict, omdb_json
 
 
