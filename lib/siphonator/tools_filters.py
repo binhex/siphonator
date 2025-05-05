@@ -28,7 +28,7 @@ class ToolsFilters(object):
 
         # various regex
         self.compare_movie_title_regex = r'[\s\.\-\_\:\+\'\"\!\,\@\#]+'
-        self.seperator_movie_title_regex = r'[\.\-\_,]+'
+        self.seperator_movie_title_regex = r'[\.\-\_,\s]+'
         self.sqlite_regex = r'\.|_|-|\s|&'
         self.resolution_regex = r'\d{3,4}(?=p)'
 
@@ -67,6 +67,22 @@ class ToolsFilters(object):
             return None
 
         result = self.regex_search(index_title_after_year_to_end, rf"^{keyword}\s|\s{keyword}\s|\s{keyword}$")
+
+        if result:
+            return True
+        return False
+
+    def keyword_unsanitised_search(self, string, keyword):
+
+        # string can be un-sanitised
+        if not string:
+            return None
+
+        index_title_after_year_to_end = self.index_title_after_year_to_end(string)
+        if not index_title_after_year_to_end:
+            return None
+
+        result = self.regex_search(index_title_after_year_to_end, rf"^{keyword}{self.seperator_movie_title_regex}|{self.seperator_movie_title_regex}{keyword}{self.seperator_movie_title_regex}|{self.seperator_movie_title_regex}{keyword}$")
 
         if result:
             return True
