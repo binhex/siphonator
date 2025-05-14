@@ -66,15 +66,15 @@ class ToolsFilters(object):
         if not index_title_after_year_to_end:
             return None
 
-        result = self.regex_search(index_title_after_year_to_end, rf"^{keyword}\s|\s{keyword}\s|\s{keyword}$")
+        result = self.regex_search(index_title_after_year_to_end, rf"^{keyword}{self.seperator_movie_title_regex}|{self.seperator_movie_title_regex}{keyword}{self.seperator_movie_title_regex}|{self.seperator_movie_title_regex}{keyword}$")
 
         if result:
             return True
         return False
 
-    def keyword_unsanitised_search(self, string, keyword):
+    def bad_keyword_search(self, string, keyword):
 
-        # string can be un-sanitised
+        # string should be un-sanitised
         if not string:
             return None
 
@@ -82,9 +82,7 @@ class ToolsFilters(object):
         if not index_title_after_year_to_end:
             return None
 
-        result = self.regex_search(index_title_after_year_to_end, rf"^{keyword}{self.seperator_movie_title_regex}|{self.seperator_movie_title_regex}{keyword}{self.seperator_movie_title_regex}|{self.seperator_movie_title_regex}{keyword}$")
-
-        if result:
+        if keyword in index_title_after_year_to_end:
             return True
         return False
 

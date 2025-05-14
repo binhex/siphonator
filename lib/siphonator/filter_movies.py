@@ -217,7 +217,7 @@ class FilterMovies(object):
 
         for filter_bad_index_title in filter_bad_index_title_list:
 
-            if self.tools_filters_instance.keyword_unsanitised_search(index_title, filter_bad_index_title):
+            if self.tools_filters_instance.bad_keyword_search(index_title, filter_bad_index_title):
 
                 result_details = f"Failed: Index title '{index_title}' contains bad title keyword '{filter_bad_index_title}', skipping movie"
                 self.logger_instance.info(result_details)
