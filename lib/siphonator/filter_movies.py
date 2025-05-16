@@ -155,7 +155,7 @@ class FilterMovies(object):
 
     def filter_index_search_criteria(self):
 
-        index_title = self.result_dict.get('index_title')
+        index_title = self.result_dict.get('index_title').lower()
         index_site_search_result_dict = self.index_site_dict.get('criteria').lower()
         index_site_search_list = index_site_search_result_dict.split()
 
