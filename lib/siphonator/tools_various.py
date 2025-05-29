@@ -128,8 +128,7 @@ def copy_files(logger_instance, src_path, dst_file_paths, db_sqlite_instance, to
 
         # if the destination file path does exist and the checksums do match then mark as verified and skip the copy
         if str(src_sha256) == str(dst_sha256):
-            logger_instance.info(f"Source path '{src_path}' with checksum '{src_sha256}' matches existing destination path '{dst_file_path_sanitised_os}' with checksum '{dst_sha256}', marking as verified in database, skipping copy to destination")
-            db_sqlite_instance.write_database_value('history', 'verified', 'true', 'torrent_tag', torrent_tag)
+            logger_instance.info(f"Source path '{src_path}' with checksum '{src_sha256}' matches existing destination path '{dst_file_path_sanitised_os}' with checksum '{dst_sha256}', skipping copy to destination")
             return True
 
         # if the destination file path does exist but the checksums do not match then delete the destination file.
@@ -159,8 +158,7 @@ def copy_files(logger_instance, src_path, dst_file_paths, db_sqlite_instance, to
         logger_instance.warning(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does not match destination path '{dst_file_path_sanitised_os}' with sha256 checksum '{dst_sha256}' after copy operation, copy failure")
         return False
 
-    logger_instance.info(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does match destination path '{dst_file_path_sanitised_os}' with sha256 checksum '{dst_sha256}' after copy operation. copy success, marking as verified in database")
-    db_sqlite_instance.write_database_value('history', 'verified', 'true', 'torrent_tag', torrent_tag)
+    logger_instance.info(f"Source path '{src_path}' with sha256 checksum '{src_sha256}' does match destination path '{dst_file_path_sanitised_os}' with sha256 checksum '{dst_sha256}' after copy operation. copy success")
     return True
 
 

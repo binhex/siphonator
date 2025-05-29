@@ -50,7 +50,7 @@ def helper_get_largest_parent_dir(logger_instance, torrent_file_name, torrent_pa
     torrent_parent_dir = tools_filters_instance.sanitise(torrent_parent_dir)
 
     if not torrent_parent_dir:
-        logger_instance.debug(f"Torrent parent directory is empty or None after sanitisation")
+        logger_instance.debug(f"Torrent parent directory is empty or None after sanitization")
         return False
 
     # get length of parent path and filename for comparison
@@ -127,6 +127,7 @@ class PostProcess(object):
                 if status_filter == 'stopped':
                     if not self.delete_torrent_and_data(torrent_completed_dict):
                         continue
+        return True
 
     def create_copy_exclude_lists(self, torrent_completed_dict):
 
@@ -219,7 +220,7 @@ class PostProcess(object):
 
             # check source file exists
             if not os.path.isfile(src_copy_file_path):
-                self.logger_instance.warning(f"Source file path '{src_copy_file_path}' does not exist, file may of been copy in previous run")
+                self.logger_instance.warning(f"Source file path '{src_copy_file_path}' does not exist, skipping copy to destination")
                 continue
 
             # get file name from src file path
@@ -233,7 +234,7 @@ class PostProcess(object):
 
                 # if parent dir does not exist, length of parent dir is shorter than filename, or file type is not container (returns False for all) then use existing file name
                 if not helper_get_largest_parent_dir(self.logger_instance, torrent_largest_file_name, torrent_path):
-                    dst_copy_file_path = os.path.join(dst_copy_path, src_copy_file)
+                    dst_copy_file_path = os.path.join(str(dst_copy_path), str(src_copy_file))
 
                 else:
 
@@ -248,6 +249,8 @@ class PostProcess(object):
             if not tools_various.copy_files(self.logger_instance, src_copy_file_path, dst_copy_file_path, self.db_sqlite_instance, torrent_completed_dict.get('torrent_tag')):
                 return False
 
+        self.logger_instance.info(f"Marking torrent tag {torrent_completed_dict.get('torrent_tag')} as verified in database")
+        self.db_sqlite_instance.write_database_value('history', 'verified', 'true', 'torrent_tag', torrent_completed_dict.get('torrent_tag'))
         return True
 
     def delete_torrent_and_data(self, torrent_completed_dict):
