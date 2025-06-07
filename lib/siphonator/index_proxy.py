@@ -301,13 +301,13 @@ class IndexProxy(object):
 
                 if result_dict.get('result') == 'Passed':
 
-                    self.logger_instance.info(u"Getting movie details from IMDb using OMDb...")
-                    result_dict = siphonator_imdb_omdb.omdb_json_api(self.logger_instance, self.config_dict, result_dict)
+                    self.logger_instance.info(u"Getting movie details from IMDb using IMDBPie...")
+                    result_dict = siphonator_imdb_imdbpie.imdb_json_api(self.logger_instance, result_dict)
 
                     if result_dict.get('result') == 'Failed':
 
-                        self.logger_instance.info(u"Getting movie details from IMDb using IMDBPie...")
-                        result_dict = siphonator_imdb_imdbpie.imdb_json_api(self.logger_instance, result_dict)
+                        self.logger_instance.info(u"Getting movie details from IMDb using OMDb...")
+                        result_dict = siphonator_imdb_omdb.omdb_json_api(self.logger_instance, self.config_dict, result_dict)
 
                 else:
 
@@ -354,3 +354,5 @@ class IndexProxy(object):
 
             # increment offset by 100 (default number of results from jackett)
             offset = offset+100
+
+        return True
