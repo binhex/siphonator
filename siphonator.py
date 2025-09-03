@@ -412,6 +412,9 @@ class SiphonatorMain(object):
         # close database
         db_sqlite_instance.close_database()
 
+        # release memory by clearing walked library path
+        del library_path_walk
+
         # TODO put in elapsed time
         current_time = siphonator_tools_various.current_time()
 
