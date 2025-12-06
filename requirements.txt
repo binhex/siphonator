@@ -7,7 +7,7 @@ daemonize               # Run application in foreground/background
 diskcache               # Required by imdbpie, need to ensure we install latest due to Collections error
 ffmpeg-python           # Used to identify resolution of existing media
 googlesearch-python     # Fallback mechanism to get IMDb ID for movies
-# imdbpie                # Python IMDB client using the IMDB JSON web service made available for their iOS application
+# imdbpie               # Python IMDB client using the IMDB JSON web service made available for their iOS application
 imdbpie @ git+https://github.com/razsteinmetz/imdb-pie@master # pulls from forked imdbpie to attempt auth fixed, not fixed
 mako                    # Mako is a web template library written in Python
 nmdmail                 # Simplified email sender for Python
