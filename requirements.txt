@@ -1,6 +1,7 @@
 apscheduler             # Adds in scheduling to run the main process at set times in a crontab style format
 backoff                 # Function decorator for backoff and retry for requests
-colorama                # Colour support for consoloe output for all platforms
+click                   # Command Line Interface Creation Kit
+colorama                # Colour support for console output for all platforms
 configobj               # Config reading, writing and validation
 ConfigArgParse          # Drop-in replacement for argparse that allows options to be set via cli, config files and/or environment variables
 daemonize               # Run application in foreground/background
