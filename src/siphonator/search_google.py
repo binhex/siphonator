@@ -1,5 +1,5 @@
 import googlesearch
-import lib.siphonator.tools_filters as siphonator_tools_filters
+import src.siphonator.tools_filters as siphonator_tools_filters
 import re
 
 

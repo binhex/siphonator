@@ -1,8 +1,8 @@
 import os
 import re
 from decimal import Decimal
-import lib.siphonator.tools_various as siphonator_tools_various
-import lib.siphonator.tools_filters as siphonator_tools_filters
+import src.siphonator.tools_various as siphonator_tools_various
+import src.siphonator.tools_filters as siphonator_tools_filters
 
 # TODO bad group list, start with SLOT?
 
@@ -46,7 +46,7 @@ class FilterMovies(object):
         if not filter_bad_movie_title_result:
             return self.result_dict
 
-        filter_library_result = self.filter_library()
+        filter_library_result = self.filter_library('index_title')
         if not filter_library_result:
             return self.result_dict
 
@@ -107,6 +107,10 @@ class FilterMovies(object):
                             if not filter_votes_result:
                                 return self.result_dict
 
+        filter_library_result = self.filter_library('imdb_title')
+        if not filter_library_result:
+            return self.result_dict
+
         return self.result_dict
 
     def filter_index_override_title(self):
@@ -155,7 +159,7 @@ class FilterMovies(object):
 
     def filter_index_search_criteria(self):
 
-        index_title = self.result_dict.get('index_title').lower()
+        index_title = self.result_dict.get('index_title')
         index_site_search_result_dict = self.index_site_dict.get('criteria').lower()
         index_site_search_list = index_site_search_result_dict.split()
 
@@ -215,9 +219,12 @@ class FilterMovies(object):
         # get bad index title compare using tools various
         index_title = self.result_dict.get('index_title')
 
+        # get sanitised index title from result dict
+        index_title_sanitised = self.result_dict.get('index_title_sanitised')
+
         for filter_bad_index_title in filter_bad_index_title_list:
 
-            if self.tools_filters_instance.bad_keyword_search(index_title, filter_bad_index_title):
+            if self.tools_filters_instance.keyword_search(index_title_sanitised, filter_bad_index_title):
 
                 result_details = f"Failed: Index title '{index_title}' contains bad title keyword '{filter_bad_index_title}', skipping movie"
                 self.logger_instance.info(result_details)
@@ -447,7 +454,7 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return False
 
-    def filter_library_file(self):
+    def filter_library_file(self, title_source):
 
         identify_walk_files_filepath_list = []
 
@@ -460,8 +467,8 @@ class FilterMovies(object):
                 if not library_filename.lower().endswith(('.mkv', '.mp4', '.avi')):
                     continue
 
-                # if index year and title does not exist in library filename then continue
-                if self.filter_library_year_and_title(library_filename):
+                # if library does not contain matching imdb title or index title (based on title_source) then continue
+                if self.filter_library_year_and_title(library_filename, title_source):
                     continue
 
                 # get full path to library filename
@@ -471,65 +478,93 @@ class FilterMovies(object):
 
         return identify_walk_files_filepath_list
 
-    def filter_library_dir(self):
+    def filter_library_dir(self, title_source):
 
-        movie_title_compare = self.result_dict.get('movie_title_compare')
-        movie_title_year = self.result_dict.get('movie_title_year')
+        # required to filter directory to match title and year
+        if title_source == 'index_title':
+
+            title_compare = self.result_dict.get('movie_title_and_year_compare')
+            year = self.result_dict.get('movie_title_year')
+
+        elif title_source == 'imdb_title':
+
+            title = self.result_dict.get('imdb_title')
+            title_sanitised = self.tools_filters_instance.sanitise(title)
+            title_compare = self.tools_filters_instance.compare(title_sanitised)
+            year = self.result_dict.get('imdb_year')
+
+        else:
+            return True
+
+        # create list to store library file paths for directories that match
         identify_walk_files_filepath_list = []
 
         for root, dirs, files in self.library_path_walk:
 
-            for library_dirs in dirs:
+            # root is absolute path (no filename)
+            library_abs_path = root
 
-                library_dirs_sanitised = self.tools_filters_instance.sanitise(library_dirs)
+            # get last directory from absolute path
+            library_dir = os.path.basename(os.path.normpath(library_abs_path))
 
-                # get library directory compare strings using tools various
-                library_dirs_title_compare = self.tools_filters_instance.compare(library_dirs_sanitised)
-                library_dir_year_compare = self.tools_filters_instance.movie_title_year(library_dirs_sanitised)
+            library_dirs_sanitised = self.tools_filters_instance.sanitise(library_dir)
 
-                # if we cannot determine the year from the directory then continue
-                if not library_dir_year_compare:
-                    continue
+            # get library directory compare strings using tools various
+            library_dirs_title_compare = self.tools_filters_instance.compare(library_dirs_sanitised)
+            library_dir_year_compare = self.tools_filters_instance.movie_title_year(library_dirs_sanitised)
 
-                # if library directory year compare not in index title then continue
-                if library_dir_year_compare not in movie_title_year:
-                    continue
+            # if we cannot determine the year from the directory then continue
+            if not library_dir_year_compare:
+                continue
 
-                # if library directory title compare not in index title then continue
-                if library_dirs_title_compare not in movie_title_compare:
-                    continue
+            # if library directory year compare not in index title then continue
+            if library_dir_year_compare not in year:
+                continue
 
-                # construct absolute library path
-                library_abs_path = os.path.join(root, library_dirs)
+            # if library directory title compare not in index title then continue
+            if library_dirs_title_compare not in title_compare:
+                continue
 
-                # note this must be a list as the library_path_walk function takes a list
-                # in case multiple root folders need to be walked
-                library_abs_path_list = [library_abs_path]
+            # note this must be a list as the library_path_walk function takes a list
+            # in case multiple root folders need to be walked
+            library_abs_path_list = [library_abs_path]
 
-                # walk absolute path to get filename
-                library_abs_path_gen = siphonator_tools_various.library_path_walk(library_abs_path_list)
+            # walk absolute path to get filename
+            library_abs_path_gen = siphonator_tools_various.library_path_walk(library_abs_path_list)
 
-                # loop over generator absolute path
-                for sub_root, sub_dirs, sub_files in library_abs_path_gen:
+            # loop over generator absolute path
+            for sub_root, sub_dirs, sub_files in library_abs_path_gen:
 
-                    for library_filename in sub_files:
+                for library_filename in sub_files:
 
-                        # TODO this is a kludge, can we do better?
-                        # only check video container formats
-                        if not library_filename.lower().endswith(('.mkv', '.mp4', '.avi')):
-                            continue
+                    # TODO this is a kludge, can we do better?
+                    # only check video container formats
+                    if not library_filename.lower().endswith(('.mkv', '.mp4', '.avi')):
+                        continue
 
-                        # get full path to library filename
-                        library_files_abs_filepath = os.path.join(sub_root, library_filename)
+                    # get full path to library filename
+                    library_files_abs_filepath = os.path.join(sub_root, library_filename)
 
-                        identify_walk_files_filepath_list.append(library_files_abs_filepath)
+                    identify_walk_files_filepath_list.append(library_files_abs_filepath)
 
         return identify_walk_files_filepath_list
 
-    def filter_library_year_and_title(self, library_filename):
+    def filter_library_year_and_title(self, library_filename, title_source):
 
-        movie_title_year = self.result_dict.get('movie_title_year')
-        movie_title_compare = self.result_dict.get('movie_title_compare')
+        if title_source == 'index_title':
+
+            title_compare = self.result_dict.get('movie_title_compare')
+            year = self.result_dict.get('movie_title_year')
+
+        elif title_source == 'imdb_title':
+
+            title = self.result_dict.get('imdb_title')
+            title_sanitised = self.tools_filters_instance.sanitise(title)
+            title_compare = self.tools_filters_instance.compare(title_sanitised)
+            year = self.result_dict.get('imdb_year')
+
+        else:
+            return True
 
         library_filename_sanitised = self.tools_filters_instance.sanitise(library_filename)
         library_title = self.tools_filters_instance.movie_title(library_filename_sanitised)
@@ -542,15 +577,15 @@ class FilterMovies(object):
         if not library_year_compare:
             return True
 
-        # if index title not in library title then movie does not exist, download
-        if library_title_compare not in movie_title_compare:
+        # if title not in library title then movie does not exist, download
+        if library_title_compare not in title_compare:
             return True
 
-        # if index year not in library title then movie does not exist, download
-        if library_year_compare not in movie_title_year:
+        # if title year not in library title then movie does not exist, download
+        if library_year_compare not in year:
             return True
 
-        # index title in library, skip download
+        # title in library, skip download
         return False
 
     def filter_quality_score(self, after_year_to_end_string):
@@ -564,13 +599,11 @@ class FilterMovies(object):
             r'(4320p?)': int(50)
         }
 
-        # define score for source type, score increases as source type improves (higher bitrate)
-        source_score_dict = {
-            r'(dvdrip|webrip)': int(10),
-            r'(hdtv)': int(20),
-            r'(webdl|web\sdl|hdrip)': int(30),
-            r'(bd|bdrip|bluray|blu\sray)': int(40),
-            r'(remux|bdremux|bd\sremux)': int(80)
+        # define scores for video quality, score increases as video quality increases
+        video_score_dict = {
+            r'(xvid|divx)': int(10),
+            r'(h264|x264)': int(20),
+            r'(h265|x265|av1)': int(30)
         }
 
         # define scores for audio quality, score increases as audio quality increases
@@ -580,8 +613,17 @@ class FilterMovies(object):
             r'(dtsx|dts\sx|atmos)': int(30)
         }
 
+        # define score for source type, score increases as source type improves (higher bitrate)
+        source_score_dict = {
+            r'(dvdrip|webrip)': int(10),
+            r'(hdtv)': int(20),
+            r'(webdl|web\sdl|hdrip)': int(30),
+            r'(bd|bdrip|bluray|blu\sray)': int(40),
+            r'(remux|bdremux|bd\sremux)': int(80)
+        }
+
         score = 0
-        score_dicts = [resolution_score_dict, audio_score_dict, source_score_dict]
+        score_dicts = [resolution_score_dict, video_score_dict, audio_score_dict, source_score_dict]
 
         # iterate over dicts
         for score_dict in score_dicts:
@@ -703,8 +745,24 @@ class FilterMovies(object):
         self.logger_instance.debug(f"Library filename resolution identified as '{str(library_filename_resolution_string)}' using filename/ffprobe for library file '{library_filename_sanitised}'")
         return library_filename_resolution_string
 
-    def filter_library(self):
+    def filter_library(self, title_source):
 
+        # if the library is not defined then return true
+        if not self.library_path_walk:
+            result_details = f"Passed: No library paths defined, assuming index title does not exist in library"
+            self.logger_instance.info(result_details)
+            self.result_dict.update({'result': u'Passed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
+            return True
+
+        # constructs a list of library filenames that match the imdb/index title and year
+        library_filepath_list = self.filter_library_file(title_source)
+
+        # constructs a list of library dirs that match the imdb/index title and year
+        library_dirpath_list = self.filter_library_dir(title_source)
+
+        # get index title
         index_title = self.result_dict.get('index_title')
 
         # get index title resolution from index title
@@ -720,148 +778,145 @@ class FilterMovies(object):
             self.result_dict.update({'result_details': self.result_details_list})
             return False
 
-        library_path = self.config_dict['general']['library_path_list']
-
-        # if the library is not defined then return true
-        if not self.library_path_walk:
-            result_details = f"Passed: No library paths defined, assuming movie does not exist in library"
-            self.logger_instance.info(result_details)
-            self.result_dict.update({'result': u'Passed'})
-            self.result_details_list.append(result_details)
-            self.result_dict.update({'result_details': self.result_details_list})
+        if self.filter_library_file_check(library_filepath_list, index_title, index_title_resolution_string):
             return True
 
-        # constructs a list of library filenames that match the index title and year
-        library_filepath_list = self.filter_library_file()
+        elif self.filter_library_dir_check(library_dirpath_list, index_title, index_title_resolution_string):
+            return True
 
-        # if libray path is defined (not None) then process, else return True
-        if self.library_path_walk is not None:
+        return False
 
-            # if identify_walk_files_filepath_dict value is not empty then get filepaths from files
-            if library_filepath_list:
+    def filter_library_file_check(self, library_filepath_list, index_title, index_title_resolution_string):
 
-                for library_filepath in library_filepath_list:
+        library_path = self.config_dict['general']['library_path_list']
 
-                    # get filename and path from filepath
-                    library_filename = os.path.basename(library_filepath)
+        # if identify_walk_files_filepath_dict value is not empty then get filepaths from files
+        if library_filepath_list:
 
-                    # get library filename resolution from filename or ffprobe
-                    library_file_resolution_string = self.filter_library_file_resolution(library_filename, library_filepath)
+            for library_filepath in library_filepath_list:
 
-                    # if the library file resolution cannot be identified via filename or ffprobe then continue
-                    if not library_file_resolution_string:
-                        continue
+                # get filename and path from filepath
+                library_filename = os.path.basename(library_filepath)
 
-                    # if the resolution in index title matches library file then check for overrides
-                    if int(index_title_resolution_string) == int(library_file_resolution_string):
+                # get library filename resolution from filename or ffprobe
+                library_file_resolution_string = self.filter_library_file_resolution(library_filename, library_filepath)
 
-                        # if index title does not contain any overrides (special editions, higher quality or preferred group) then return False (skip)
-                        if not self.filter_quality_check(library_filename):
+                # if the library file resolution cannot be identified via filename or ffprobe then continue
+                if not library_file_resolution_string:
+                    continue
 
-                            result_details = f"Failed: Index title '{index_title}' does not contain overrides for library filename '{library_filename}'"
-                            self.logger_instance.info(result_details)
-                            self.result_dict.update({'result': u'Failed'})
-                            self.result_details_list.append(result_details)
-                            self.result_dict.update({'result_details': self.result_details_list})
-                            return False
+                # if the resolution in index title matches library file then check for overrides
+                if int(index_title_resolution_string) == int(library_file_resolution_string):
 
-                        else:
+                    # if index title does not contain any overrides (special editions, higher quality or preferred group) then return False (skip)
+                    if not self.filter_quality_check(library_filename):
 
-                            # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
-                            result_details = f"Passed: Index title '{index_title}' does contain override for library filename '{library_filename}'"
-                            self.logger_instance.info(result_details)
-                            self.result_dict.update({'result': u'Passed'})
-                            self.result_details_list.append(result_details)
-                            self.result_dict.update({'result_details': self.result_details_list})
-
-                    # if index resolution is less than library file then skip
-                    if int(index_title_resolution_string) < int(library_file_resolution_string):
-
-                        result_details = f"Failed: Index title '{index_title}' resolution {index_title_resolution_string} is less than library filename '{library_filename}' resolution {library_file_resolution_string}"
+                        result_details = f"Failed: Index title '{index_title}' does not contain overrides for library filename '{library_filename}'"
                         self.logger_instance.info(result_details)
                         self.result_dict.update({'result': u'Failed'})
                         self.result_details_list.append(result_details)
                         self.result_dict.update({'result_details': self.result_details_list})
                         return False
 
-                    # if index resolution is greater than library file then log and carry on (maybe higher resolution library files in next iteration)
-                    if int(index_title_resolution_string) > int(library_file_resolution_string):
+                    else:
 
                         # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
-                        result_details = f"Passed: Index title '{index_title}' resolution {index_title_resolution_string} is greater than library filename '{library_filename}' resolution {library_file_resolution_string}"
+                        result_details = f"Passed: Index title '{index_title}' does contain override for library filename '{library_filename}'"
                         self.logger_instance.info(result_details)
                         self.result_dict.update({'result': u'Passed'})
                         self.result_details_list.append(result_details)
                         self.result_dict.update({'result_details': self.result_details_list})
 
-            else:
+                # if index resolution is less than library file then skip
+                if int(index_title_resolution_string) < int(library_file_resolution_string):
+                    result_details = f"Failed: Index title '{index_title}' resolution {index_title_resolution_string} is less than library filename '{library_filename}' resolution {library_file_resolution_string}"
+                    self.logger_instance.info(result_details)
+                    self.result_dict.update({'result': u'Failed'})
+                    self.result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': self.result_details_list})
+                    return False
 
-                # constructs a list of library filenames that exist in a directory, NO matching of index and year
-                library_filepath_list = self.filter_library_dir()
+                # if index resolution is greater than library file then log and carry on (maybe higher resolution library files in next iteration)
+                if int(index_title_resolution_string) > int(library_file_resolution_string):
+                    # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
+                    result_details = f"Passed: Index title '{index_title}' resolution {index_title_resolution_string} is greater than library filename '{library_filename}' resolution {library_file_resolution_string}"
+                    self.logger_instance.info(result_details)
+                    self.result_dict.update({'result': u'Passed'})
+                    self.result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': self.result_details_list})
 
-                # if identify_walk_dirs_filepath_dict value is not empty then get filepaths from dirs
-                if library_filepath_list:
+            result_details = f"Passed: Index title '{index_title}' contains overrides, is higher resolution or does not exist in library path '{library_path}'"
+            self.logger_instance.info(result_details)
+            self.result_dict.update({'result': u'Passed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
+            return True
 
-                    for library_filepath in library_filepath_list:
+    def filter_library_dir_check(self, library_filepath_list, index_title, index_title_resolution_string):
 
-                        # get filename and path from filepath
-                        library_filename = os.path.basename(library_filepath)
+        library_path = self.config_dict['general']['library_path_list']
 
-                        # get library filename resolution from filename or ffprobe
-                        library_file_resolution_string = self.filter_library_file_resolution(library_filename, library_filepath)
+        # if identify_walk_dirs_filepath_dict value is not empty then get filepaths from dirs
+        if library_filepath_list:
 
-                        # if the library file resolution cannot be identified via filename or ffprobe then continue
-                        if not library_file_resolution_string:
-                            continue
+            for library_filepath in library_filepath_list:
 
-                        # if the resolution in index title matches library file then check for overrides
-                        if int(index_title_resolution_string) == int(library_file_resolution_string):
+                # get filename and path from filepath
+                library_filename = os.path.basename(library_filepath)
 
-                            # if index title does not contain any overrides (special editions, higher quality or preferred group) then return False (skip)
-                            if not self.filter_quality_check(library_filename):
+                # get library filename resolution from filename or ffprobe
+                library_file_resolution_string = self.filter_library_file_resolution(library_filename, library_filepath)
 
-                                result_details = f"Failed: Index title '{index_title}' does not contain overrides for library filename '{library_filename}'"
-                                self.logger_instance.info(result_details)
-                                self.result_dict.update({'result': u'Failed'})
-                                self.result_details_list.append(result_details)
-                                self.result_dict.update({'result_details': self.result_details_list})
-                                return False
+                # if the library file resolution cannot be identified via filename or ffprobe then continue
+                if not library_file_resolution_string:
+                    continue
 
-                            else:
+                # if the resolution in index title matches library file then check for overrides
+                if int(index_title_resolution_string) == int(library_file_resolution_string):
 
-                                # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
-                                result_details = f"Passed: Index title '{index_title}' does contain override for library filename '{library_filename}'"
-                                self.logger_instance.info(result_details)
-                                self.result_dict.update({'result': u'Passed'})
-                                self.result_details_list.append(result_details)
-                                self.result_dict.update({'result_details': self.result_details_list})
+                    # if index title does not contain any overrides (special editions, higher quality or preferred group) then return False (skip)
+                    if not self.filter_quality_check(library_filename):
 
-                        # if index resolution is less than library file then skip
-                        if int(index_title_resolution_string) < int(library_file_resolution_string):
+                        result_details = f"Failed: Index title '{index_title}' does not contain overrides for library filename '{library_filename}'"
+                        self.logger_instance.info(result_details)
+                        self.result_dict.update({'result': u'Failed'})
+                        self.result_details_list.append(result_details)
+                        self.result_dict.update({'result_details': self.result_details_list})
+                        return False
 
-                            result_details = f"Failed: Index title '{index_title}' resolution {index_title_resolution_string} is less than library filename '{library_filename}' resolution {library_file_resolution_string}"
-                            self.logger_instance.info(result_details)
-                            self.result_dict.update({'result': u'Failed'})
-                            self.result_details_list.append(result_details)
-                            self.result_dict.update({'result_details': self.result_details_list})
-                            return False
+                    else:
 
-                        # if index resolution is greater than library file then log and carry on (maybe higher resolution library files in next iteration)
-                        if int(index_title_resolution_string) > int(library_file_resolution_string):
+                        # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
+                        result_details = f"Passed: Index title '{index_title}' does contain override for library filename '{library_filename}'"
+                        self.logger_instance.info(result_details)
+                        self.result_dict.update({'result': u'Passed'})
+                        self.result_details_list.append(result_details)
+                        self.result_dict.update({'result_details': self.result_details_list})
 
-                            # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
-                            result_details = f"Passed: Index title '{index_title}' resolution {index_title_resolution_string} is greater than library filename '{library_filename}' resolution {library_file_resolution_string}"
-                            self.logger_instance.info(result_details)
-                            self.result_dict.update({'result': u'Passed'})
-                            self.result_details_list.append(result_details)
-                            self.result_dict.update({'result_details': self.result_details_list})
+                # if index resolution is less than library file then skip
+                if int(index_title_resolution_string) < int(library_file_resolution_string):
+                    result_details = f"Failed: Index title '{index_title}' resolution {index_title_resolution_string} is less than library filename '{library_filename}' resolution {library_file_resolution_string}"
+                    self.logger_instance.info(result_details)
+                    self.result_dict.update({'result': u'Failed'})
+                    self.result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': self.result_details_list})
+                    return False
 
-        result_details = f"Passed: Index title '{index_title}' contains overrides, is higher resolution or does not exist in library path '{library_path}'"
-        self.logger_instance.info(result_details)
-        self.result_dict.update({'result': u'Passed'})
-        self.result_details_list.append(result_details)
-        self.result_dict.update({'result_details': self.result_details_list})
-        return True
+                # if index resolution is greater than library file then log and carry on (maybe higher resolution library files in next iteration)
+                if int(index_title_resolution_string) > int(library_file_resolution_string):
+                    # note do not return bool, as there maybe other library files to evaluate in the library which may result in False
+                    result_details = f"Passed: Index title '{index_title}' resolution {index_title_resolution_string} is greater than library filename '{library_filename}' resolution {library_file_resolution_string}"
+                    self.logger_instance.info(result_details)
+                    self.result_dict.update({'result': u'Passed'})
+                    self.result_details_list.append(result_details)
+                    self.result_dict.update({'result_details': self.result_details_list})
+
+            result_details = f"Passed: Index title '{index_title}' contains overrides, is higher resolution or does not exist in library path '{library_path}'"
+            self.logger_instance.info(result_details)
+            self.result_dict.update({'result': u'Passed'})
+            self.result_details_list.append(result_details)
+            self.result_dict.update({'result_details': self.result_details_list})
+            return True
 
     def filter_imdb_override_genre(self):
 

@@ -1,4 +1,4 @@
-import lib.siphonator.torrent_clients as torrent_clients
+import src.siphonator.torrent_clients as torrent_clients
 
 
 class QueueManagement(object):

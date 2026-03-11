@@ -1,10 +1,10 @@
 import os
 import pathlib
 import re
-import lib.siphonator.torrent_clients as torrent_clients
-import lib.siphonator.db_sqlite as db_sqlite
-import lib.siphonator.tools_various as tools_various
-import lib.siphonator.tools_filters as siphonator_tools_filters
+import src.siphonator.torrent_clients as torrent_clients
+import src.siphonator.db_sqlite as db_sqlite
+import src.siphonator.tools_various as tools_various
+import src.siphonator.tools_filters as siphonator_tools_filters
 
 
 def helper_get_largest_file_path(torrent_completed_dict):

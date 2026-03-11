@@ -18,7 +18,7 @@ pycountry               # Handles country and language conversion to short two l
 pydantic                # Data validation, used for dict merging and yaml validation
 pyomdbapi               # A simple OMDB API python wrapper
 Pytest                  # Test framework for Python
-PyYAML                  # Tool used to pretty print YAML/dict for debug
+pyyaml                  # Tool used to pretty print YAML/dict for debug
 qbittorrent-api         # API support to add torrents/magnets to qBittorrent
 requests                # HTTP library for humans
 ruamel.yaml             # YAML editor that permits roundtripping without loss of formatting

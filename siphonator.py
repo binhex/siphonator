@@ -9,14 +9,14 @@ import qbittorrentapi
 import xml.etree.ElementTree as elementTree
 from daemonize import Daemonize
 from apscheduler.schedulers.background import BackgroundScheduler
-import lib.siphonator.config_manager as siphonator_config_manager
-import lib.siphonator.post_processing as post_processing
-import lib.siphonator.queue_management as queue_management
-import lib.siphonator.index_proxy as siphonator_index_proxy
-import lib.siphonator.tools_logging as siphonator_tools_logging
-import lib.siphonator.tools_various as siphonator_tools_various
-import lib.siphonator.tools_downloader as siphonator_tools_downloader
-import lib.siphonator.db_sqlite as siphonator_db_sqlite
+import src.siphonator.config_manager as siphonator_config_manager
+import src.siphonator.post_processing as post_processing
+import src.siphonator.queue_management as queue_management
+import src.siphonator.index_proxy as siphonator_index_proxy
+import src.siphonator.tools_logging as siphonator_tools_logging
+import src.siphonator.tools_various as siphonator_tools_various
+import src.siphonator.tools_downloader as siphonator_tools_downloader
+import src.siphonator.db_sqlite as siphonator_db_sqlite
 
 
 def check_python():

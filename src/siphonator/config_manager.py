@@ -187,6 +187,10 @@ def read_config(init_dict):
     # get the absolute path to config.yml
     config_filepath = init_dict['config_filepath']
 
+    # Ensure the config file exists
+    if not os.path.isfile(config_filepath):
+        raise FileNotFoundError(f"Configuration file '{config_filepath}' does not exist.")
+        
     # Read the existing config data
     with open(config_filepath, "r") as config_file:
         # Load the YAML file into a Python dictionary
