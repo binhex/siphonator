@@ -1,6 +1,6 @@
 import qbittorrentapi
-import src.siphonator.tools_various as siphonator_tools_various
-import src.siphonator.config_manager as siphonator_config_manager
+import lib.siphonator.tools_various as siphonator_tools_various
+import lib.siphonator.config_manager as siphonator_config_manager
 import uuid
 import datetime
 

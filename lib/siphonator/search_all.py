@@ -1,7 +1,7 @@
-import src.siphonator.search_google as siphonator_search_google
-import src.siphonator.search_imdb as siphonator_search_imdb
-import src.siphonator.search_tmdb as siphonator_search_tmdb
-import src.siphonator.search_omdb as siphonator_search_omdb
+import lib.siphonator.search_google as siphonator_search_google
+import lib.siphonator.search_imdb as siphonator_search_imdb
+import lib.siphonator.search_tmdb as siphonator_search_tmdb
+import lib.siphonator.search_omdb as siphonator_search_omdb
 
 
 class SearchAll(object):

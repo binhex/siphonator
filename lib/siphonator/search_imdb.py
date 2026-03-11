@@ -1,6 +1,6 @@
 import imdbpie
 from imdbpie import ImdbAPIError
-import src.siphonator.tools_filters as siphonator_tools_filters
+import lib.siphonator.tools_filters as siphonator_tools_filters
 
 
 class SearchIMDB(object):

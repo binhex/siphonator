@@ -1,7 +1,7 @@
 import json
 import urllib.parse
-import src.siphonator.tools_downloader as siphonator_tools_downloader
-import src.siphonator.tools_filters as siphonator_tools_filters
+import lib.siphonator.tools_downloader as siphonator_tools_downloader
+import lib.siphonator.tools_filters as siphonator_tools_filters
 import re
 
 

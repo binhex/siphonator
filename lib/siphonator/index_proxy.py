@@ -1,14 +1,14 @@
 import xmltodict
 import urllib.parse
-import src.siphonator.tools_downloader as siphonator_tools_downloader
-import src.siphonator.tools_filters as siphonator_tools_filters
-import src.siphonator.search_all as siphonator_search_all
-import src.siphonator.imdb_imdbpie as siphonator_imdb_imdbpie
-import src.siphonator.imdb_omdb as siphonator_imdb_omdb
-import src.siphonator.filter_movies as siphonator_filter_movies
-import src.siphonator.torrent_clients as siphonator_torrent_clients
-import src.siphonator.notification_email as siphonator_notification_email
-import src.siphonator.db_sqlite as siphonator_db_sqlite
+import lib.siphonator.tools_downloader as siphonator_tools_downloader
+import lib.siphonator.tools_filters as siphonator_tools_filters
+import lib.siphonator.search_all as siphonator_search_all
+import lib.siphonator.imdb_imdbpie as siphonator_imdb_imdbpie
+import lib.siphonator.imdb_omdb as siphonator_imdb_omdb
+import lib.siphonator.filter_movies as siphonator_filter_movies
+import lib.siphonator.torrent_clients as siphonator_torrent_clients
+import lib.siphonator.notification_email as siphonator_notification_email
+import lib.siphonator.db_sqlite as siphonator_db_sqlite
 
 
 class IndexProxy(object):

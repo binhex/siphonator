@@ -1,5 +1,5 @@
 import sqlite_utils
-import src.siphonator.tools_filters as siphonator_tools_filters
+import lib.siphonator.tools_filters as siphonator_tools_filters
 
 
 class DbSqlite(object):
