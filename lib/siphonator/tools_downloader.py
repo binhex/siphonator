@@ -84,115 +84,116 @@ def http_client(logger_instance, **kwargs):
     # set read timeout value (max time to wait between each byte)
     read_timeout = 30.0
 
-    # use a session instance to customize how "requests" handles making http requests
-    session = requests.Session()
-
     # set status_code and content to None in case nothing returned
     status_code = None
 
-    try:
+    # use a context manager so the session (and its underlying connection pool) is
+    # always closed on exit — even when backoff retries the decorated function
+    with requests.Session() as session:
 
-        # define dict of common arguments for requests
-        requests_data_dict = {'url': url, 'timeout': (connect_timeout, read_timeout), 'allow_redirects': True, 'verify': False}
+        try:
 
-        # define default headers to compress and fake user agent
-        session.headers.update({
-            'Accept-encoding': 'gzip',
-            'User-Agent': user_agent
-        })
+            # define dict of common arguments for requests
+            requests_data_dict = {'url': url, 'timeout': (connect_timeout, read_timeout), 'allow_redirects': True, 'verify': False}
 
-        if "additional_header" in kwargs:
+            # define default headers to compress and fake user agent
+            session.headers.update({
+                'Accept-encoding': 'gzip',
+                'User-Agent': user_agent
+            })
 
-            # append to headers dict with additional headers dict
-            session.headers.update(additional_header)
+            if "additional_header" in kwargs:
 
-        if "auth" in kwargs:
+                # append to headers dict with additional headers dict
+                session.headers.update(additional_header)
 
-            session.auth = auth
+            if "auth" in kwargs:
 
-        if request_type == "put":
+                session.auth = auth
 
-            # add additional keyword arguments
-            requests_data_dict.update({'data': data_payload})
+            if request_type == "put":
 
-        elif request_type == "post":
+                # add additional keyword arguments
+                requests_data_dict.update({'data': data_payload})
 
-            # add additional keyword arguments
-            requests_data_dict.update({'data': data_payload})
+            elif request_type == "post":
 
-        # construct class.method from request_type
-        request_method = getattr(session, request_type)
+                # add additional keyword arguments
+                requests_data_dict.update({'data': data_payload})
 
-        # use keyword argument unpack to convert dict to keyword args
-        response = request_method(**requests_data_dict)
+            # construct class.method from request_type
+            request_method = getattr(session, request_type)
 
-        # get status code and content returned
-        status_code = response.status_code
-        content = response.content
+            # use keyword argument unpack to convert dict to keyword args
+            response = request_method(**requests_data_dict)
 
-        if status_code == 401:
+            # get status code and content returned
+            status_code = response.status_code
+            content = response.content
 
-            logger_instance.warning(f"The status code '{status_code}' indicates unauthorised access for '{url}', error is '{content}'")
-            raise requests.exceptions.HTTPError(status_code, url, content)
+            if status_code == 401:
 
-        elif status_code == 404:
+                logger_instance.warning(f"The status code '{status_code}' indicates unauthorised access for '{url}', error is '{content}'")
+                raise requests.exceptions.HTTPError(status_code, url, content)
 
-            logger_instance.warning(f"The status code '{status_code}' indicates the requested resource could not be found  for '{url}', error is '{content}'")
-            raise requests.exceptions.HTTPError(status_code, url, content)
+            elif status_code == 404:
 
-        elif status_code == 422:
+                logger_instance.warning(f"The status code '{status_code}' indicates the requested resource could not be found  for '{url}', error is '{content}'")
+                raise requests.exceptions.HTTPError(status_code, url, content)
 
-            logger_instance.warning(f"The status code '{status_code}' indicates a request was well-formed but was unable to be followed due to semantic errors for '{url}', error is '{content}'")
-            raise requests.exceptions.HTTPError(status_code, url, content)
+            elif status_code == 422:
 
-        elif not 200 <= status_code <= 299:
+                logger_instance.warning(f"The status code '{status_code}' indicates a request was well-formed but was unable to be followed due to semantic errors for '{url}', error is '{content}'")
+                raise requests.exceptions.HTTPError(status_code, url, content)
 
-            logger_instance.warning(f"The status code '{status_code}' indicates an unexpected error for '{url}', error is '{content}'")
-            raise requests.exceptions.HTTPError(status_code, url, content)
+            elif not 200 <= status_code <= 299:
 
-    except requests.exceptions.ConnectTimeout as content:
+                logger_instance.warning(f"The status code '{status_code}' indicates an unexpected error for '{url}', error is '{content}'")
+                raise requests.exceptions.HTTPError(status_code, url, content)
 
-        # connect timeout occurred
-        logger_instance.warning(f"Connection timeout for URL '{url}' with error '{content}'")
-        return 1, status_code, content
+        except requests.exceptions.ConnectTimeout as content:
 
-    except requests.exceptions.ConnectionError as content:
+            # connect timeout occurred
+            logger_instance.warning(f"Connection timeout for URL '{url}' with error '{content}'")
+            return 1, status_code, content
 
-        # connection error occurred
-        logger_instance.warning(f"Connection error for URL '{url}' with error '{content}'")
-        return 1, status_code, content
+        except requests.exceptions.ConnectionError as content:
 
-    except requests.exceptions.TooManyRedirects as content:
+            # connection error occurred
+            logger_instance.warning(f"Connection error for URL '{url}' with error '{content}'")
+            return 1, status_code, content
 
-        # too many redirects, bad site or circular redirect
-        logger_instance.warning(f"Too many retries for URL '{url}' with error '{content}'")
-        return 1, status_code, content
+        except requests.exceptions.TooManyRedirects as content:
 
-    except requests.exceptions.HTTPError as content:
+            # too many redirects, bad site or circular redirect
+            logger_instance.warning(f"Too many retries for URL '{url}' with error '{content}'")
+            return 1, status_code, content
 
-        # catch http exceptions thrown by requests
-        return 1, status_code, content
+        except requests.exceptions.HTTPError as content:
 
-    except requests.exceptions.ReadTimeout as content:
-        # too many redirects, bad site or circular redirect
-        logger_instance.warning(f"Read timeout for URL '{url}' with error '{content}'")
-        return 1, status_code, content
+            # catch http exceptions thrown by requests
+            return 1, status_code, content
 
-    except requests.exceptions.JSONDecodeError as content:
+        except requests.exceptions.ReadTimeout as content:
+            # too many redirects, bad site or circular redirect
+            logger_instance.warning(f"Read timeout for URL '{url}' with error '{content}'")
+            return 1, status_code, content
 
-        # catch any other exceptions thrown by requests
-        logger_instance.warning(f"Json decode error for URL '{url}' with error '{content}'")
-        return 1, status_code, content
+        except requests.exceptions.JSONDecodeError as content:
 
-    except requests.exceptions.RequestException as content:
+            # catch any other exceptions thrown by requests
+            logger_instance.warning(f"Json decode error for URL '{url}' with error '{content}'")
+            return 1, status_code, content
 
-        # catch any other exceptions thrown by requests
-        logger_instance.warning(f"Caught other exceptions for URL '{url}' with error '{content}'")
-        return 1, status_code, content
+        except requests.exceptions.RequestException as content:
 
-    else:
+            # catch any other exceptions thrown by requests
+            logger_instance.warning(f"Caught other exceptions for URL '{url}' with error '{content}'")
+            return 1, status_code, content
 
-        if 200 <= status_code <= 299:
+        else:
 
-            logger_instance.debug(f"The status code '{status_code}' indicates a successful request for '{url}'")
-            return 0, status_code, content
+            if 200 <= status_code <= 299:
+
+                logger_instance.debug(f"The status code '{status_code}' indicates a successful request for '{url}'")
+                return 0, status_code, content

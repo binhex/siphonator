@@ -42,6 +42,7 @@ def imdb_json_api(logger_instance, result_dict):
         result_dict.update({'result': u'Failed'})
         result_details_list.append(result_details)
         result_dict.update({'result_details': result_details_list})
+        imdb_instance.session.close()
         return result_dict
 
     try:
@@ -222,4 +223,5 @@ def imdb_json_api(logger_instance, result_dict):
     result_details_list.append(result_details)
     result_dict.update({'result_details': result_details_list})
 
+    imdb_instance.session.close()
     return result_dict

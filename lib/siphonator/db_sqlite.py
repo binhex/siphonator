@@ -309,6 +309,13 @@ class DbSqlite(object):
         # close database
         self.db_sqlite_connection.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close_database()
+        return False
+
     def delete_database(self):
 
         pass
