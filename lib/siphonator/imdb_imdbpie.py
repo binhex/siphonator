@@ -36,7 +36,7 @@ def imdb_json_api(logger_instance, result_dict):
         imdb_get_title_credits_dict = imdb_instance.get_title_credits(str(imdb_id))
         imdb_get_title_auxiliary_dict = imdb_instance.get_title_auxiliary(str(imdb_id))
 
-    except (IndexError, KeyError, TypeError, ImdbAPIError) as e:
+    except (IndexError, KeyError, TypeError, LookupError, ImdbAPIError) as e:
         result_details = f"Failed: Cannot get IMDb details using IMDbPie, error is '{e}'"
         logger_instance.warning(result_details)
         result_dict.update({'result': u'Failed'})
