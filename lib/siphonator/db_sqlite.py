@@ -51,6 +51,7 @@ class DbSqlite(object):
             "imdb_credits_character_list": str,
             "imdb_language_list": str,
             'imdb_country_list': str,
+            'imdb_certification': str,
         }, pk="id", if_not_exists=True)
 
         # set database version to track when db upgrades/downgrades are required, v:d validates that db_version is an integer
@@ -91,6 +92,7 @@ class DbSqlite(object):
             "imdb_credits_character_list": (self.result_dict.get('imdb_credits_character_list')),
             "imdb_language_list": (self.result_dict.get('imdb_language_list')),
             "imdb_country_list": (self.result_dict.get('imdb_country_list')),
+            "imdb_certification": (self.result_dict.get('imdb_certification')),
         }], pk="id", column_order=(
             "index_title",
             "result",
@@ -124,6 +126,7 @@ class DbSqlite(object):
             "imdb_credits_character_list",
             "imdb_language_list",
             'imdb_country_list',
+            'imdb_certification',
         ))
 
     def read_database_simple(self, sqlite_table, sqlite_column, sqlite_query):
@@ -248,6 +251,7 @@ class DbSqlite(object):
             self.logger_instance.debug(f"Upgrading db version on disk '{pragma_user_version}' to '{int(pragma_user_version)+1}'...")
             self.db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN imdb_country_origins_list text")
             self.set_db_version(2)
+            pragma_user_version = 2
 
         # if v2 then upgrade to v3 by renaming column
         if pragma_user_version == 2:
@@ -255,24 +259,35 @@ class DbSqlite(object):
             self.db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_country_origins_list TO imdb_country_list")
             self.db_sqlite_connection.execute("ALTER TABLE history RENAME COLUMN imdb_spoken_languages_list TO imdb_language_list")
             self.set_db_version(3)
+            pragma_user_version = 3
 
         # if v3 then upgrade to v4 by adding in the missing column
         if pragma_user_version == 3:
             self.logger_instance.debug(f"Upgrading db version on disk '{pragma_user_version}' to '{int(pragma_user_version)+1}'...")
             self.db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN imdb_trailer_url text")
             self.set_db_version(4)
+            pragma_user_version = 4
 
         # if v4 then upgrade to v5 by adding in the missing column
         if pragma_user_version == 4:
             self.logger_instance.debug(f"Upgrading db version on disk '{pragma_user_version}' to '{int(pragma_user_version)+1}'...")
             self.db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN torrent_tag text")
             self.set_db_version(5)
+            pragma_user_version = 5
 
         # if v5 then upgrade to v6 by adding in the missing column
         if pragma_user_version == 5:
             self.logger_instance.debug(f"Upgrading db version on disk '{pragma_user_version}' to '{int(pragma_user_version)+1}'...")
             self.db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN verified text")
             self.set_db_version(6)
+            pragma_user_version = 6
+
+        # if v6 then upgrade to v7 by adding in the missing column
+        if pragma_user_version == 6:
+            self.logger_instance.debug(f"Upgrading db version on disk '{pragma_user_version}' to '{int(pragma_user_version)+1}'...")
+            self.db_sqlite_connection.execute("ALTER TABLE history ADD COLUMN imdb_certification text")
+            self.set_db_version(7)
+            pragma_user_version = 7
 
     def set_db_version(self, version):
 

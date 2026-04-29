@@ -117,6 +117,23 @@ def imdb_json_api(logger_instance, result_dict):
             logger_instance.warning(f"Failed: Unable to identify IMDb Genres, error is '{e}'")
             genres_list = None
 
+    imdb_certification = None
+    try:
+        imdb_certification = imdb_get_title_auxiliary_dict['certificate']['certificate']
+
+    except (IndexError, KeyError, TypeError):
+        try:
+            certs_list = imdb_get_title_auxiliary_dict.get('certificates') or []
+            uk_cert = next(
+                (c['certificate'] for c in certs_list if c.get('country') in ('United Kingdom', 'UK')),
+                None
+            )
+            imdb_certification = uk_cert if uk_cert else (certs_list[0].get('certificate') if certs_list else None)
+            if not imdb_certification:
+                raise KeyError('no certificate found')
+        except (IndexError, KeyError, TypeError) as e:
+            logger_instance.warning(f"Failed: Unable to identify IMDb Certification, error is '{e}'")
+
     try:
         imdb_title = (imdb_get_title_dict['base']['title'])
 
@@ -209,6 +226,7 @@ def imdb_json_api(logger_instance, result_dict):
         'imdb_title_type': title_type,
         'imdb_running_time_in_minutes': running_time_in_minutes,
         'imdb_genres_list': genres_list,
+        'imdb_certification': imdb_certification,
         'imdb_credits_character_list': credits_character_list,
         'imdb_credits_director_list': credits_director_list,
         'imdb_credits_writer_list': credits_writer_list,

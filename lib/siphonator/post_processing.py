@@ -1,10 +1,112 @@
 import os
+import ast
+import json
 import pathlib
 import re
 import lib.siphonator.torrent_clients as torrent_clients
 import lib.siphonator.db_sqlite as db_sqlite
 import lib.siphonator.tools_various as tools_various
 import lib.siphonator.tools_filters as siphonator_tools_filters
+
+# BBFC certificate ordering, least restrictive to most restrictive
+_BBFC_ORDER = ['U', 'PG', '12', '12A', '15', '18', 'R18']
+
+
+def _parse_genres_list(genres_raw):
+    """Return a list of genre strings from the DB-stored value (JSON or Python repr)."""
+    if not genres_raw:
+        return []
+    if isinstance(genres_raw, list):
+        return [str(g).strip() for g in genres_raw]
+    try:
+        result = json.loads(genres_raw)
+        if isinstance(result, list):
+            return [str(g).strip() for g in result]
+    except (ValueError, TypeError):
+        pass
+    try:
+        result = ast.literal_eval(genres_raw)
+        if isinstance(result, list):
+            return [str(g).strip() for g in result]
+    except (ValueError, SyntaxError):
+        pass
+    return []
+
+
+def _get_resolution(logger_instance, index_title):
+    """Re-derive resolution string (e.g. '1080', '2160') from the stored index_title."""
+    if not index_title:
+        return None
+    tools_filters_instance = siphonator_tools_filters.ToolsFilters(logger_instance)
+    sanitised = tools_filters_instance.sanitise(index_title)
+    if not sanitised:
+        return None
+    return tools_filters_instance.index_title_resolution(sanitised)
+
+
+def _is_cert_acceptable(movie_cert, max_cert):
+    """Return True if movie_cert is at or below max_cert in the BBFC ordering."""
+    if not movie_cert:
+        return False
+    mc = movie_cert.strip().upper()
+    mx = max_cert.strip().upper()
+    if mc not in _BBFC_ORDER or mx not in _BBFC_ORDER:
+        return False
+    return _BBFC_ORDER.index(mc) <= _BBFC_ORDER.index(mx)
+
+
+def _resolve_copy_destination(logger_instance, movie_genres, movie_cert, resolution, rules, default):
+    """
+    Determine the destination base path for a movie.
+
+    Routing logic:
+    - Exactly one rule whose genres intersect the movie's genres → use that rule's path
+      (subject to optional max_certification check; falls back to default on failure)
+    - Zero or multiple rules match → use default_copy_library path
+    Returns the resolved path string, or None if no path is configured.
+    """
+    path_key = 'uhd_path' if resolution == '2160' else 'hd_path'
+
+    def _default_path():
+        path = default.get(path_key)
+        if not path:
+            logger_instance.warning(f"No '{path_key}' configured in default_copy_library")
+        return path
+
+    movie_genres_lower = {g.lower() for g in movie_genres}
+    matching_rules = [
+        rule for rule in rules
+        if {g.lower() for g in (rule.get('genres') or [])} & movie_genres_lower
+    ]
+
+    if len(matching_rules) != 1:
+        if len(matching_rules) == 0:
+            logger_instance.info(f"Movie genres {movie_genres} matched no rules, using default destination")
+        else:
+            names = [r.get('name', '?') for r in matching_rules]
+            logger_instance.info(f"Movie genres {movie_genres} matched multiple rules {names}, using default destination")
+        return _default_path()
+
+    rule = matching_rules[0]
+    max_cert = rule.get('max_certification')
+    if max_cert:
+        if not _is_cert_acceptable(movie_cert, max_cert):
+            logger_instance.info(
+                f"Movie certification '{movie_cert}' does not satisfy max_certification '{max_cert}' "
+                f"for rule '{rule.get('name', '?')}', using default destination"
+            )
+            return _default_path()
+
+    path = rule.get(path_key)
+    if not path:
+        logger_instance.warning(f"Rule '{rule.get('name', '?')}' has no '{path_key}', using default destination")
+        return _default_path()
+
+    logger_instance.info(
+        f"Movie genres {movie_genres}, cert '{movie_cert}', resolution '{resolution}' "
+        f"routed to rule '{rule.get('name', '?')}' path '{path}'"
+    )
+    return path
 
 
 def helper_get_largest_file_path(torrent_completed_dict):
@@ -78,10 +180,16 @@ class PostProcess(object):
         self.db_sqlite_instance = db_sqlite.DbSqlite(self.logger_instance, init_dict)
         self.qbt_client = qbt_client
 
+    def _lookup_db_record(self, torrent_completed_dict):
+        """Return the full DB history record for this torrent, or None if not found."""
+        return self.db_sqlite_instance.read_database_simple(
+            'history', 'torrent_tag', torrent_completed_dict.get('torrent_tag')
+        )
+
     def helper_get_imdb_title_year(self, torrent_completed_dict):
 
         # send torrent_dict to db_sqlite to query db bsed on tag name for imdb name and year and append to dict and return here
-        read_database_simple_bool = self.db_sqlite_instance.read_database_simple('history', 'torrent_tag', torrent_completed_dict.get('torrent_tag'))
+        read_database_simple_bool = self._lookup_db_record(torrent_completed_dict)
 
         # get imdb title ad year, used for rename
         if not read_database_simple_bool:
@@ -136,7 +244,7 @@ class PostProcess(object):
 
         exclude_file_min_kb = self.config_dict['post_process']['exclude_file_min_kb']
         exclude_file_regex_list = self.config_dict['post_process']['exclude_file_regex_list']
-        exclude_folder_regex_list = self.config_dict['post_process']['exclude_folder_regex_list']
+        exclude_folder_regex_list = self.config_dict['post_process'].get('exclude_folder_regex_list')
 
         src_copy_files_list = []
 
@@ -198,22 +306,62 @@ class PostProcess(object):
         if not self.config_dict['post_process']['copy_completed']:
             return False
 
-        copy_library_path = self.config_dict['post_process']['copy_library_path']
-        if not copy_library_path:
+        copy_library_rules = self.config_dict['post_process'].get('copy_library_rules') or []
+        default_copy_library = self.config_dict['post_process'].get('default_copy_library') or {}
+
+        # backward compat: if new routing keys are absent, fall back to old copy_library_path
+        if not default_copy_library:
+            legacy_path = self.config_dict['post_process'].get('copy_library_path')
+            if legacy_path:
+                self.logger_instance.warning(
+                    "Using legacy 'copy_library_path' for copy destination — update config to use "
+                    "'copy_library_rules' and 'default_copy_library'"
+                )
+                default_copy_library = {'hd_path': legacy_path, 'uhd_path': legacy_path}
+            else:
+                self.logger_instance.warning("No 'default_copy_library' configured in post_process, cannot copy files")
+                return False
+
+        # get full DB record for this torrent
+        db_record = self._lookup_db_record(torrent_completed_dict)
+        if not db_record:
             return False
 
-        # get imdb title and year - used to construct destination path
-        imdb_title_year = self.helper_get_imdb_title_year(torrent_completed_dict)
+        imdb_title = db_record.get('imdb_title')
+        imdb_year = db_record.get('imdb_year')
 
-        # if query result from sqlite for imdb title and year is false then return
-        if not imdb_title_year:
+        if not imdb_title or not imdb_year:
+            self.logger_instance.warning(
+                f"DB record for torrent tag '{torrent_completed_dict.get('torrent_tag')}' "
+                f"has missing imdb_title or imdb_year, skipping copy"
+            )
             return False
+
+        imdb_title_year = f"{imdb_title} ({imdb_year})"
+
+        movie_genres = _parse_genres_list(db_record.get('imdb_genres_list'))
+        imdb_certification = db_record.get('imdb_certification')
+        resolution = _get_resolution(self.logger_instance, db_record.get('index_title'))
+
+        # determine destination base path via routing rules
+        base_path = _resolve_copy_destination(
+            self.logger_instance,
+            movie_genres,
+            imdb_certification,
+            resolution,
+            copy_library_rules,
+            default_copy_library,
+        )
+
+        if not base_path:
+            self.logger_instance.warning(f"Could not determine copy destination for '{imdb_title_year}', skipping")
+            return False
+
+        # construct absolute path to destination
+        dst_copy_path = os.path.join(base_path, imdb_title_year)
 
         # get the largest torrent file name and path
         torrent_largest_file_name, torrent_path = helper_get_largest_file_path(torrent_completed_dict)
-
-        # construct absolute path to destination
-        dst_copy_path = os.path.join(copy_library_path, imdb_title_year)
 
         # loop over list of files to copy
         for src_copy_file_path in src_copy_files_list:

@@ -160,6 +160,10 @@ def omdb_json_api(logger_instance, config_dict, result_dict):
     else:
         omdb_genre_list = None
 
+    omdb_rated = get_json_value(logger_instance, omdb_json, 'rated')
+    if omdb_rated == 'N/A' or omdb_rated == 'Not Rated' or omdb_rated == 'Unrated':
+        omdb_rated = None
+
     omdb_country_list = get_json_value(logger_instance, omdb_json, 'country')
     if omdb_country_list is not None and omdb_country_list != 'N/A':
         omdb_country_list = omdb_country_list.split(',')
@@ -211,6 +215,7 @@ def omdb_json_api(logger_instance, config_dict, result_dict):
         'imdb_title_type': omdb_type,
         'imdb_running_time_in_minutes': omdb_runtime,
         'imdb_genres_list': omdb_genre_list,
+        'imdb_certification': omdb_rated,
         'imdb_credits_character_list': None,
         'imdb_credits_director_list': omdb_director_list,
         'imdb_credits_writer_list': omdb_writer_list,
