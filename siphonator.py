@@ -435,7 +435,7 @@ if __name__ == '__main__':
     app_friendly_name = app_name.capitalize()
     app_version = '0.0.2'
     config_version = '0.0.1'
-    db_version = int(6)
+    db_version = int(7)
     user_agent = f"{app_name}/{app_version}; https://github.com/binhex/{app_name}"
 
     # ensure we are running python 3.11 or later

@@ -130,7 +130,20 @@ def create_config_file(init_dict):
             'remove_completed': True,
             'exclude_file_min_kb': 10000,
             'exclude_file_regex_list': None,
-            'copy_library_path': None,
+            'exclude_folder_regex_list': None,
+            'copy_library_rules': [
+                {
+                    'name': 'default',
+                    'genres': None,
+                    'max_certification': None,
+                    'hd_path': None,
+                    'uhd_path': None,
+                }
+            ],
+            'default_copy_library': {
+                'hd_path': None,
+                'uhd_path': None,
+            },
         }
     }
 

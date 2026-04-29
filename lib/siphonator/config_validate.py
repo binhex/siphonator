@@ -115,16 +115,28 @@ class QueueManagementConfig(BaseModel):
     client_startup_grace_mins: int
 
 
+class CopyLibraryRuleConfig(BaseModel):
+    name: str
+    genres: list = None
+    max_certification: str = None
+    hd_path: str = None
+    uhd_path: str = None
+
+
+class DefaultCopyLibraryConfig(BaseModel):
+    hd_path: str = None
+    uhd_path: str = None
+
+
 class PostProcessConfig(BaseModel):
     post_process_enabled: bool
-    rename_completed: bool
-    move_completed: bool
+    copy_completed: bool
     remove_completed: bool
-    delete_unwanted_files: bool
-    delete_unwanted_min_kb: int
-    delete_max_path_size_gb: int
-    delete_unwanted_ext_list: list = None
-    move_library_path: str = None
+    exclude_file_min_kb: int = None
+    exclude_file_regex_list: list = None
+    exclude_folder_regex_list: list = None
+    copy_library_rules: list[CopyLibraryRuleConfig] = None
+    default_copy_library: DefaultCopyLibraryConfig = None
 
 
 class Config(BaseModel):
