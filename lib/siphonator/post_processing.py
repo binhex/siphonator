@@ -65,7 +65,7 @@ def _resolve_copy_destination(logger_instance, movie_genres, movie_cert, resolut
     - Zero or multiple rules match → use default_copy_library path
     Returns the resolved path string, or None if no path is configured.
     """
-    path_key = 'uhd_path' if resolution == '2160' else 'hd_path'
+    path_key = 'uhd_path' if resolution == '2160' or resolution == '4k' else 'hd_path'
 
     def _default_path():
         path = default.get(path_key)
