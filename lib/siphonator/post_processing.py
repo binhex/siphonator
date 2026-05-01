@@ -74,20 +74,30 @@ def _resolve_copy_destination(logger_instance, movie_genres, movie_cert, resolut
         return path
 
     movie_genres_lower = {g.lower() for g in movie_genres}
-    matching_rules = [
-        rule for rule in rules
-        if {g.lower() for g in (rule.get('genres') or [])} & movie_genres_lower
-    ]
 
-    if len(matching_rules) != 1:
-        if len(matching_rules) == 0:
-            logger_instance.info(f"Movie genres {movie_genres} matched no rules, using default destination")
-        else:
-            names = [r.get('name', '?') for r in matching_rules]
-            logger_instance.info(f"Movie genres {movie_genres} matched multiple rules {names}, using default destination")
+    # score each rule by number of genre overlaps with the movie
+    scored_rules = [
+        (len({g.lower() for g in (rule.get('genres') or [])} & movie_genres_lower), rule)
+        for rule in rules
+    ]
+    scored_rules = [(score, rule) for score, rule in scored_rules if score > 0]
+
+    if not scored_rules:
+        logger_instance.info(f"Movie genres {movie_genres} matched no rules, using default destination")
         return _default_path()
 
-    rule = matching_rules[0]
+    max_score = max(score for score, _ in scored_rules)
+    top_rules = [rule for score, rule in scored_rules if score == max_score]
+
+    if len(top_rules) != 1:
+        names = [r.get('name', '?') for r in top_rules]
+        logger_instance.info(
+            f"Movie genres {movie_genres} tied on {max_score} match(es) across rules {names}, "
+            f"using default destination"
+        )
+        return _default_path()
+
+    rule = top_rules[0]
     max_cert = rule.get('max_certification')
     if max_cert:
         if not _is_cert_acceptable(movie_cert, max_cert):
