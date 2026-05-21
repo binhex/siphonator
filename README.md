@@ -1,5 +1,7 @@
 # Siphonator
 
+## DEPRECATED - Please use [movarr](https://github.com/binhex/movarr)
+
 This software is under *HEAVY* development right now, expect lack of documentation, major bugs and missing functionality.
 
 ## Description
